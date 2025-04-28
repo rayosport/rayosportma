@@ -1,0 +1,82 @@
+Here’s a ready-to-use prompt you can send to a web designer or an agency to create the **Rayo Sport** website. It includes the concept, specs, and visual branding:
+
+---
+
+**🌐 Web Design Brief: Rayo Sport Website**
+
+**🔹 Project Name:** Rayo Sport – Play. Shine. Become a Legend.
+
+**🔹 Website Type:** Static website (landing page + sections)
+
+**🔹 Objective:**  
+Create a modern, sporty, and engaging one-page website for **Rayo Sport**, a football (soccer) community platform. The site will introduce the Rayo concept, explain how the matches work, show rules and FAQs, and include clear CTAs to **download the mobile app**, **join our WhatsApp group**, or **follow on social media**.
+
+---
+
+### 🔶 Concept Overview
+
+**Rayo Sport** is a community-driven football platform that organizes 5vs5 and 3-team rotation matches in Moroccan cities. Players book matches, join local games, get ranked by performance, and enjoy a premium match experience (uniforms, referees, photos, etc.).  
+The goal is to become the #1 platform for community football in Morocco.
+
+---
+
+### 🔵 Color Palette & Theme
+
+- **Primary Color:** Electric Blue `#007BFF` (backgrounds, accents)
+- **Secondary Color:** White `#FFFFFF` (text, icons)
+- **Accent Color:** Jet Black `#121212` or Dark Grey `#1F1F1F` (sections)
+- **Optional Accent:** Neon Green `#00FFAB` or Red `#FF3B3B` for CTA highlights or team colors
+- **Font:** 'Montserrat' – sporty, modern, and readable
+
+---
+
+### 📄 Sections to Include
+
+1. **Hero Section**  
+   - Slogan: *Joue. Brille. Deviens une Légende.*
+   - Background animation or video of a match highlight
+   - CTA buttons: “Rejoindre un match” | “Télécharger l’application”
+
+2. **About Rayo Sport**  
+   - What is Rayo?
+   - How we reinvent football with 3-team matches
+   - Our mission to build a football community
+
+3. **How It Works**  
+   - Visual steps or icons:
+     1. Rejoindre un groupe WhatsApp
+     2. Réserver un match
+     3. Jouer. Marquer. Briller.
+     4. Recevoir ses stats et highlights
+
+4. **Formats & Rules**  
+   - Standard Match (5vs5)
+   - Rayo Clash (3 équipes, 5 min par match, le perdant sort)
+   - Duration: 60 minutes
+   - Leaderboards, Stats, MVP system
+
+5. **FAQ Section**  
+   - “Comment réserver ?”  
+   - “Combien ça coûte ?”  
+   - “Dois-je ramener mes équipements ?”
+
+6. **Call to Action**  
+   - Join WhatsApp
+   - Download the app (when live)
+   - Follow us on social media
+
+7. **Footer**  
+   - Social links (Instagram, Facebook, TikTok)  
+   - Contact form or WhatsApp contact  
+   - Legal / Terms link
+
+---
+
+### 📱 Mobile Optimization
+
+Must be **fully responsive**, designed with **mobile-first** in mind, since 90% of traffic will come from smartphones.
+
+---
+
+Let me know if you want to include **video, blog, or match gallery** features later.  
+Want me to help you write the actual content for the sections?
