@@ -17,12 +17,12 @@ interface City {
 
 const CITIES: Record<string, City[]> = {
   fr: [
-    { id: 'casablanca', name: 'Casablanca', whatsappLink: 'https://wa.me/212522000000' },
-    { id: 'berrechid', name: 'Berrechid', whatsappLink: 'https://wa.me/212522000001' },
+    { id: 'casablanca', name: 'Rayo Casablanca', whatsappLink: 'https://chat.whatsapp.com/L6ePdMmtGrUIiF4VFEQ6eA' },
+    { id: 'berrechid', name: 'Rayo Berrechid', whatsappLink: 'https://chat.whatsapp.com/KHcdMSbsph07VZaX8NnrPN' },
   ],
   ar: [
-    { id: 'casablanca', name: 'الدار البيضاء', whatsappLink: 'https://wa.me/212522000000' },
-    { id: 'berrechid', name: 'برشيد', whatsappLink: 'https://wa.me/212522000001' },
+    { id: 'casablanca', name: 'رايو الدار البيضاء', whatsappLink: 'https://chat.whatsapp.com/L6ePdMmtGrUIiF4VFEQ6eA' },
+    { id: 'berrechid', name: 'رايو برشيد', whatsappLink: 'https://chat.whatsapp.com/KHcdMSbsph07VZaX8NnrPN' },
   ],
 };
 
@@ -48,7 +48,7 @@ export function CitySelector() {
       <DialogContent className="sm:max-w-[425px] bg-white">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-gray-800">
-            {t('select_city')}
+            {language === 'fr' ? 'Sélectionnez votre ville' : 'اختر مدينتك'}
           </DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
