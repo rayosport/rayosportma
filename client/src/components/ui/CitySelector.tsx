@@ -26,7 +26,13 @@ const CITIES: Record<string, City[]> = {
   ],
 };
 
-export function CitySelector() {
+interface CitySelectorProps {
+  buttonText?: string;
+  buttonClassName?: string;
+  isWhatsappContact?: boolean;
+}
+
+export function CitySelector({ buttonText, buttonClassName = "btn-primary px-8 py-4 text-lg", isWhatsappContact = false }: CitySelectorProps) {
   const { t, language } = useLanguage();
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -38,11 +44,26 @@ export function CitySelector() {
     window.location.href = city.whatsappLink;
   };
 
+  const handleWhatsappContact = () => {
+    window.location.href = "https://wa.me/212649076758";
+  };
+
+  if (isWhatsappContact) {
+    return (
+      <button 
+        className={buttonClassName}
+        onClick={handleWhatsappContact}
+      >
+        {buttonText || t("contact_whatsapp")}
+      </button>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button className="btn-primary px-8 py-4 text-lg">
-          {t("hero_cta_primary")}
+        <button className={buttonClassName}>
+          {buttonText || t("hero_cta_primary")}
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] bg-white">
