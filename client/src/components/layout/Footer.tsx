@@ -15,7 +15,7 @@ const Footer = () => {
               {t("footer_about")}
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-rayoblue transition-colors">
+              <a href="https://www.instagram.com/rayosport.ma/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-rayoblue transition-colors">
                 <FaInstagram size={24} />
               </a>
               <a href="#" className="text-gray-400 hover:text-rayoblue transition-colors">
