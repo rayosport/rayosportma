@@ -7,6 +7,7 @@ import FaqSectionComponent from "@/components/sections/FaqSection";
 import RulesSectionComponent from "@/components/sections/RulesSection";
 import { useNav } from "@/hooks/use-intersection";
 import { FiUsers, FiCalendar, FiActivity, FiAward } from "react-icons/fi";
+import { CitySelector } from "@/components/ui/CitySelector";
 
 // Hero section
 const HeroSection = () => {
@@ -23,7 +24,7 @@ const HeroSection = () => {
             {t("hero_subtitle")}
           </p>
           <div className="flex flex-wrap gap-5">
-            <button className="btn-primary px-8 py-4 text-lg">{t("hero_cta_primary")}</button>
+            <CitySelector />
             <button className="btn-outline px-8 py-4 text-lg">{t("hero_cta_secondary")}</button>
           </div>
           
