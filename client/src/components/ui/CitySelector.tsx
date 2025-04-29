@@ -41,20 +41,22 @@ export function CitySelector() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="default" className="w-full">
-          {t('join_match')}
-        </Button>
+        <button className="btn-primary px-8 py-4 text-lg">
+          {t("hero_cta_primary")}
+        </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-white">
         <DialogHeader>
-          <DialogTitle>{t('select_city')}</DialogTitle>
+          <DialogTitle className="text-2xl font-bold text-gray-800">
+            {t('select_city')}
+          </DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           {CITIES[language].map((city) => (
             <Button
               key={city.id}
               variant="outline"
-              className="w-full justify-start"
+              className="w-full justify-start py-4 text-lg hover:bg-gray-100"
               onClick={() => handleCitySelect(city)}
             >
               {city.name}
