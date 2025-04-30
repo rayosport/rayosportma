@@ -396,7 +396,7 @@ const FaqSection = () => {
               {language === 'ar' ? "هل لديك أسئلة أخرى؟" : "Tu as d'autres questions ?"}
             </p>
             <a 
-              href="https://wa.me/212522000000" 
+              href="https://wa.me/212649076758" 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn-primary inline-flex items-center"
