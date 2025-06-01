@@ -8,13 +8,10 @@ import Loader from "./components/ui/Loader";
 import Header from "./components/layout/Header";
 import { useEffect, useState } from "react";
 
-// Base path for GitHub Pages
-const BASE_PATH = '/rayosportma';
-
 function Router() {
   return (
     <Switch>
-      <Route path={`${BASE_PATH}/`} component={Home} />
+      <Route path="/" component={Home} />
       <Route component={NotFound} />
     </Switch>
   );

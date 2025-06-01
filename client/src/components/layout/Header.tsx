@@ -25,6 +25,7 @@ const Header = () => {
     { id: "about", label: t("nav_about") },
     { id: "how-it-works", label: t("nav_how") },
     { id: "rules", label: t("nav_rules") },
+    { id: "leaderboard", label: t("nav_leaderboard") },
     { id: "faq", label: t("nav_faq") },
   ];
 

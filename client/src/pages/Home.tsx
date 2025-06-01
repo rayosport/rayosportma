@@ -5,9 +5,9 @@ import RevealAnimation from "@/components/ui/RevealAnimation";
 import Footer from "@/components/layout/Footer";
 import FaqSectionComponent from "@/components/sections/FaqSection";
 import RulesSectionComponent from "@/components/sections/RulesSection";
+import LeaderboardSectionComponent from "@/components/sections/LeaderboardSection";
 import { useNav } from "@/hooks/use-intersection";
 import { FiUsers, FiCalendar, FiActivity, FiAward } from "react-icons/fi";
-import { CitySelector } from "@/components/ui/CitySelector";
 
 // Hero section
 const HeroSection = () => {
@@ -24,7 +24,7 @@ const HeroSection = () => {
             {t("hero_subtitle")}
           </p>
           <div className="flex flex-wrap gap-5">
-            <CitySelector />
+            <button className="btn-primary px-8 py-4 text-lg">{t("hero_cta_primary")}</button>
             <button className="btn-outline px-8 py-4 text-lg">{t("hero_cta_secondary")}</button>
           </div>
           
@@ -149,12 +149,17 @@ const HowItWorksSection = () => {
         
         <div className="mt-16 text-center">
           <RevealAnimation>
-            <CitySelector buttonText={t("how_cta_button")} />
+            <button className="btn-primary px-8 py-4 text-lg">{t("how_cta_button")}</button>
           </RevealAnimation>
         </div>
       </div>
     </section>
   );
+};
+
+// Leaderboard Section
+const LeaderboardSection = () => {
+  return <LeaderboardSectionComponent />;
 };
 
 // Formats & Rules Section
@@ -181,19 +186,14 @@ const CtaSection = () => {
           </p>
           
           <div className="flex flex-wrap gap-5 justify-center">
-            <CitySelector 
-              buttonText={t("cta_whatsapp")} 
-              buttonClassName="btn-white px-8 py-4 text-lg flex items-center"
-            />
-            <a 
-              href="https://www.instagram.com/rayosport.ma/" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="btn-outline-white px-8 py-4 text-lg flex items-center"
-            >
+            <button className="btn-white px-8 py-4 text-lg flex items-center">
+              <span className="mr-2">{t("cta_whatsapp")}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            </button>
+            <button className="btn-outline-white px-8 py-4 text-lg flex items-center">
               <span className="mr-2">{t("cta_instagram")}</span>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-            </a>
+            </button>
           </div>
           
           <p className="mt-10 opacity-70 text-sm">
@@ -218,6 +218,7 @@ const Home = () => {
     <main className="overflow-hidden">
       <HeroSection />
       <AboutSection />
+      <LeaderboardSection />
       <HowItWorksSection />
       <RulesSection />
       <FaqSection />

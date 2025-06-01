@@ -1,7 +1,6 @@
 import { useLanguage } from "@/hooks/use-language";
 import RevealAnimation from "@/components/ui/RevealAnimation";
 import AnimatedLine from "@/components/ui/AnimatedLine";
-import { CitySelector } from "@/components/ui/CitySelector";
 
 const HeroSection = () => {
   const { t } = useLanguage();
@@ -68,12 +67,6 @@ const HeroSection = () => {
                   <span className="text-rayoblue font-bold">+2,500</span> {t("hero_community_text")}
                 </p>
               </div>
-            </div>
-          </RevealAnimation>
-          
-          <RevealAnimation delay={0.8}>
-            <div className="max-w-md mx-auto">
-              <CitySelector />
             </div>
           </RevealAnimation>
         </div>

@@ -8,6 +8,7 @@ export const translations: Record<Language, TranslationRecord> = {
     "nav_about": "À propos",
     "nav_how": "Comment ça marche",
     "nav_rules": "Formats & Règles",
+    "nav_leaderboard": "Classement",
     "nav_faq": "FAQ",
     "nav_join": "Rejoindre",
     
@@ -148,6 +149,7 @@ export const translations: Record<Language, TranslationRecord> = {
     "nav_about": "من نحن",
     "nav_how": "كيف يعمل",
     "nav_rules": "الأنظمة والقوانين",
+    "nav_leaderboard": "لوحة الصدارة",
     "nav_faq": "الأسئلة الشائعة",
     "nav_join": "انضم إلينا",
     
