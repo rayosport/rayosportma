@@ -107,7 +107,10 @@ const LeaderboardSection = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(GOOGLE_SHEETS_CONFIG.csvUrl);
+      // Récupérer des données fraîches à chaque requête
+      const response = await fetch(GOOGLE_SHEETS_CONFIG.csvUrl, {
+        cache: 'no-store'
+      });
       
       if (!response.ok) {
         throw new Error(`Erreur HTTP: ${response.status}`);
@@ -327,14 +330,7 @@ const LeaderboardSection = () => {
           </div>
         </RevealAnimation>
 
-        {/* Explication Team Wins */}
-        <RevealAnimation delay={0.3}>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-            <p className="text-blue-800 text-center">
-              <strong>{content.teamWins}:</strong> {content.teamWinsDesc}
-            </p>
-          </div>
-        </RevealAnimation>
+
 
         {/* Tableau des scores - Desktop */}
         <RevealAnimation delay={0.4}>
@@ -486,7 +482,7 @@ const LeaderboardSection = () => {
         {/* Statistiques */}
         {filteredPlayers.length > 0 && (
           <RevealAnimation delay={0.6}>
-            <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 text-center">
                 <div className="text-2xl md:text-3xl font-bold text-blue-600">{filteredPlayers.length}</div>
                 <div className="text-gray-600 text-sm md:text-base">Joueurs actifs</div>
@@ -503,12 +499,7 @@ const LeaderboardSection = () => {
                 </div>
                 <div className="text-gray-600 text-sm md:text-base">Total des passes</div>
               </div>
-              <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 text-center">
-                <div className="text-2xl md:text-3xl font-bold text-orange-600">
-                  {filteredPlayers.reduce((sum, player) => sum + player.teamWins, 0)}
-                </div>
-                <div className="text-gray-600 text-sm md:text-base">Total Team Wins</div>
-              </div>
+
             </div>
           </RevealAnimation>
         )}

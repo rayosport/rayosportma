@@ -81,7 +81,13 @@ const Header = () => {
           </button>
 
           {/* Join button */}
-          <button className="btn-primary">
+          <button 
+            className="btn-primary"
+            onClick={() => {
+              // Trigger WhatsApp modal
+              window.dispatchEvent(new CustomEvent('openWhatsAppModal'));
+            }}
+          >
             {t("nav_join")}
           </button>
         </div>
