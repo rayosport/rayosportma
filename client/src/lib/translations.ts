@@ -17,7 +17,7 @@ export const translations: Record<Language, TranslationRecord> = {
     "hero_title_highlight": "Deviens une Légende.",
     "hero_subtitle": "Rejoins la révolution du football communautaire au Maroc avec des matchs 5vs5 et des tournois à 3 équipes.",
     "hero_cta_primary": "Rejoindre un match",
-    "hero_cta_secondary": "Télécharger l'app",
+    "hero_cta_secondary": "Matchs à venir",
     "hero_players_text": "joueurs déjà inscrits",
     
     // About Section

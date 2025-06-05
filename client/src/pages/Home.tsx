@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import FaqSectionComponent from "@/components/sections/FaqSection";
 import RulesSectionComponent from "@/components/sections/RulesSection";
 import LeaderboardSectionComponent from "@/components/sections/LeaderboardSection";
+import UpcomingMatchesSectionComponent from "@/components/sections/UpcomingMatchesSection";
 import { useNav } from "@/hooks/use-intersection";
 import { FiUsers, FiCalendar, FiActivity, FiAward, FiX } from "react-icons/fi";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,11 +16,24 @@ const HeroSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
   const { t } = useLanguage();
   
   return (
-    <section id="hero" className="relative min-h-screen flex items-center bg-jetblack text-white">
-      <div className="container mx-auto px-4">
+    <section id="hero" className="relative min-h-screen flex items-center bg-jetblack text-white overflow-hidden">
+      {/* Background image with overlay */}
+      <div 
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: `url('https://images.unsplash.com/photo-1553778263-73a83bab9b0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        <div className="absolute inset-0 bg-jetblack/40"></div>
+      </div>
+      
+      <div className="container mx-auto px-4 relative z-10">
         <RevealAnimation>
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            {t("hero_title")} <span className="text-rayoblue">{t("hero_title_highlight")}</span>
+            {t("hero_title")} <span style={{color: '#ecd71b'}}>{t("hero_title_highlight")}</span>
           </h1>
           <p className="text-xl md:text-2xl max-w-3xl mb-10">
             {t("hero_subtitle")}
@@ -34,10 +48,10 @@ const HeroSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
             <button 
               className="btn-outline px-8 py-4 text-lg"
               onClick={() => {
-                // Scroll to leaderboard section
-                const leaderboardSection = document.getElementById('leaderboard');
-                if (leaderboardSection) {
-                  leaderboardSection.scrollIntoView({ behavior: 'smooth' });
+                // Scroll to upcoming matches section
+                const upcomingMatchesSection = document.getElementById('upcoming-matches');
+                if (upcomingMatchesSection) {
+                  upcomingMatchesSection.scrollIntoView({ behavior: 'smooth' });
                 }
               }}
             >
@@ -55,7 +69,7 @@ const HeroSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
       </div>
       
       {/* Football field background effect */}
-      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#121212] to-transparent"></div>
+      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#121212] to-transparent z-10"></div>
     </section>
   );
 };
@@ -65,40 +79,49 @@ const AboutSection = () => {
   const { t } = useLanguage();
   
   return (
-    <section id="about" className="py-24 bg-white">
+    <section id="about" className="py-24 bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <RevealAnimation>
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">{t("about_title")}</h2>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-rayoblue to-gray-800 bg-clip-text text-transparent">{t("about_title")}</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               {t("about_subtitle")}
             </p>
           </RevealAnimation>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-10">
+        <div className="grid md:grid-cols-3 gap-8">
           <RevealAnimation delay={0.1}>
-            <div className="bg-gray-50 p-8 rounded-xl shadow-sm">
-              <h3 className="text-xl font-bold mb-4 text-rayoblue">{t("about_concept_title")}</h3>
-              <p className="text-gray-700">
+            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/50 hover:border-rayoblue/30 group">
+              <div className="w-16 h-16 bg-gradient-to-br from-rayoblue to-blue-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <span className="text-2xl font-bold text-white">🎯</span>
+              </div>
+              <h3 className="text-xl font-bold mb-4 text-gray-900">{t("about_concept_title")}</h3>
+              <p className="text-gray-600 leading-relaxed">
                 {t("about_concept_text")}
               </p>
             </div>
           </RevealAnimation>
           
           <RevealAnimation delay={0.2}>
-            <div className="bg-gray-50 p-8 rounded-xl shadow-sm">
-              <h3 className="text-xl font-bold mb-4 text-rayoblue">{t("about_mission_title")}</h3>
-              <p className="text-gray-700">
+            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/50 hover:border-rayoblue/30 group">
+              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <span className="text-2xl font-bold text-white">🚀</span>
+              </div>
+              <h3 className="text-xl font-bold mb-4 text-gray-900">{t("about_mission_title")}</h3>
+              <p className="text-gray-600 leading-relaxed">
                 {t("about_mission_text")}
               </p>
             </div>
           </RevealAnimation>
           
           <RevealAnimation delay={0.3}>
-            <div className="bg-gray-50 p-8 rounded-xl shadow-sm">
-              <h3 className="text-xl font-bold mb-4 text-rayoblue">{t("about_vision_title")}</h3>
-              <p className="text-gray-700">
+            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/50 hover:border-rayoblue/30 group">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <span className="text-2xl font-bold text-white">✨</span>
+              </div>
+              <h3 className="text-xl font-bold mb-4 text-gray-900">{t("about_vision_title")}</h3>
+              <p className="text-gray-600 leading-relaxed">
                 {t("about_vision_text")}
               </p>
             </div>
@@ -117,31 +140,35 @@ const HowItWorksSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
     {
       icon: <FiUsers className="w-8 h-8" />,
       title: t("how_step1_title"),
-      description: t("how_step1_description")
+      description: t("how_step1_description"),
+      color: "from-blue-500 to-rayoblue"
     },
     {
       icon: <FiCalendar className="w-8 h-8" />,
       title: t("how_step2_title"),
-      description: t("how_step2_description")
+      description: t("how_step2_description"),
+      color: "from-green-500 to-emerald-600"
     },
     {
       icon: <FiActivity className="w-8 h-8" />,
       title: t("how_step3_title"),
-      description: t("how_step3_description")
+      description: t("how_step3_description"),
+      color: "from-purple-500 to-indigo-600"
     },
     {
       icon: <FiAward className="w-8 h-8" />,
       title: t("how_step4_title"),
-      description: t("how_step4_description")
+      description: t("how_step4_description"),
+      color: "from-orange-500 to-red-600"
     }
   ];
   
   return (
-    <section id="how-it-works" className="py-24 bg-gray-50">
+    <section id="how-it-works" className="py-24 bg-white">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <RevealAnimation>
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">{t("how_title")}</h2>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-rayoblue to-gray-800 bg-clip-text text-transparent">{t("how_title")}</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               {t("how_subtitle")}
             </p>
@@ -151,14 +178,20 @@ const HowItWorksSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((step, index) => (
             <RevealAnimation key={index} delay={index * 0.1}>
-              <div className="bg-white p-8 rounded-xl shadow-sm flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-rayoblue bg-opacity-10 flex items-center justify-center text-rayoblue mb-6">
-                  {step.icon}
+              <div className="relative bg-gradient-to-br from-white to-gray-50 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/50 hover:border-rayoblue/30 group overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
+                  <div className={`w-full h-full bg-gradient-to-br ${step.color} rounded-full transform translate-x-8 -translate-y-8`}></div>
                 </div>
-                <h3 className="text-xl font-bold mb-3">{step.title}</h3>
-                <p className="text-gray-700">
-                  {step.description}
-                </p>
+                <div className="relative z-10 flex flex-col items-center text-center">
+                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                    {step.icon}
+                  </div>
+                  <div className="w-8 h-1 bg-gradient-to-r from-transparent via-rayoblue to-transparent mb-4"></div>
+                  <h3 className="text-xl font-bold mb-4 text-gray-900">{step.title}</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    {step.description}
+                  </p>
+                </div>
               </div>
             </RevealAnimation>
           ))}
@@ -167,16 +200,22 @@ const HowItWorksSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
         <div className="mt-16 text-center">
           <RevealAnimation>
             <button 
-              className="btn-primary px-8 py-4 text-lg"
+              className="relative overflow-hidden bg-gradient-to-r from-rayoblue to-blue-600 text-white px-10 py-4 text-lg rounded-2xl hover:from-rayoblue/90 hover:to-blue-600/90 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl font-semibold"
               onClick={onJoinClick}
             >
-              {t("how_cta_button")}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+              <span className="relative z-10">{t("how_cta_button")}</span>
             </button>
           </RevealAnimation>
         </div>
       </div>
     </section>
   );
+};
+
+// Upcoming Matches Section
+const UpcomingMatchesSection = () => {
+  return <UpcomingMatchesSectionComponent />;
 };
 
 // Leaderboard Section
@@ -199,33 +238,42 @@ const CtaSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
   const { t } = useLanguage();
   
   return (
-    <section id="cta" className="py-24 bg-rayoblue text-white">
-      <div className="container mx-auto px-4 text-center">
+    <section id="cta" className="py-24 bg-gradient-to-br from-rayoblue via-blue-600 to-indigo-700 text-white relative overflow-hidden">
+      <div className="absolute inset-0 bg-black/20"></div>
+      <div className="absolute top-0 left-0 w-full h-full">
+        <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
+        <div className="absolute bottom-10 right-10 w-48 h-48 bg-white/5 rounded-full blur-2xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-white/5 to-transparent rounded-full blur-3xl"></div>
+      </div>
+      
+      <div className="container mx-auto px-4 text-center relative z-10">
         <RevealAnimation>
           <h2 className="text-3xl md:text-5xl font-bold mb-6">{t("cta_title")}</h2>
           <p className="text-xl max-w-3xl mx-auto mb-10 opacity-90">
             {t("cta_subtitle")}
           </p>
           
-          <div className="flex flex-wrap gap-5 justify-center">
+          <div className="flex flex-wrap gap-6 justify-center">
             <button 
-              className="btn-white px-8 py-4 text-lg flex items-center"
+              className="relative overflow-hidden bg-white text-rayoblue px-8 py-4 text-lg rounded-2xl font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3 group"
               onClick={onJoinClick}
             >
-              <span className="mr-2">{t("cta_whatsapp")}</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <span className="relative z-10">{t("cta_whatsapp")}</span>
+              <svg className="relative z-10 group-hover:rotate-12 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
             </button>
             <button 
-              className="btn-outline-white px-8 py-4 text-lg flex items-center"
+              className="relative overflow-hidden border-2 border-white/30 text-white px-8 py-4 text-lg rounded-2xl font-semibold hover:bg-white/10 transition-all duration-300 transform hover:scale-105 flex items-center gap-3 group backdrop-blur-sm"
               onClick={() => window.open('https://www.instagram.com/rayosport.ma/', '_blank')}
             >
-              <span className="mr-2">{t("cta_instagram")}</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+              <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <span className="relative z-10">{t("cta_instagram")}</span>
+              <svg className="relative z-10 group-hover:rotate-12 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
             </button>
           </div>
           
           <p 
-            className="mt-10 opacity-70 text-sm cursor-pointer hover:opacity-100 transition-opacity"
+            className="mt-10 opacity-70 text-sm cursor-pointer hover:opacity-100 transition-all duration-300 hover:scale-105 inline-block"
             onClick={() => window.open('https://www.instagram.com/rayosport.ma/', '_blank')}
           >
             {t("cta_button_app")}
@@ -243,59 +291,71 @@ const WhatsAppGroupsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: ()
   const whatsappGroups = [
     {
       city: "Rayo Casablanca",
-      link: "https://chat.whatsapp.com/L6ePdMmtGrUIiF4VFEQ6eA"
+      link: "https://chat.whatsapp.com/L6ePdMmtGrUIiF4VFEQ6eA",
+      color: "from-blue-500 to-rayoblue"
     },
     {
       city: "Rayo Berrechid", 
-      link: "https://chat.whatsapp.com/KHcdMSbsph07VZaX8NnrPN"
+      link: "https://chat.whatsapp.com/KHcdMSbsph07VZaX8NnrPN",
+      color: "from-green-500 to-emerald-600"
     },
     {
       city: "Rayo Bouskoura",
-      link: "https://chat.whatsapp.com/FAolLQ1PMkn7ItK2v2ZqQo"
+      link: "https://chat.whatsapp.com/FAolLQ1PMkn7ItK2v2ZqQo",
+      color: "from-purple-500 to-indigo-600"
     },
     {
       city: "Rayo Marrakech",
-      link: "https://chat.whatsapp.com/C33iLj6NFeq5yVH1Vx1BHf"
+      link: "https://chat.whatsapp.com/C33iLj6NFeq5yVH1Vx1BHf",
+      color: "from-orange-500 to-red-600"
     }
   ];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg bg-gradient-to-br from-white to-gray-50 border-none shadow-2xl rounded-3xl">
         <DialogHeader>
-          <DialogTitle className="text-center text-xl font-bold text-rayoblue">
+          <DialogTitle className="text-center text-2xl font-bold bg-gradient-to-r from-rayoblue to-blue-600 bg-clip-text text-transparent mb-2">
             Rejoindre un groupe WhatsApp
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 p-4">
-          <p className="text-center text-gray-600 mb-6">
+        <div className="space-y-6 p-6">
+          <p className="text-center text-gray-600 mb-8">
             Choisissez votre ville pour rejoindre le groupe WhatsApp
           </p>
           {whatsappGroups.map((group, index) => (
-            <div key={index} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.515z"/>
-                  </svg>
-                </div>
-                <span className="font-medium text-gray-900">{group.city}</span>
+            <div key={index} className="relative bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/50 hover:border-green-400/30 group overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
+                <div className={`w-full h-full bg-gradient-to-br ${group.color} rounded-full transform translate-x-8 -translate-y-8`}></div>
               </div>
-              <button
-                onClick={() => {
-                  if (group.link !== "#") {
-                    window.open(group.link, '_blank');
-                  }
-                }}
-                disabled={group.link === "#"}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  group.link === "#" 
-                    ? "bg-gray-200 text-gray-500 cursor-not-allowed" 
-                    : "bg-green-600 text-white hover:bg-green-700"
-                }`}
-              >
-                {group.link === "#" ? "Bientôt" : "Rejoindre"}
-              </button>
+              <div className="flex items-center justify-between relative z-10">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.515z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <span className="font-bold text-gray-900 text-lg">{group.city}</span>
+                    <div className="w-12 h-1 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full mt-1"></div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    if (group.link !== "#") {
+                      window.open(group.link, '_blank');
+                    }
+                  }}
+                  disabled={group.link === "#"}
+                  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                    group.link === "#" 
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed" 
+                      : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-xl"
+                  }`}
+                >
+                  {group.link === "#" ? "Bientôt" : "Rejoindre"}
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -336,6 +396,7 @@ const Home = () => {
   return (
     <main className="overflow-hidden">
       <HeroSection onJoinClick={handleJoinClick} />
+      <UpcomingMatchesSection />
       <LeaderboardSection />
       <AboutSection />
       <HowItWorksSection onJoinClick={handleJoinClick} />

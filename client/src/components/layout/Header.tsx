@@ -22,6 +22,7 @@ const Header = () => {
   };
 
   const navLinks = [
+    { id: "upcoming-matches", label: "Matchs à venir" },
     { id: "about", label: t("nav_about") },
     { id: "how-it-works", label: t("nav_how") },
     { id: "rules", label: t("nav_rules") },
@@ -34,7 +35,7 @@ const Header = () => {
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
         isScrolled
           ? "bg-white shadow-md py-3 text-black"
-          : "bg-transparent py-5 text-white"
+          : "bg-black/20 backdrop-blur-sm py-5 text-white"
       }`}
       dir={direction}
     >
@@ -124,7 +125,14 @@ const Header = () => {
               >
                 {language === "fr" ? "العربية" : "Français"}
               </button>
-              <button className="btn-primary mt-3">
+              <button 
+                className="btn-primary mt-3"
+                onClick={() => {
+                  // Trigger WhatsApp modal
+                  window.dispatchEvent(new CustomEvent('openWhatsAppModal'));
+                  setIsMobileMenuOpen(false);
+                }}
+              >
                 {t("nav_join")}
               </button>
             </nav>
