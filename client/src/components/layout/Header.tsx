@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/hooks/use-language";
 import { useNavContext } from "@/context/NavContext";
+import { trackEvent } from "@/lib/analytics";
 
 const Header = () => {
   const { t, setLanguage, language, direction } = useLanguage();
@@ -85,6 +86,7 @@ const Header = () => {
           <button 
             className="btn-primary"
             onClick={() => {
+              trackEvent('join_click', 'user_engagement', 'header_navigation');
               // Trigger WhatsApp modal
               window.dispatchEvent(new CustomEvent('openWhatsAppModal'));
             }}
