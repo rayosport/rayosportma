@@ -16,29 +16,35 @@ const AboutSection = () => {
           </p>
         </RevealAnimation>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-12">
+        <div className="flex flex-col md:flex-row gap-8 mt-12">
           <RevealAnimation delay={0.2}>
-            <div className="rounded-lg overflow-hidden shadow-lg">
-              <img 
-                src="https://images.unsplash.com/photo-1556056504-5c7696c4c28d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8Zm9vdGJhbGx8ZW58MHx8MHx8&auto=format&fit=crop&w=800&q=60" 
-                alt="Football match"
-                className="w-full h-80 object-cover"
-              />
+            <div className="bg-gray-50 rounded-lg p-8 shadow-md hover:shadow-xl transition-all flex-1 flex flex-col">
+              <h3 className="text-2xl font-bold mb-4 text-rayoblue">
+                {t("about_concept_title")}
+              </h3>
+              <p className="text-gray-700 flex-grow">
+                {t("about_concept_text")}
+              </p>
+            </div>
+          </RevealAnimation>
+          
+          <RevealAnimation delay={0.3}>
+            <div className="bg-gray-50 rounded-lg p-8 shadow-md hover:shadow-xl transition-all flex-1 flex flex-col">
+              <h3 className="text-2xl font-bold mb-4 text-rayoblue">
+                {t("about_mission_title")}
+              </h3>
+              <p className="text-gray-700 flex-grow">
+                {t("about_mission_text")}
+              </p>
             </div>
           </RevealAnimation>
           
           <RevealAnimation delay={0.4}>
-            <div className="flex flex-col justify-center h-full">
-              <h3 className="text-2xl font-bold mb-4 text-rayoblue">
-                {t("about_mission_title")}
-              </h3>
-              <p className="text-gray-700 mb-6">
-                {t("about_mission_text")}
-              </p>
+            <div className="bg-gray-50 rounded-lg p-8 shadow-md hover:shadow-xl transition-all flex-1 flex flex-col">
               <h3 className="text-2xl font-bold mb-4 text-rayoblue">
                 {t("about_vision_title")}
               </h3>
-              <p className="text-gray-700">
+              <p className="text-gray-700 flex-grow">
                 {t("about_vision_text")}
               </p>
             </div>

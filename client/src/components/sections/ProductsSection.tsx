@@ -44,7 +44,7 @@ const ProductsSection = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {products.map((product, index) => (
               <RevealAnimation key={index} delay={product.delay}>
-                <div className="bg-neutral-100 rounded-xl overflow-hidden hover:scale-105 transition-transform duration-300">
+                <div className="bg-neutral-100 rounded-xl overflow-hidden hover:scale-105 transition-transform duration-300 h-full flex flex-col">
                   <div className="h-60 overflow-hidden">
                     <img
                       src={product.image}
@@ -52,10 +52,10 @@ const ProductsSection = () => {
                       className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                     />
                   </div>
-                  <div className="p-6">
+                  <div className="p-6 flex-grow flex flex-col">
                     <h3 className="text-2xl font-bold mb-2">{product.title}</h3>
-                    <p className="text-neutral-600 mb-4">{product.description}</p>
-                    <a href="#" className="text-primary font-semibold flex items-center">
+                    <p className="text-neutral-600 mb-4 flex-grow">{product.description}</p>
+                    <a href="#" className="text-primary font-semibold flex items-center mt-auto">
                       <span>{t("En savoir plus")}</span>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"

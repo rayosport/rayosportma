@@ -81,14 +81,14 @@ const FeaturesSection = () => {
               </RevealAnimation>
             </div>
             
-            <div className="space-y-8">
+            <div className="grid grid-cols-1 gap-6">
               <RevealAnimation delay={0.2}>
                 {features.map((feature, index) => (
                   <div
                     key={index}
-                    className="flex items-start border-l-4 border-primary pl-6 hover:bg-white/5 p-4 rounded-r-lg transition-colors"
+                    className="flex items-start border-l-4 border-primary pl-6 hover:bg-white/5 p-4 rounded-r-lg transition-colors h-full"
                   >
-                    <div>
+                    <div className="flex-grow">
                       <h3 className="text-2xl font-bold mb-2">{feature.title}</h3>
                       <p className="text-neutral-300">{feature.description}</p>
                     </div>

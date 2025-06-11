@@ -43,10 +43,10 @@ const HowItWorksSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
           {steps.map((step, index) => (
             <RevealAnimation key={index} delay={0.2 + index * 0.1}>
-              <div className="bg-white rounded-lg p-8 shadow-md hover:shadow-xl transition-all text-center">
+              <div className="bg-white rounded-lg p-8 shadow-md hover:shadow-xl transition-all text-center h-full flex flex-col">
                 {step.icon}
-                <h3 className="text-xl font-bold mb-3">{step.title}</h3>
-                <p className="text-gray-600">{step.description}</p>
+                <h3 className="text-xl font-bold mb-3 flex-shrink-0">{step.title}</h3>
+                <p className="text-gray-600 flex-grow">{step.description}</p>
               </div>
             </RevealAnimation>
           ))}

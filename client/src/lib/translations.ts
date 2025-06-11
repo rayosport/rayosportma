@@ -13,9 +13,9 @@ export const translations: Record<Language, TranslationRecord> = {
     "nav_join": "Rejoindre",
     
     // Hero Section
-    "hero_title": "Joue. Brille.",
-    "hero_title_highlight": "Deviens une Légende.",
-    "hero_subtitle": "Rejoins la révolution du football communautaire au Maroc avec des matchs 5vs5 et des tournois à 3 équipes.",
+    "hero_title": "Jouez au foot",
+    "hero_title_highlight": "quand ça vous arrange !",
+    "hero_subtitle": "Envie de foot sans engagement ? Réservez un match quand vous voulez !",
     "hero_cta_primary": "Rejoindre un match",
     "hero_cta_secondary": "Matchs à venir",
     "hero_players_text": "joueurs déjà inscrits",

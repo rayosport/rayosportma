@@ -78,13 +78,13 @@ const ConceptSection = () => {
                   {t("Rayosport représente une fusion parfaite entre innovation technologique et excellence sportive. Notre concept redéfinit les limites de la performance tout en offrant une expérience utilisateur incomparable.")}
                 </p>
                 
-                <div className="space-y-6 mt-8">
+                <div className="grid grid-cols-1 gap-6 mt-8">
                   {conceptFeatures.map((feature, index) => (
-                    <div key={index} className="flex items-start hover:scale-105 transition-transform duration-300">
+                    <div key={index} className="flex items-start hover:scale-105 transition-transform duration-300 h-full">
                       <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary flex-shrink-0">
                         {feature.icon}
                       </div>
-                      <div className="ml-4">
+                      <div className="ml-4 flex-grow">
                         <h4 className="text-xl font-semibold mb-2">{feature.title}</h4>
                         <p className="text-neutral-600">{feature.description}</p>
                       </div>

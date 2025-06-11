@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "@/hooks/use-language";
 import RevealAnimation from "@/components/ui/RevealAnimation";
 import { FaTrophy, FaMedal, FaAward, FaUser, FaGamepad } from "react-icons/fa";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 // Types pour les données du leaderboard
 interface Player {
@@ -352,7 +353,7 @@ const LeaderboardSection = () => {
                 </thead>
                 <tbody>
                   {filteredPlayers.length > 0 ? (
-                    filteredPlayers.slice(0, 50).map((player, index) => (
+                    filteredPlayers.slice(0, showMorePlayers ? 50 : 10).map((player, index) => (
                       <tr 
                         key={`${player.username}-${index}`}
                         className={`border-b border-gray-100 hover:bg-blue-50 transition-colors ${
@@ -477,7 +478,29 @@ const LeaderboardSection = () => {
           )}
         </div>
 
-
+        {/* Bouton Voir plus/moins - Desktop uniquement */}
+        {filteredPlayers.length > 10 && (
+          <RevealAnimation delay={0.5}>
+            <div className="hidden md:flex justify-center mt-6">
+              <button
+                onClick={() => setShowMorePlayers(!showMorePlayers)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200 flex items-center gap-2"
+              >
+                {showMorePlayers ? (
+                  <>
+                    <ChevronUp size={16} />
+                    {content.showLess}
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown size={16} />
+                    {content.showMore}
+                  </>
+                )}
+              </button>
+            </div>
+          </RevealAnimation>
+        )}
 
         {/* Statistiques */}
         {filteredPlayers.length > 0 && (

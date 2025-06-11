@@ -6,7 +6,7 @@ const HeroSection = () => {
   const { t } = useLanguage();
 
   return (
-    <section id="hero" className="relative min-h-screen flex items-center bg-jetblack overflow-hidden">
+    <section id="hero" className="relative min-h-screen flex items-center bg-jetblack overflow-hidden pt-24 md:pt-0">
       {/* Background elements */}
       <div className="absolute inset-0 w-full h-full">
         <div className="absolute opacity-30 right-0 bottom-0 w-3/4 md:w-1/2 h-full">
@@ -27,13 +27,13 @@ const HeroSection = () => {
       <div className="container relative z-10">
         <div className="max-w-3xl mx-auto md:mx-0">
           <RevealAnimation>
-            <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold text-white mb-6 leading-tight">
               {t("hero_title")} <span className="text-rayoblue">{t("hero_title_highlight")}</span>
             </h1>
           </RevealAnimation>
           
           <RevealAnimation delay={0.2}>
-            <p className="text-xl md:text-2xl text-gray-300 mb-8">
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-8">
               {t("hero_subtitle")}
             </p>
           </RevealAnimation>
