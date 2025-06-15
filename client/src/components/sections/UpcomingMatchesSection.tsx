@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "@/hooks/use-language";
 import RevealAnimation from "@/components/ui/RevealAnimation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { FiCalendar, FiMapPin, FiClock, FiUsers, FiCheck, FiX, FiStar, FiRefreshCw, FiFilter } from "react-icons/fi";
+import { FiCalendar, FiMapPin, FiClock, FiUsers, FiCheck, FiX, FiStar, FiRefreshCw, FiFilter, FiTrendingUp, FiTarget, FiAward, FiZap, FiShield } from "react-icons/fi";
 import { TbBuildingStadium } from "react-icons/tb";
 import { trackEvent } from "@/lib/analytics";
 
@@ -44,6 +44,10 @@ interface Player {
   teamWins?: number;
   jerseyNumber?: number;
   team?: "Orange" | "Jaune" | "Blue";
+  attackRatio?: number;     // ATT from CSV
+  defenseRatio?: number;    // DEF from CSV
+  teamScore?: number;       // Team Score from CSV
+  soloScore?: number;       // Solo Score from CSV
 }
 
 interface TeamPlayer {
@@ -164,8 +168,150 @@ const UpcomingMatchesSection = () => {
   const [selectedCity, setSelectedCity] = useState<string>("All cities");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [showPlayerCard, setShowPlayerCard] = useState(false);
 
+  // Handler pour ouvrir la carte joueur
+  const handlePlayerClick = (player: Player) => {
+    setSelectedPlayer(player);
+    setShowPlayerCard(true);
+    trackEvent('player_card_view', 'interaction', player.username);
+  };
 
+  // FIFA Player Card Component
+  const FIFAPlayerCard = ({ player, onClose }: { player: Player; onClose: () => void }) => {
+    const getCardGradient = (score: number, rank: number) => {
+      // Gold theme for top 3 players
+      if (rank <= 3) return 'from-yellow-500 via-yellow-600 to-yellow-800';
+      
+      // Score-based colors for other players
+      if (score >= 8.5) return 'from-yellow-500 via-yellow-600 to-yellow-800';
+      if (score >= 7.5) return 'from-green-600 via-emerald-600 to-teal-800';
+      if (score >= 6.5) return 'from-blue-600 via-indigo-600 to-purple-800';
+      if (score >= 5.5) return 'from-purple-600 via-violet-600 to-pink-800';
+      return 'from-gray-600 via-slate-600 to-gray-800';
+    };
+
+    // Map our stats with full words instead of abbreviations
+    const baseStats = {
+      Matches: player.gamesPlayed || 0,
+      Score: parseFloat((player.globalScore || 0).toFixed(2)), // Show as 8.80 instead of 880
+      Goals: player.goals || 0,
+      Assists: player.assists || 0,
+      Wins: player.teamWins || 0,
+      Rank: player.ranking || 0
+    };
+
+    // Add advanced stats if available (percentages and decimal scores)
+    const advancedStats: Record<string, number> = {};
+    if (player.attackRatio !== undefined) {
+      advancedStats['Attack %'] = parseFloat((player.attackRatio || 0).toFixed(1));
+    }
+    if (player.defenseRatio !== undefined) {
+      advancedStats['Defense %'] = parseFloat((player.defenseRatio || 0).toFixed(1));
+    }
+    if (player.teamScore !== undefined) {
+      advancedStats['Team Score'] = parseFloat((player.teamScore || 0).toFixed(2));
+    }
+    if (player.soloScore !== undefined) {
+      advancedStats['Solo Score'] = parseFloat((player.soloScore || 0).toFixed(2));
+    }
+
+    const playerStats = { ...baseStats, ...advancedStats };
+
+    return (
+      <Dialog open={showPlayerCard} onOpenChange={() => onClose()}>
+        <DialogContent className="max-w-sm w-full mx-auto p-0 bg-transparent border-none flex items-center justify-center" aria-describedby="player-card-description">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Player Statistics for {player.username}</DialogTitle>
+          </DialogHeader>
+          <div className="relative flex items-center justify-center w-full">
+            {/* FIFA Card */}
+            <div className={`w-72 max-w-[90vw] sm:w-72 rounded-3xl bg-gradient-to-br ${getCardGradient(player.globalScore, player.ranking)} p-5 shadow-2xl text-white font-sans transform hover:scale-105 transition duration-300 ease-in-out relative`}>
+              
+              {/* Close Button */}
+              <button
+                onClick={onClose}
+                className="absolute top-2 right-2 w-8 h-8 bg-black/20 rounded-full flex items-center justify-center hover:bg-black/40 transition-colors z-10"
+              >
+                <FiX className="w-4 h-4 text-white" />
+              </button>
+
+              {/* Header with Rating only */}
+              <div className="flex justify-between items-center text-2xl font-extrabold drop-shadow-md">
+                <span>{(player.globalScore || 0).toFixed(2)}</span>
+              </div>
+
+              {/* Moroccan Flag and Rank */}
+              <div className="flex justify-between mt-3 mb-4">
+                <div className="h-6 w-10 rounded shadow-md relative overflow-hidden">
+                  {/* Red section */}
+                  <div className="absolute top-0 left-0 w-full h-full bg-red-600"></div>
+                  {/* Green pentagram star in center */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div className="h-6 px-2 bg-orange-500 rounded shadow-md flex items-center justify-center">
+                  <span className="text-xs font-bold text-white">#{player.ranking}</span>
+                </div>
+              </div>
+
+              {/* Player Avatar Area */}
+              <div className="relative h-40 flex justify-center items-center">
+                <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center">
+                  <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-3xl font-bold text-white">
+                      {player.fullName.split(' ')[0].charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+                {player.isNewPlayer && (
+                  <div className="absolute top-2 right-8 bg-yellow-400 text-black px-2 py-1 rounded-full text-xs font-bold">
+                    NEW
+                  </div>
+                )}
+              </div>
+
+              {/* Player Name */}
+              <div className="text-center text-lg mt-3 font-bold uppercase tracking-wide border-t border-white pt-2">
+                {player.username}
+              </div>
+
+              {/* Payment Status - Star for Subscription, Circles for others */}
+              <div className="flex justify-center mt-2">
+                {player.paymentStatus === "Subscription" ? (
+                  <svg className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                ) : (
+                  <div className={`w-3 h-3 rounded-full ${
+                    player.paymentStatus === "Payé" ? "bg-green-500" : 
+                    player.paymentStatus === "Nouveau joueur" ? "bg-green-500" : "bg-red-500"
+                  }`}></div>
+                )}
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm mt-4 bg-black bg-opacity-20 p-3 rounded-lg shadow-inner">
+                {Object.entries(playerStats).map(([key, val]) => (
+                  <div key={key} className="flex justify-between font-semibold">
+                    <span>{key}</span>
+                    <span>{val}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div id="player-card-description" className="sr-only">
+              FIFA-style player card showing detailed statistics for {player.username}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
 
   // Fonction pour obtenir l'icône du terrain (toujours un stade)
   const getFieldIcon = () => {
@@ -187,7 +333,7 @@ const UpcomingMatchesSection = () => {
       if (!line.trim()) continue;
 
       // Parser CSV en gérant les virgules dans les guillemets (comme "7,5")
-      const row = [];
+      const row: string[] = [];
       let current = '';
       let inQuotes = false;
       
@@ -215,7 +361,9 @@ const UpcomingMatchesSection = () => {
       const status = hasTerrain ? row[4]?.trim() : row[3]?.trim(); // Status
       const playerUsername = hasTerrain ? row[5]?.trim() : row[4]?.trim(); // PlayerUsername
       const matchCount = parseInt(hasTerrain ? row[6] : row[5]) || 0; // Match (games played)
-      const score = parseFloat(hasTerrain ? row[7] : row[6]) || 0; // Score
+      // Parse score with European decimal format handling (comma to dot conversion)
+      const rawScore = hasTerrain ? row[7] : row[6];
+      const score = rawScore ? parseFloat(rawScore.toString().replace(',', '.').trim()) || 0 : 0; // Score
       const rank = parseInt(hasTerrain ? row[8] : row[7]) || 0; // Rank
       
       // Extraire l'équipe, le numéro et le statut de paiement si ils existent
@@ -264,10 +412,42 @@ const UpcomingMatchesSection = () => {
         const timeStr = dateObj.toTimeString().slice(0, 5) + ' (60min)';
         
         const maxPlayers = 15;
+        // Function to convert cities to French
+        const convertToFrench = (cityName: string): string => {
+          const cityMap: Record<string, string> = {
+            'Casablanca': 'Casablanca',
+            'Rabat': 'Rabat',
+            'Fez': 'Fès',
+            'Marrakech': 'Marrakech',
+            'Tangier': 'Tanger',
+            'Agadir': 'Agadir',
+            'Meknes': 'Meknès',
+            'Oujda': 'Oujda',
+            'Kenitra': 'Kénitra',
+            'Tetouan': 'Tétouan',
+            'Safi': 'Safi',
+            'Mohammedia': 'Mohammedia',
+            'Khouribga': 'Khouribga',
+            'Beni Mellal': 'Béni Mellal',
+            'El Jadida': 'El Jadida',
+            'Taza': 'Taza',
+            'Nador': 'Nador',
+            'Settat': 'Settat',
+            'Larache': 'Larache',
+            'Ksar el Kebir': 'Ksar el-Kébir',
+            'Sale': 'Salé',
+            'Berrechid': 'Berrechid',
+            'Khemisset': 'Khémisset',
+            'Inezgane': 'Inezgane',
+            'Ait Melloul': 'Aït Melloul'
+          };
+          return cityMap[cityName] || cityName;
+        };
+
         const match: Match = {
           id: `MATCH_${gameId}`,
           gameId: gameId,
-          city: city || "Casablanca",
+          city: convertToFrench(city || "Casablanca"),
           field: terrain || "Terrain Rayo Sport",
           date: dateStr,
           time: timeStr,
@@ -322,6 +502,26 @@ const UpcomingMatchesSection = () => {
           finalPaymentStatus = isNewPlayer ? "Nouveau joueur" : "Non payé";
         }
 
+        // Parse additional statistics with proper decimal handling
+        const parseDecimal = (value: string | undefined) => {
+          if (!value || value.trim() === '') return undefined;
+          const cleanValue = value.toString().replace(',', '.').trim();
+          const parsed = parseFloat(cleanValue);
+          return isNaN(parsed) ? undefined : parsed;
+        };
+
+        // Extract Goals, Assists, and Wins from CSV if available
+        const extractStatByHeader = (statName: string) => {
+          const headerIndex = headers.findIndex(h => h.toLowerCase() === statName.toLowerCase());
+          if (headerIndex !== -1) {
+            const value = row[headerIndex]?.trim();
+            if (value && value !== '#REF!' && value !== '#N/A' && value !== '#ERROR!' && value !== '') {
+              return parseInt(value) || 0;
+            }
+          }
+          return 0;
+        };
+
         const player: Player = {
           id: `${gameId}_${playerUsername}`,
           username: playerUsername,
@@ -333,7 +533,16 @@ const UpcomingMatchesSection = () => {
           paymentStatus: finalPaymentStatus,
           isNewPlayer: isNewPlayer,
           team: teamName,
-          jerseyNumber: playerNumber ?? undefined
+          jerseyNumber: playerNumber ?? undefined,
+          // Extract Goals, Assists, Wins from CSV
+          goals: extractStatByHeader('goals'),
+          assists: extractStatByHeader('assists'),
+          teamWins: extractStatByHeader('wins'),
+          // New statistics from CSV columns (if available)
+          attackRatio: parseDecimal(row[13]),    // ATT column
+          defenseRatio: parseDecimal(row[14]),   // DEF column  
+          teamScore: parseDecimal(row[15]),      // Team Score column
+          soloScore: parseDecimal(row[16])       // Solo Score column
         };
         
         const match = matchesMap.get(gameId)!;
@@ -615,14 +824,16 @@ const UpcomingMatchesSection = () => {
                         <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
                         <div className="relative z-10">
                           <h4 className="font-bold text-xl mb-1">Équipe {team.name}</h4>
-                          <div className="text-sm opacity-90 font-medium">
-                            {team.players.length} joueurs • Moy: {
+                          <div className="text-sm opacity-90 font-medium flex flex-col sm:flex-row sm:items-center sm:justify-center gap-1 sm:gap-2">
+                            <span>{team.players.length} joueurs</span>
+                            <span className="hidden sm:inline">•</span>
+                            <span>Score Moyen: {
                               (selectedMatch.players
                                 .filter(p => p.team === team.name)
                                 .reduce((sum, p) => sum + p.globalScore, 0) / 
                                selectedMatch.players.filter(p => p.team === team.name).length
                               ).toFixed(1)
-                            }
+                            }</span>
                           </div>
                         </div>
                       </div>
@@ -648,25 +859,28 @@ const UpcomingMatchesSection = () => {
                         {team.players.map((player, playerIndex) => (
                           <div 
                             key={player.id}
-                            className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-3 hover:from-blue-50 hover:to-indigo-50 hover:shadow-md transition-all duration-200 border border-gray-200"
+                            className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-3 hover:from-blue-50 hover:to-indigo-50 hover:shadow-md transition-all duration-200 border border-gray-200 cursor-pointer hover:scale-[1.02]"
+                            onClick={() => {
+                              const fullPlayer = selectedMatch.players.find(p => p.id === player.id);
+                              if (fullPlayer) handlePlayerClick(fullPlayer);
+                            }}
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
-                                {/* Numéro de maillot avec style amélioré */}
-                                <div className={`w-10 h-10 ${team.color} text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg hover:scale-110 transition-transform duration-200`}>
+                                {/* Numéro de maillot avec style amélioré et étoile pour nouveaux joueurs */}
+                                <div className={`w-10 h-10 ${team.color} text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg hover:scale-110 transition-transform duration-200 relative`}>
                                   {player.jerseyNumber}
+                                  {selectedMatch.players.find(p => p.id === player.id)?.gamesPlayed === 0 && (
+                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                                      <FiStar className="w-2 h-2 text-white" />
+                                    </div>
+                                  )}
                                 </div>
                                 
                                 {/* Info joueur */}
                                 <div className="flex-1 min-w-0">
-                                  <div className="font-semibold text-gray-900 text-sm truncate flex items-center gap-1">
+                                  <div className="font-semibold text-gray-900 text-sm truncate">
                                     {player.fullName}
-                                    {/* Tag "New Player" pour les joueurs avec 0 match */}
-                                    {selectedMatch.players.find(p => p.id === player.id)?.gamesPlayed === 0 && (
-                                      <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full font-medium">
-                                        Nouveau
-                                      </span>
-                                    )}
                                   </div>
 
                                   {/* Statistiques du joueur */}
@@ -732,64 +946,55 @@ const UpcomingMatchesSection = () => {
                     .map((player) => (
                     <div 
                       key={player.id}
-                      className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-lg p-3 hover:shadow-md transition-shadow text-white"
+                      className="bg-white rounded-lg shadow-md p-3 border-l-4 border-l-blue-500 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+                      onClick={() => handlePlayerClick(player)}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                      {/* En-tête compact - même format que leaderboard */}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
                           <div 
-                            className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg flex-shrink-0 relative"
+                            className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg flex-shrink-0 relative"
                             style={{
                               background: `linear-gradient(135deg, 
                                 ${player.isNewPlayer ? '#10b981, #059669' : '#3b82f6, #1d4ed8'})`
                             }}
                           >
-                            <span className="font-bold text-white text-sm">
+                            <span className="font-bold text-white text-xs">
                               {player.username.charAt(0).toUpperCase()}
                             </span>
                             {player.isNewPlayer && (
-                              <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                                <FiStar className="w-2 h-2 text-white" />
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                                <FiStar className="w-1.5 h-1.5 text-white" />
                               </div>
                             )}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-white text-sm sm:text-base truncate">
-                                {player.username}
-                              </span>
-                              {/* Tag "New Player" pour les joueurs avec 0 match */}
-                              {player.gamesPlayed === 0 && (
-                                <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full font-medium">
-                                  Nouveau
-                                </span>
-                              )}
-                            </div>
+                          <div>
+                            <div className="font-bold text-base text-gray-900">{player.username}</div>
                           </div>
                         </div>
-                        
-                        <div className="flex flex-col items-end text-right flex-shrink-0">
-                          <div className="flex items-center gap-2 text-xs sm:text-sm">
-                            <span className="text-blue-400 font-semibold">#{player.ranking}</span>
-                            <span className="text-gray-400">score {player.globalScore.toFixed(1)}</span>
-                            {/* Statut de paiement */}
-                            {player.paymentStatus === "Subscription" ? (
-                              <FiStar className="w-4 h-4 text-green-500 fill-current" />
-                            ) : (
-                              <div className={`w-4 h-4 rounded-full ${
-                                player.paymentStatus === "Payé" 
-                                  ? "bg-green-500 shadow-green-500/50 shadow-lg" 
-                                  : "bg-red-500 shadow-red-500/50 shadow-lg"
-                              }`}></div>
-                            )}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1 grid grid-cols-2 gap-2">
-                            <div>
-                              <span className="text-purple-400 font-semibold">{player.gamesPlayed}</span> matchs
-                            </div>
-                            <div>
-                              <span className="text-blue-400 font-semibold">#{player.ranking}</span> rang global
-                            </div>
-                          </div>
+                        <div className="text-right flex items-center gap-2">
+                          <div className="text-lg font-bold text-blue-600">#{player.ranking}</div>
+                          {/* Statut de paiement */}
+                          {player.paymentStatus === "Subscription" ? (
+                            <FiStar className="w-4 h-4 text-green-500 fill-current" />
+                          ) : (
+                            <div className={`w-4 h-4 rounded-full ${
+                              player.paymentStatus === "Payé" 
+                                ? "bg-green-500 shadow-green-500/50 shadow-lg" 
+                                : "bg-red-500 shadow-red-500/50 shadow-lg"
+                            }`}></div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Score et stats sur une ligne - même format que leaderboard */}
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-1">
+                          <span className="font-semibold text-blue-600">{player.globalScore.toFixed(2)}</span>
+                          <span className="text-gray-500">pts</span>
+                        </div>
+                        <div className="flex gap-3 text-xs">
+                          <span className="text-gray-600">{player.gamesPlayed} matchs</span>
                         </div>
                       </div>
                     </div>
@@ -1224,6 +1429,17 @@ Pour rejoindre : https://wa.me/212649076758`,
       
       {/* Modal WhatsApp */}
       {showWhatsappModal && <WhatsAppModal isOpen={showWhatsappModal} onClose={() => setShowWhatsappModal(false)} />}
+      
+      {/* FIFA Player Card Modal */}
+      {selectedPlayer && (
+        <FIFAPlayerCard 
+          player={selectedPlayer} 
+          onClose={() => {
+            setSelectedPlayer(null);
+            setShowPlayerCard(false);
+          }} 
+        />
+      )}
     </section>
   );
 };
