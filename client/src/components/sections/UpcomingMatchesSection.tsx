@@ -76,6 +76,7 @@ interface Match {
   players: Player[];
   maxPlayers: number;
   teams?: Team[];
+  captain?: string;
 }
 
 // Configuration Google Sheets
@@ -366,10 +367,22 @@ const UpcomingMatchesSection = () => {
       const score = rawScore ? parseFloat(rawScore.toString().replace(',', '.').trim()) || 0 : 0; // Score
       const rank = parseInt(hasTerrain ? row[8] : row[7]) || 0; // Rank
       
-      // Extraire l'équipe, le numéro et le statut de paiement si ils existent
+      // Extraire le capitaine, l'équipe, le numéro et le statut de paiement si ils existent
+      let captainName = '';
       let teamLetter = '';
       let playerNumber = null;
       let paymentStatus = '';
+      
+      // Extraire le capitaine
+      const hasCaptain = headers.includes('Capitain name');
+      if (hasCaptain) {
+        const captainIndex = headers.findIndex(h => h === 'Capitain name');
+        captainName = row[captainIndex]?.trim() || '';
+        // Ignorer les valeurs d'erreur Excel
+        if (captainName === '#REF!' || captainName === '#N/A' || captainName === '#ERROR!') {
+          captainName = '';
+        }
+      }
       
       if (hasTeam) {
         const teamIndex = headers.findIndex(h => h.toLowerCase() === 'team');
@@ -454,7 +467,8 @@ const UpcomingMatchesSection = () => {
           format: "5vs5",
           status: "Besoin d'autres joueurs",
           players: [],
-          maxPlayers: maxPlayers
+          maxPlayers: maxPlayers,
+          captain: captainName
         };
         matchesMap.set(gameId, match);
       }
@@ -816,6 +830,22 @@ const UpcomingMatchesSection = () => {
                   {selectedMatch.status === "Complet" ? " (3 x 5 joueurs)" : ` (${selectedMatch.players.length}/${selectedMatch.maxPlayers} joueurs)`}
                 </h3>
                 
+                {/* Capitaine Rayo - sous le titre et avant les équipes */}
+                {selectedMatch.captain && (
+                  <div className="mb-6 p-4 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg border-l-4 border-orange-400">
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="w-12 h-8 bg-orange-700 rounded-full flex items-center justify-center shadow-lg gap-1">
+                        <span className="text-orange-100 text-xs">📋</span>
+                        <span className="text-orange-100 text-xs">👨‍⚖️</span>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-orange-100 text-xs font-semibold uppercase tracking-wide">Rayo Sport Capitaine</div>
+                        <div className="text-white font-bold text-lg">{selectedMatch.captain}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {selectedMatch.teams.map((team, teamIndex) => (
                     <div key={team.name} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden">
@@ -939,6 +969,22 @@ const UpcomingMatchesSection = () => {
                 <h3 className="text-lg font-semibold mb-3">
                   Joueurs confirmés ({selectedMatch.players.length})
                 </h3>
+                
+                {/* Capitaine Rayo - sous le titre et avant la liste des joueurs */}
+                {selectedMatch.captain && (
+                  <div className="mb-6 p-4 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg border-l-4 border-orange-400">
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="w-12 h-8 bg-orange-700 rounded-full flex items-center justify-center shadow-lg gap-1">
+                        <span className="text-orange-100 text-xs">📋</span>
+                        <span className="text-orange-100 text-xs">👨‍⚖️</span>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-orange-100 text-xs font-semibold uppercase tracking-wide">Rayo Sport Capitaine</div>
+                        <div className="text-white font-bold text-lg">{selectedMatch.captain}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="space-y-2">
                   {selectedMatch.players
@@ -1243,11 +1289,27 @@ const UpcomingMatchesSection = () => {
                         </button>
                       </div>
 
-                      {/* Milieu : Adresse et ville */}
+                      {/* Milieu : Adresse, ville et capitaine */}
                       <div className="mb-6 pb-4 border-b border-gray-600">
-                        <div className="flex items-center gap-2">
-                          <FiMapPin className="text-blue-400 w-4 h-4" />
-                          <p className="text-white text-lg font-semibold">{match.city}</p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <FiMapPin className="text-blue-400 w-4 h-4" />
+                            <p className="text-white text-lg font-semibold">{match.city}</p>
+                          </div>
+                          
+                          {/* Capitaine - visible sur desktop */}
+                          {match.captain && (
+                            <div className="hidden sm:flex items-center gap-2">
+                              <div className="w-7 h-5 bg-orange-600 rounded-full flex items-center justify-center gap-0.5">
+                                <span className="text-orange-100" style={{fontSize: '8px'}}>📋</span>
+                                <span className="text-orange-100" style={{fontSize: '8px'}}>👨‍⚖️</span>
+                              </div>
+                              <div>
+                                <div className="text-orange-400 text-xs font-semibold">Rayo Capitaine</div>
+                                <div className="text-white font-bold text-sm">{match.captain}</div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -1348,14 +1410,30 @@ const UpcomingMatchesSection = () => {
                         </div>
                       </div>
                       
-                      {/* Bouton partage en bas de la carte - mobile uniquement */}
-                      <div className="mt-4 pt-4 border-t border-gray-600 flex justify-center sm:hidden">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const shareData = {
-                              title: `Match Rayo Sport - Game ${match.gameId}`,
-                              text: `Rejoins-moi pour ce match de foot !
+                      {/* Section partage avec capitaine - mobile uniquement */}
+                      <div className="mt-4 pt-4 border-t border-gray-600 sm:hidden">
+                        <div className="flex justify-between items-center">
+                          {/* Capitaine à gauche */}
+                          {match.captain && (
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-5 bg-orange-600 rounded-full flex items-center justify-center gap-0.5">
+                                <span className="text-orange-100" style={{fontSize: '8px'}}>📋</span>
+                                <span className="text-orange-100" style={{fontSize: '8px'}}>👨‍⚖️</span>
+                              </div>
+                              <div>
+                                <div className="text-orange-400 text-xs font-semibold">Rayo Capitaine</div>
+                                <div className="text-white font-bold text-sm">{match.captain}</div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Bouton partage à droite */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const shareData = {
+                                title: `Match Rayo Sport - Game ${match.gameId}`,
+                                text: `Rejoins-moi pour ce match de foot !
 
 🏟️ ${match.field}, ${match.city}
 📅 ${formatDayName(match.date)} ${formatDateWithoutYear(match.date)}
@@ -1363,30 +1441,31 @@ const UpcomingMatchesSection = () => {
 ⚽ ${match.format}
 
 Pour rejoindre : https://wa.me/212649076758`,
-                              url: window.location.href
-                            };
+                                url: window.location.href
+                              };
 
-                            if (navigator.share) {
-                              navigator.share(shareData).catch((err) => {
-                                console.log('Erreur de partage:', err);
-                              });
-                            } else {
-                              const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareData.text)}`;
-                              window.open(whatsappUrl, '_blank');
-                            }
-                            trackEvent('share_match', 'user_engagement', `Game_${match.gameId}`);
-                          }}
-                          className="flex items-center gap-2 text-blue-500 hover:text-blue-400 transition-all duration-300 transform hover:scale-105"
-                        >
-                          <svg 
-                            className="w-4 h-4 transition-transform duration-300 -rotate-25 hover:rotate-0" 
-                            fill="currentColor" 
-                            viewBox="0 0 24 24"
+                              if (navigator.share) {
+                                navigator.share(shareData).catch((err) => {
+                                  console.log('Erreur de partage:', err);
+                                });
+                              } else {
+                                const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareData.text)}`;
+                                window.open(whatsappUrl, '_blank');
+                              }
+                              trackEvent('share_match', 'user_engagement', `Game_${match.gameId}`);
+                            }}
+                            className="flex items-center gap-2 text-blue-500 hover:text-blue-400 transition-all duration-300 transform hover:scale-105"
                           >
-                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                          </svg>
-                          <span className="text-sm font-medium">Invite un ami</span>
-                        </button>
+                            <svg 
+                              className="w-4 h-4 transition-transform duration-300 -rotate-25 hover:rotate-0" 
+                              fill="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                            <span className="text-sm font-medium">Invite un ami</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                 </div>
