@@ -25,6 +25,7 @@ interface Player {
   teamScore?: number;
   isNewPlayer?: boolean;
   paymentStatus?: "Payé" | "Non payé" | "Nouveau joueur" | "Subscription";
+  solde?: number;
 }
 
 // Configuration Google Sheets - URL publique CSV
@@ -33,6 +34,7 @@ const GOOGLE_SHEETS_CONFIG = {
 };
 
 const LeaderboardSection = () => {
+  // console.log('🎯 LeaderboardSection: Component rendering...');
   const { language } = useLanguage();
   const [players, setPlayers] = useState<Player[]>([]);
   const [filteredPlayers, setFilteredPlayers] = useState<Player[]>([]);
@@ -124,6 +126,10 @@ const LeaderboardSection = () => {
     if (player.teamScore !== undefined) {
       advancedStats['Team Score'] = parseFloat((player.teamScore || 0).toFixed(2));
     }
+    // Balance hidden per user request
+    // if (typeof player.solde === 'number') {
+    //   advancedStats['Balance'] = player.solde;
+    // }
 
     const playerStats = { ...baseStats, ...advancedStats };
 
@@ -193,32 +199,47 @@ const LeaderboardSection = () => {
                 {player.city} • Global #{player.rank}
               </div>
 
-              {/* Payment Status */}
+              {/* Payment Status and Subscriber Games Left */}
               {player.paymentStatus && (
                 <div className="text-center mt-2">
                   <span className={`text-xs px-2 py-1 rounded-full ${
                     player.paymentStatus === "Subscription" ? "bg-green-500" :
-                    player.paymentStatus === "Payé" ? "bg-blue-500" : "bg-red-500"
-                  }`}>
-                    {player.paymentStatus === "Subscription" ? "PREMIUM" :
-                     player.paymentStatus === "Payé" ? "PAID" : "UNPAID"}
+                    player.paymentStatus === "Payé" ? "bg-blue-500" :
+                    player.paymentStatus === "Non payé" ? "bg-red-500" :
+                    "bg-yellow-500"
+                  } text-white`}>
+                    {player.paymentStatus}
                   </span>
+
                 </div>
               )}
 
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm mt-4 bg-black bg-opacity-20 p-3 rounded-lg shadow-inner">
-                {Object.entries(playerStats).map(([key, val]) => (
-                  <div key={key} className="flex justify-between font-semibold">
-                    <span>{key}</span>
-                    <span>{val}</span>
+              {/* Player Stats Grid */}
+              <div className="grid grid-cols-3 gap-2 mt-4 text-center text-xs">
+                {Object.entries(playerStats).slice(0, 6).map(([stat, value]) => (
+                  <div key={stat} className="bg-black/20 rounded-lg p-2">
+                    <div className="font-bold text-sm">{value}</div>
+                    <div className="text-xs opacity-80">{stat}</div>
                   </div>
                 ))}
               </div>
+
+              {/* Additional Stats for advanced players */}
+              {Object.keys(advancedStats).length > 0 && (
+                <div className="grid grid-cols-2 gap-2 mt-2 text-center text-xs">
+                  {Object.entries(advancedStats).map(([stat, value]) => (
+                    <div key={stat} className="bg-black/20 rounded-lg p-2">
+                      <div className="font-bold text-sm">{value}</div>
+                      <div className="text-xs opacity-80">{stat}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
             </div>
-            <div id="player-card-description" className="sr-only">
-              FIFA-style player card showing detailed statistics for {player.username}
-            </div>
+          </div>
+          <div id="player-card-description" className="sr-only">
+            FIFA-style player card showing detailed statistics for {player.username}
           </div>
         </DialogContent>
       </Dialog>
@@ -299,10 +320,15 @@ const LeaderboardSection = () => {
     try {
       setLoading(true);
       setError(null);
+      // console.log('🎯 LeaderboardSection: Starting data fetch...');
       
       // Récupérer des données fraîches à chaque requête
+      // console.log('🎯 LeaderboardSection: Fetching from URL:', GOOGLE_SHEETS_CONFIG.csvUrl);
       const response = await fetch(GOOGLE_SHEETS_CONFIG.csvUrl, {
-        cache: 'no-store'
+        cache: 'no-store',
+        headers: {
+          'Accept': 'text/csv,text/plain,*/*'
+        }
       });
       
       if (!response.ok) {
@@ -313,6 +339,10 @@ const LeaderboardSection = () => {
       const rows = parseCSV(csvText);
       
       if (rows.length > 1) { // Ignorer la première ligne (en-têtes)
+        // Extract headers from first row
+        const headers = rows[0] || [];
+        // console.log('🎯 LeaderboardSection: CSV Headers:', headers);
+        
         const playersData = rows.slice(1)
           .filter(row => row[1] && row[1].trim() !== '' && row[1] !== '#VALUE!') // Filtrer les lignes avec des noms valides
           .map((row: string[]) => {
@@ -342,6 +372,33 @@ const LeaderboardSection = () => {
             const playerUsername = row[2] || 'Username'; // Assuming PlayerUsername is in column C
             const firstName = playerUsername.split(' ')[0] || playerUsername; // Extract first part as name
             
+            // Parse payment type from CSV to determine payment status
+            const paymentType = row[4] ? row[4].toString().toLowerCase().trim() : '';
+            // Parse subscriber balance from SubGamesLeft column
+            let subGamesLeft = 0;
+            const hasSubGamesLeft = headers.some(h => h.includes('SubGamesLeft'));
+            if (hasSubGamesLeft) {
+              const subGamesLeftIndex = headers.findIndex(h => h.includes('SubGamesLeft'));
+              const subGamesLeftValue = row[subGamesLeftIndex]?.trim();
+              // console.log(`📊 LeaderboardSection - Player: ${playerUsername}, SubGamesLeft value: "${subGamesLeftValue}", Index: ${subGamesLeftIndex}`);
+              if (subGamesLeftValue && subGamesLeftValue !== '#REF!' && subGamesLeftValue !== '#N/A' && subGamesLeftValue !== '#ERROR!' && subGamesLeftValue !== '') {
+                subGamesLeft = parseInt(subGamesLeftValue) || 0;
+              }
+            }
+            
+            // Determine payment status based on payment type and balance
+            let paymentStatus: "Payé" | "Non payé" | "Nouveau joueur" | "Subscription" | undefined;
+            if (paymentType === 'sub' || paymentType === 'subscription') {
+              // All subscribers keep "Subscription" status regardless of balance
+              paymentStatus = "Subscription";
+            } else if (paymentType === 'payé' || paymentType === 'paid') {
+              paymentStatus = "Payé";
+            } else if (paymentType === 'non payé' || paymentType === 'unpaid') {
+              paymentStatus = "Non payé";
+            } else if ((parseInt(row[6]) || 0) === 0) {
+              paymentStatus = "Nouveau joueur";
+            }
+
             return {
               rank: parseInt(row[0]) || 0,               // Colonne A - Rank
               cityRank: parseInt(row[1]) || 0,          // Colonne B - City Rank
@@ -357,8 +414,9 @@ const LeaderboardSection = () => {
               defenseRatio: parseDecimal(row[11]),       // Colonne L - Defense RATIO
               individualScore: parseDecimal(row[12]),    // Colonne M - Individuel Score
               teamScore: parseDecimal(row[13]),          // Colonne N - TEAM SCORE
+              solde: subGamesLeft,                       // Colonne O - SubGamesLeft (subscriber balance)
               isNewPlayer: (parseInt(row[6]) || 0) === 0, // New player if 0 games played
-              paymentStatus: undefined // Not available in leaderboard CSV
+              paymentStatus: paymentStatus
             };
           });
         
@@ -385,7 +443,13 @@ const LeaderboardSection = () => {
         setFilteredPlayers([]);
       }
     } catch (err) {
-      console.error('Erreur lors du chargement des données:', err);
+      console.error('🚨 LeaderboardSection - Erreur lors du chargement des données:', err);
+      console.error('🚨 LeaderboardSection - Error details:', {
+        message: err instanceof Error ? err.message : 'Unknown error',
+        stack: err instanceof Error ? err.stack : 'No stack trace',
+        type: typeof err,
+        fullError: err
+      });
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
       setLoading(false);
