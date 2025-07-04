@@ -273,7 +273,7 @@ interface Player {
   assists?: number;
   teamWins?: number;
   jerseyNumber?: number;
-  team?: "Orange" | "Jaune" | "Blue" | "Yellow" | "Green";
+  team?: "Orange" | "Jaune" | "Blue" | "Yellow" | "Vert";
   attackRatio?: number;     // ATT from CSV
   defenseRatio?: number;    // DEF from CSV
   teamScore?: number;       // Team Score from CSV
@@ -293,7 +293,7 @@ interface TeamPlayer {
 }
 
 interface Team {
-  name: "Orange" | "Jaune" | "Blue" | "Yellow" | "Green";
+  name: "Orange" | "Jaune" | "Blue" | "Yellow" | "Vert";
   color: string;
   players: TeamPlayer[];
 }
@@ -349,28 +349,42 @@ const createTeamsFromPlayers = (players: Player[], isRayoBattle: boolean = false
   
   
   if (isRayoBattle) {
-    // Pour Rayo Battle: 4 équipes avec couleurs simples
-    const teamConfigs = [
+    // Pour Rayo Battle: obtenir toutes les couleurs d'équipe uniques du CSV
+    const uniqueTeamNames = new Set<string>();
+    players.forEach(player => {
+      if (player.team) {
+        uniqueTeamNames.add(player.team);
+      }
+    });
+
+    // Pour Rayo Battle, toujours afficher les 4 équipes (même vides)
+    const allRayoBattleTeams = [
       { name: "Blue", color: "bg-blue-500" },
       { name: "Orange", color: "bg-orange-500" },
-      { name: "Yellow", color: "bg-yellow-500" },
-      { name: "Green", color: "bg-green-500" }
+      { name: "Jaune", color: "bg-yellow-500" },
+      { name: "Vert", color: "bg-green-500" }
     ];
 
-    teamConfigs.forEach(config => {
-      if (teamMap.has(config.name)) {
-        const sortedPlayers = teamMap.get(config.name)!.sort((a, b) => {
-          const playerA = players.find(p => p.id === a.id);
-          const playerB = players.find(p => p.id === b.id);
-          return (playerA?.ranking || 999) - (playerB?.ranking || 999);
-        });
-        
-        teams.push({
-          name: config.name,
-          color: config.color,
-          players: sortedPlayers
-        });
-      }
+    // Toujours utiliser les 4 équipes pour Rayo Battle
+    const teamNamesToUse = allRayoBattleTeams.map(t => t.name);
+    
+    teamNamesToUse.forEach((teamName, index) => {
+      const colorConfig = allRayoBattleTeams.find(t => t.name === teamName) || allRayoBattleTeams[index % allRayoBattleTeams.length];
+      
+      // Toujours créer l'équipe, même si elle est vide
+      const teamPlayers = teamMap.has(teamName) 
+        ? teamMap.get(teamName)!.sort((a, b) => {
+            const playerA = players.find(p => p.id === a.id);
+            const playerB = players.find(p => p.id === b.id);
+            return (playerA?.ranking || 999) - (playerB?.ranking || 999);
+          })
+        : []; // Équipe vide si aucun joueur assigné
+      
+      teams.push({
+        name: teamName as "Orange" | "Jaune" | "Blue" | "Vert",
+        color: colorConfig.color,
+        players: teamPlayers
+      });
     });
   } else {
     // Pour les matchs réguliers: 3 équipes classiques
@@ -794,7 +808,7 @@ const UpcomingMatchesSection = () => {
         const isNewPlayer = matchCount === 0;
         
         // Mapper les équipes directement par nom de couleur
-        let teamName: "Orange" | "Jaune" | "Blue" | "Red Dragons" | "Blue Sharks" | "Green Eagles" | "Gold Lions" | undefined;
+        let teamName: "Orange" | "Jaune" | "Blue" | "Yellow" | "Vert" | undefined;
         switch (teamLetter.toLowerCase()) {
           case 'orange':
             teamName = "Orange";
@@ -805,19 +819,13 @@ const UpcomingMatchesSection = () => {
           case 'blue':
             teamName = "Blue";
             break;
-          case 'red dragons':
-            teamName = "Red Dragons";
+          case 'yellow':
+            teamName = "Yellow";
             break;
-          case 'blue sharks':
-            teamName = "Blue Sharks";
+          case 'vert':
+            teamName = "Vert";
             break;
-          case 'green eagles':
-            teamName = "Green Eagles";
-            break;
-          case 'gold lions':
-            teamName = "Gold Lions";
-            break;
-          // Support legacy mapping A->Orange, B->Jaune, C->Blue, D->Red Dragons
+          // Support legacy mapping A->Orange, B->Jaune, C->Blue, D->Vert
           case 'a':
             teamName = "Orange";
             break;
@@ -828,7 +836,7 @@ const UpcomingMatchesSection = () => {
             teamName = "Blue";
             break;
           case 'd':
-            teamName = "Red Dragons";
+            teamName = "Vert";
             break;
         }
 
@@ -951,16 +959,10 @@ const UpcomingMatchesSection = () => {
       // Regular: 15 joueurs avec 3 équipes de 5
       const isRayoBattle = matchItem.mode?.toLowerCase() === 'rayo battle';
       
-      // For Rayo Battle matches, reassign teams to use the 4-team structure
-      if (isRayoBattle && matchItem.players.length > 0) {
-        const teams = ["Blue", "Orange", "Yellow", "Green"];
-        matchItem.players.forEach((player, index) => {
-          player.team = teams[index % 4] as any;
-          player.jerseyNumber = Math.floor(index / 4) + 1;
-        });
-        }
-      const shouldCreateTeams = matchItem.players.some(p => p.team) && 
-        ((isRayoBattle && matchItem.players.length >= 4) || (!isRayoBattle && matchItem.players.length >= 3));
+      // For Rayo Battle matches, always show teams (even if empty)
+      // For regular matches, only show teams if there are enough players with team assignments
+      const shouldCreateTeams = isRayoBattle || 
+        (matchItem.players.some(p => p.team) && matchItem.players.length >= 3);
       
       if (shouldCreateTeams) {
         matchItem.teams = createTeamsFromPlayers(matchItem.players, isRayoBattle);
@@ -979,29 +981,29 @@ const UpcomingMatchesSection = () => {
     // Kings League teams with 5 players each
     const kingsLeagueTeams = [
       {
-        name: "Red Dragons" as const,
-        color: "from-red-500 to-red-700",
+        name: "Blue" as const,
+        color: "from-blue-500 to-blue-700",
         players: [
           "mohamed al.01", "youssef ka.02", "hassan be.03", "omar sa.04", "ahmed el.05"
         ]
       },
       {
-        name: "Blue Sharks" as const,
-        color: "from-blue-500 to-blue-700", 
+        name: "Orange" as const,
+        color: "from-orange-500 to-orange-700", 
         players: [
           "karim ra.06", "ayoub ma.07", "said ch.08", "rachid bo.09", "zakaria ha.10"
         ]
       },
       {
-        name: "Green Eagles" as const,
-        color: "from-green-500 to-green-700",
+        name: "Jaune" as const,
+        color: "from-yellow-500 to-yellow-700",
         players: [
           "hamza ja.11", "ismail gh.12", "amine ze.13", "hicham mo.14", "abdellah fa.15"
         ]
       },
       {
-        name: "Gold Lions" as const,
-        color: "from-yellow-500 to-yellow-700",
+        name: "Vert" as const,
+        color: "from-green-500 to-green-700",
         players: [
           "tarik ben.16", "nabil qu.17", "walid ah.18", "redouane el.19", "mounir ka.20"
         ]
@@ -1116,13 +1118,8 @@ const UpcomingMatchesSection = () => {
         const realRayoBattleMatch = parsedMatches.find(m => m.mode?.toLowerCase() === 'rayo battle');
         console.log('🔍 Real Rayo Battle match found:', realRayoBattleMatch?.gameId, 'players:', realRayoBattleMatch?.players.length);
         if (realRayoBattleMatch && realRayoBattleMatch.players.length > 0) {
-          // Always reassign teams for Rayo Battle to use the special 4-team structure
-          const teams = ["Red Dragons", "Blue Sharks", "Green Eagles", "Gold Lions"];
-          realRayoBattleMatch.players.forEach((player, index) => {
-            player.team = teams[index % 4] as any; // Distribute evenly across 4 teams
-            player.jerseyNumber = Math.floor(index / 4) + 1; // Jersey numbers 1-5 for each team
-          });
-          console.log('✨ Reassigned teams to Rayo Battle players with 4-team structure');
+          // Keep original team assignments from CSV for Rayo Battle
+          console.log('✨ Using original team assignments from CSV for Rayo Battle');
         } else if (realRayoBattleMatch && realRayoBattleMatch.players.length === 0) {
           // Create demo players for the real Rayo Battle match
           const demoPlayers: Player[] = [
@@ -2161,7 +2158,7 @@ const UpcomingMatchesSection = () => {
                             )}
                             {match.mode?.toLowerCase() === 'rayo rush' && (
                               <span className="text-green-200 bg-green-900/30 px-2 py-1 rounded-full font-semibold text-sm">
-                                💰 <span className="whitespace-pre-line">1er match ? 25DH{'\n'}💰 déjà joué ? 50 Dhs</span>
+                                💰 <span className="whitespace-pre-line">1er match ? 25DH{'\n'}💰 déjà joué ? 50DH</span>
                               </span>
                             )}
                           </div>
