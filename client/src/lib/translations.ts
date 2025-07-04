@@ -16,7 +16,7 @@ export const translations: Record<Language, TranslationRecord> = {
     "hero_title": "Jouez au foot",
     "hero_title_highlight": "quand ça vous arrange !",
     "hero_subtitle": "Envie de foot sans engagement ? Réservez un match quand vous voulez !",
-    "hero_cta_primary": "Rejoindre un match",
+    "hero_cta_primary": "Rejoindre WhatsApp groups",
     "hero_cta_secondary": "Matchs à venir",
     "hero_players_text": "joueurs déjà inscrits",
     
@@ -119,7 +119,7 @@ export const translations: Record<Language, TranslationRecord> = {
     "hero_title": "العب. تألق.",
     "hero_title_highlight": "كن أسطورة.",
     "hero_subtitle": "انضم إلى ثورة كرة القدم المجتمعية في المغرب مع مباريات 5 ضد 5 وبطولات بين 3 فرق.",
-    "hero_cta_primary": "انضم إلى مباراة",
+    "hero_cta_primary": "انضم إلى مجموعات WhatsApp",
     "hero_cta_secondary": "تحميل التطبيق",
     "hero_players_text": "لاعب مسجل بالفعل",
     

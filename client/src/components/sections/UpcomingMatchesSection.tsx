@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { FiCalendar, FiMapPin, FiClock, FiUsers, FiCheck, FiX, FiStar, FiRefreshCw, FiFilter, FiTrendingUp, FiTarget, FiAward, FiZap, FiShield } from "react-icons/fi";
 import { TbBuildingStadium } from "react-icons/tb";
 import { trackEvent } from "@/lib/analytics";
+import { useCityPreference } from "@/hooks/use-city-preference";
+import { CitySelectionModal } from "@/components/ui/CitySelectionModal";
 
 // Composant pour animer les changements de nombres
 const AnimatedNumber = ({ value, className = "" }: { value: number | string, className?: string }) => {
@@ -271,12 +273,13 @@ interface Player {
   assists?: number;
   teamWins?: number;
   jerseyNumber?: number;
-  team?: "Orange" | "Jaune" | "Blue";
+  team?: "Orange" | "Jaune" | "Blue" | "Yellow" | "Green";
   attackRatio?: number;     // ATT from CSV
   defenseRatio?: number;    // DEF from CSV
   teamScore?: number;       // Team Score from CSV
   soloScore?: number;       // Solo Score from CSV
   solde?: number;           // Subscriber balance from SubGamesLeft column
+  expirationDate?: string;  // Expiration date from ExpirationDate column
 }
 
 interface TeamPlayer {
@@ -285,10 +288,12 @@ interface TeamPlayer {
   fullName: string;
   jerseyNumber: number;
   paymentStatus: "Payé" | "Non payé" | "Nouveau joueur" | "Subscription";
+  solde?: number;           // Subscriber balance
+  expirationDate?: string;  // Expiration date
 }
 
 interface Team {
-  name: "Orange" | "Jaune" | "Blue";
+  name: "Orange" | "Jaune" | "Blue" | "Yellow" | "Green";
   color: string;
   players: TeamPlayer[];
 }
@@ -306,6 +311,7 @@ interface Match {
   maxPlayers: number;
   teams?: Team[];
   captain?: string;
+  mode?: string;
 }
 
 // Configuration Google Sheets
@@ -314,7 +320,7 @@ const MATCHES_SHEET_CONFIG = {
 };
 
 // Fonction pour créer les équipes basées sur les vrais joueurs
-const createTeamsFromPlayers = (players: Player[]): Team[] => {
+const createTeamsFromPlayers = (players: Player[], isRayoBattle: boolean = false): Team[] => {
   const teamMap = new Map<string, TeamPlayer[]>();
   
   // Grouper les joueurs par équipe
@@ -329,60 +335,89 @@ const createTeamsFromPlayers = (players: Player[]): Team[] => {
         username: player.username,
         fullName: player.fullName,
         jerseyNumber: player.jerseyNumber || (teamMap.get(player.team)!.length + 1), // Utiliser le numéro du CSV ou séquentiel
-        paymentStatus: player.paymentStatus
+        paymentStatus: player.paymentStatus,
+        solde: player.solde,
+        expirationDate: player.expirationDate
       };
       
       teamMap.get(player.team)!.push(teamPlayer);
     }
   });
   
-  // Créer les équipes avec leurs couleurs
+  // Créer les équipes avec leurs couleurs selon le mode de jeu
   const teams: Team[] = [];
   
-  if (teamMap.has("Orange")) {
-    // Sort players by ranking within the team
-    const sortedPlayers = teamMap.get("Orange")!.sort((a, b) => {
-      const playerA = players.find(p => p.id === a.id);
-      const playerB = players.find(p => p.id === b.id);
-      return (playerA?.ranking || 999) - (playerB?.ranking || 999);
-    });
-    
-    teams.push({
-      name: "Orange",
-      color: "bg-orange-500",
-      players: sortedPlayers
-    });
-  }
   
-  if (teamMap.has("Jaune")) {
-    // Sort players by ranking within the team
-    const sortedPlayers = teamMap.get("Jaune")!.sort((a, b) => {
-      const playerA = players.find(p => p.id === a.id);
-      const playerB = players.find(p => p.id === b.id);
-      return (playerA?.ranking || 999) - (playerB?.ranking || 999);
+  if (isRayoBattle) {
+    // Pour Rayo Battle: 4 équipes avec couleurs simples
+    const teamConfigs = [
+      { name: "Blue", color: "bg-blue-500" },
+      { name: "Orange", color: "bg-orange-500" },
+      { name: "Yellow", color: "bg-yellow-500" },
+      { name: "Green", color: "bg-green-500" }
+    ];
+
+    teamConfigs.forEach(config => {
+      if (teamMap.has(config.name)) {
+        const sortedPlayers = teamMap.get(config.name)!.sort((a, b) => {
+          const playerA = players.find(p => p.id === a.id);
+          const playerB = players.find(p => p.id === b.id);
+          return (playerA?.ranking || 999) - (playerB?.ranking || 999);
+        });
+        
+        teams.push({
+          name: config.name,
+          color: config.color,
+          players: sortedPlayers
+        });
+      }
     });
+  } else {
+    // Pour les matchs réguliers: 3 équipes classiques
+    if (teamMap.has("Orange")) {
+      const sortedPlayers = teamMap.get("Orange")!.sort((a, b) => {
+        const playerA = players.find(p => p.id === a.id);
+        const playerB = players.find(p => p.id === b.id);
+        return (playerA?.ranking || 999) - (playerB?.ranking || 999);
+      });
+      
+      teams.push({
+        name: "Orange",
+        color: "bg-orange-500",
+        players: sortedPlayers
+      });
+    }
     
-    teams.push({
-      name: "Jaune",
-      color: "bg-yellow-500",
-      players: sortedPlayers
-    });
-  }
-  
-  if (teamMap.has("Blue")) {
-    // Sort players by ranking within the team
-    const sortedPlayers = teamMap.get("Blue")!.sort((a, b) => {
-      const playerA = players.find(p => p.id === a.id);
-      const playerB = players.find(p => p.id === b.id);
-      return (playerA?.ranking || 999) - (playerB?.ranking || 999);
-    });
+    if (teamMap.has("Jaune")) {
+      const sortedPlayers = teamMap.get("Jaune")!.sort((a, b) => {
+        const playerA = players.find(p => p.id === a.id);
+        const playerB = players.find(p => p.id === b.id);
+        return (playerA?.ranking || 999) - (playerB?.ranking || 999);
+      });
+      
+      teams.push({
+        name: "Jaune",
+        color: "bg-yellow-500",
+        players: sortedPlayers
+      });
+    }
     
-    teams.push({
-      name: "Blue",
-      color: "bg-blue-500",
-      players: sortedPlayers
-    });
+    if (teamMap.has("Blue")) {
+      const sortedPlayers = teamMap.get("Blue")!.sort((a, b) => {
+        const playerA = players.find(p => p.id === a.id);
+        const playerB = players.find(p => p.id === b.id);
+        return (playerA?.ranking || 999) - (playerB?.ranking || 999);
+      });
+      
+      teams.push({
+        name: "Blue",
+        color: "bg-blue-500",
+        players: sortedPlayers
+      });
+    }
   }
+
+
   
   return teams;
 };
@@ -400,6 +435,19 @@ const UpcomingMatchesSection = () => {
   const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [showPlayerCard, setShowPlayerCard] = useState(false);
+  
+  // City preference management
+  const { selectedCity: savedCity, isFirstVisit, saveCityPreference } = useCityPreference();
+  const [showCityModal, setShowCityModal] = useState(false);
+
+  // Handle city selection
+  const handleCitySelect = (city: string) => {
+    saveCityPreference(city);
+    setSelectedCity(city);
+    setShowCityModal(false);
+    trackEvent('city_preference_selected', 'user_preference', city);
+  };
+
 
   // Handler pour ouvrir la carte joueur
   const handlePlayerClick = (player: Player) => {
@@ -525,9 +573,26 @@ const UpcomingMatchesSection = () => {
                   } text-white`}>
                     {player.paymentStatus}
                   </span>
-                  {player.paymentStatus === "Subscription" && player.solde !== undefined && (
+                  
+                  {/* Balance Display - Show for ALL players including -1 values */}
+                  {player.solde !== undefined && (
                     <div className="text-xs mt-1 opacity-80">
-                      Balance: {player.solde}
+                      <span className={`${
+                        player.solde === -1 ? "text-red-300" :
+                        player.solde === 0 ? "text-green-300" :
+                        player.solde < 1 ? "text-red-300" :
+                        player.solde === 1 ? "text-yellow-300" :
+                        "text-green-300"
+                      }`}>
+                        Balance: {player.solde}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Expiration Date Display - ONLY for subscribers */}
+                  {player.paymentStatus === "Subscription" && player.expirationDate && (
+                    <div className="text-xs mt-1 opacity-80 text-orange-200">
+                      Expire: {player.expirationDate}
                     </div>
                   )}
                 </div>
@@ -592,6 +657,7 @@ const UpcomingMatchesSection = () => {
       // Dynamic parsing to handle both sheet formats
       const hasTerrain = headers.includes('Terrain');
       const hasTeam = headers.includes('Team') || headers.includes('team');
+      const hasMode = headers.includes('Mode') || headers.includes('mode');
       
       const gameId = row[0]?.trim(); // GameID
       const terrain = hasTerrain ? row[1]?.trim() : null; // Terrain (if exists)
@@ -604,6 +670,13 @@ const UpcomingMatchesSection = () => {
       const rawScore = hasTerrain ? row[7] : row[6];
       const score = rawScore ? parseFloat(rawScore.toString().replace(',', '.').trim()) || 0 : 0; // Score
       const rank = parseInt(hasTerrain ? row[8] : row[7]) || 0; // Rank
+      
+      // Extract Mode column
+      let gameMode = '';
+      if (hasMode) {
+        const modeIndex = headers.findIndex(h => h.toLowerCase() === 'mode');
+        gameMode = row[modeIndex]?.trim() || '';
+      }
       
       // Extraire le capitaine, l'équipe, le numéro et le statut de paiement si ils existent
       let captainName = '';
@@ -662,7 +735,10 @@ const UpcomingMatchesSection = () => {
         const dateStr = dateObj.toISOString().split('T')[0];
         const timeStr = dateObj.toTimeString().slice(0, 5) + ' (60min)';
         
-        const maxPlayers = 15;
+        // Set max players and format based on mode
+        const isRayoBattle = gameMode.toLowerCase() === 'rayo battle';
+        const maxPlayers = isRayoBattle ? 20 : 15;
+        const gameFormat = isRayoBattle ? 'Rayo Battle 4x5' : '5vs5';
         // Function to convert cities to French
         const convertToFrench = (cityName: string): string => {
           const cityMap: Record<string, string> = {
@@ -702,11 +778,12 @@ const UpcomingMatchesSection = () => {
           field: terrain || "Terrain Rayo Sport",
           date: dateStr,
           time: timeStr,
-          format: "5vs5",
+          format: gameFormat,
           status: "Besoin d'autres joueurs",
           players: [],
           maxPlayers: maxPlayers,
-          captain: captainName
+          captain: captainName,
+          mode: gameMode
         };
         matchesMap.set(gameId, match);
       }
@@ -717,7 +794,7 @@ const UpcomingMatchesSection = () => {
         const isNewPlayer = matchCount === 0;
         
         // Mapper les équipes directement par nom de couleur
-        let teamName: "Orange" | "Jaune" | "Blue" | undefined;
+        let teamName: "Orange" | "Jaune" | "Blue" | "Red Dragons" | "Blue Sharks" | "Green Eagles" | "Gold Lions" | undefined;
         switch (teamLetter.toLowerCase()) {
           case 'orange':
             teamName = "Orange";
@@ -728,7 +805,19 @@ const UpcomingMatchesSection = () => {
           case 'blue':
             teamName = "Blue";
             break;
-          // Support legacy mapping A->Orange, B->Jaune, C->Blue
+          case 'red dragons':
+            teamName = "Red Dragons";
+            break;
+          case 'blue sharks':
+            teamName = "Blue Sharks";
+            break;
+          case 'green eagles':
+            teamName = "Green Eagles";
+            break;
+          case 'gold lions':
+            teamName = "Gold Lions";
+            break;
+          // Support legacy mapping A->Orange, B->Jaune, C->Blue, D->Red Dragons
           case 'a':
             teamName = "Orange";
             break;
@@ -737,6 +826,9 @@ const UpcomingMatchesSection = () => {
             break;
           case 'c':
             teamName = "Blue";
+            break;
+          case 'd':
+            teamName = "Red Dragons";
             break;
         }
 
@@ -752,6 +844,17 @@ const UpcomingMatchesSection = () => {
           }
         } else {
           // console.log('Debug: SubGamesLeft column not found in headers:', headers);
+        }
+
+        // Parse expiration date from ExpirationDate column
+        let expirationDate = '';
+        const hasExpirationDate = headers.includes('ExpirationDate');
+        if (hasExpirationDate) {
+          const expirationDateIndex = headers.findIndex(h => h === 'ExpirationDate');
+          const expirationDateValue = row[expirationDateIndex]?.trim();
+          if (expirationDateValue && expirationDateValue !== '#REF!' && expirationDateValue !== '#N/A' && expirationDateValue !== '#ERROR!') {
+            expirationDate = expirationDateValue;
+          }
         }
         
         // Mapper le statut de paiement depuis la colonne CSV
@@ -810,7 +913,8 @@ const UpcomingMatchesSection = () => {
           defenseRatio: parseDecimal(row[14]),   // DEF column  
           teamScore: parseDecimal(row[15]),      // Team Score column
           soloScore: parseDecimal(row[16]),      // Solo Score column
-          solde: subGamesLeft          // SubGamesLeft column (dynamic index)
+          solde: subGamesLeft,          // SubGamesLeft column (dynamic index)
+          expirationDate: expirationDate // ExpirationDate column (dynamic index)
         };
         
         // Debug: Log the player data to verify balance values
@@ -842,9 +946,24 @@ const UpcomingMatchesSection = () => {
     Array.from(matchesMap.values()).forEach(matchItem => {
       matchItem.status = matchItem.players.length >= matchItem.maxPlayers ? "Complet" : "Besoin d'autres joueurs";
       
-      // Créer les équipes seulement pour les matchs complets (15 joueurs) qui ont des équipes assignées
-      if (matchItem.players.length === 15 && matchItem.players.some(p => p.team)) {
-        matchItem.teams = createTeamsFromPlayers(matchItem.players);
+      // Créer les équipes pour les matchs qui ont des équipes assignées
+      // Rayo Battle: 20 joueurs avec 4 équipes de 5
+      // Regular: 15 joueurs avec 3 équipes de 5
+      const isRayoBattle = matchItem.mode?.toLowerCase() === 'rayo battle';
+      
+      // For Rayo Battle matches, reassign teams to use the 4-team structure
+      if (isRayoBattle && matchItem.players.length > 0) {
+        const teams = ["Blue", "Orange", "Yellow", "Green"];
+        matchItem.players.forEach((player, index) => {
+          player.team = teams[index % 4] as any;
+          player.jerseyNumber = Math.floor(index / 4) + 1;
+        });
+        }
+      const shouldCreateTeams = matchItem.players.some(p => p.team) && 
+        ((isRayoBattle && matchItem.players.length >= 4) || (!isRayoBattle && matchItem.players.length >= 3));
+      
+      if (shouldCreateTeams) {
+        matchItem.teams = createTeamsFromPlayers(matchItem.players, isRayoBattle);
       }
     });
     
@@ -854,6 +973,115 @@ const UpcomingMatchesSection = () => {
 
 
 
+
+  // Function to create fake Kings League match data
+  const createFakeKingsLeagueMatch = (): Match => {
+    // Kings League teams with 5 players each
+    const kingsLeagueTeams = [
+      {
+        name: "Red Dragons" as const,
+        color: "from-red-500 to-red-700",
+        players: [
+          "mohamed al.01", "youssef ka.02", "hassan be.03", "omar sa.04", "ahmed el.05"
+        ]
+      },
+      {
+        name: "Blue Sharks" as const,
+        color: "from-blue-500 to-blue-700", 
+        players: [
+          "karim ra.06", "ayoub ma.07", "said ch.08", "rachid bo.09", "zakaria ha.10"
+        ]
+      },
+      {
+        name: "Green Eagles" as const,
+        color: "from-green-500 to-green-700",
+        players: [
+          "hamza ja.11", "ismail gh.12", "amine ze.13", "hicham mo.14", "abdellah fa.15"
+        ]
+      },
+      {
+        name: "Gold Lions" as const,
+        color: "from-yellow-500 to-yellow-700",
+        players: [
+          "tarik ben.16", "nabil qu.17", "walid ah.18", "redouane el.19", "mounir ka.20"
+        ]
+      }
+    ];
+
+    const allPlayers: Player[] = [];
+    const teams: Team[] = [];
+
+    kingsLeagueTeams.forEach((kingsTeam, teamIndex) => {
+      const teamPlayers: TeamPlayer[] = [];
+      
+      kingsTeam.players.forEach((username, playerIndex) => {
+        const firstName = username.split(' ')[0];
+        const jerseyNumber = (teamIndex * 5) + playerIndex + 1;
+        
+        const player: Player = {
+          id: `kl-${jerseyNumber}`,
+          username: username,
+          fullName: firstName,
+          globalScore: Math.floor(Math.random() * 50) + 50,
+          gamesPlayed: Math.floor(Math.random() * 10) + 5,
+          ranking: jerseyNumber,
+          cityRanking: jerseyNumber,
+          paymentStatus: Math.random() > 0.5 ? "Subscription" : "Payé",
+          isNewPlayer: false,
+          goals: Math.floor(Math.random() * 8),
+          assists: Math.floor(Math.random() * 5),
+          teamWins: Math.floor(Math.random() * 6),
+          jerseyNumber: jerseyNumber,
+          team: kingsTeam.name as any,
+          attackRatio: Math.random() * 10,
+          defenseRatio: Math.random() * 10,
+          teamScore: Math.random() * 30,
+          soloScore: Math.random() * 20,
+          solde: Math.floor(Math.random() * 10) - 1,
+          expirationDate: Math.random() > 0.7 ? "2025-02-15" : undefined
+        };
+
+        const teamPlayer: TeamPlayer = {
+          id: player.id,
+          username: player.username,
+          fullName: player.fullName,
+          jerseyNumber: jerseyNumber,
+          paymentStatus: player.paymentStatus,
+          solde: player.solde,
+          expirationDate: player.expirationDate
+        };
+
+        allPlayers.push(player);
+        teamPlayers.push(teamPlayer);
+      });
+
+      teams.push({
+        name: kingsTeam.name as any,
+        color: kingsTeam.color,
+        players: teamPlayers
+      });
+    });
+
+    // Create Kings League match
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dateStr = tomorrow.toISOString().split('T')[0];
+
+    return {
+      id: "kings-league-demo",
+      gameId: "KL001",
+      city: "Casablanca",
+      field: "Stade Mohammed V",
+      date: dateStr,
+      time: "19:00 (60min)",
+      format: "Rayo Battle 4x5",
+      status: "Complet",
+      players: allPlayers,
+      maxPlayers: 20,
+      teams: teams,
+      captain: "mohamed al.01"
+    };
+  };
 
   // Fonction pour charger les données depuis Google Sheets
   const loadMatchesData = async () => {
@@ -876,6 +1104,308 @@ const UpcomingMatchesSection = () => {
       
       const csvData = await response.text();
       const parsedMatches = parseMatchesCSV(csvData);
+      
+      // Debug: Check if we have any Rayo Battle matches
+      console.log('🎯 Parsed matches:', parsedMatches.map(m => ({ gameId: m.gameId, format: m.format, mode: m.mode })));
+      const rayoBattleMatches = parsedMatches.filter(m => m.mode?.toLowerCase() === 'rayo battle');
+      console.log('⚔️ Rayo Battle matches found:', rayoBattleMatches.length);
+      
+      // Add demo players to existing Rayo Battle matches or create a demo match
+      if (rayoBattleMatches.length > 0) {
+        // Add demo players to the first real Rayo Battle match
+        const realRayoBattleMatch = parsedMatches.find(m => m.mode?.toLowerCase() === 'rayo battle');
+        console.log('🔍 Real Rayo Battle match found:', realRayoBattleMatch?.gameId, 'players:', realRayoBattleMatch?.players.length);
+        if (realRayoBattleMatch && realRayoBattleMatch.players.length > 0) {
+          // Always reassign teams for Rayo Battle to use the special 4-team structure
+          const teams = ["Red Dragons", "Blue Sharks", "Green Eagles", "Gold Lions"];
+          realRayoBattleMatch.players.forEach((player, index) => {
+            player.team = teams[index % 4] as any; // Distribute evenly across 4 teams
+            player.jerseyNumber = Math.floor(index / 4) + 1; // Jersey numbers 1-5 for each team
+          });
+          console.log('✨ Reassigned teams to Rayo Battle players with 4-team structure');
+        } else if (realRayoBattleMatch && realRayoBattleMatch.players.length === 0) {
+          // Create demo players for the real Rayo Battle match
+          const demoPlayers: Player[] = [
+            {
+              id: "demo1",
+              username: "captain.01",
+              fullName: "Captain Red",
+              globalScore: 2850,
+              gamesPlayed: 45,
+              ranking: 1,
+              cityRanking: 1,
+              paymentStatus: "Payé",
+              isNewPlayer: false,
+              goals: 28,
+              assists: 15,
+              teamWins: 32,
+              jerseyNumber: 10,
+              team: "Red Dragons",
+              attackRatio: 85,
+              defenseRatio: 78,
+              teamScore: 2400,
+              soloScore: 450
+            },
+            {
+              id: "demo2",
+              username: "shark.02",
+              fullName: "Blue Striker",
+              globalScore: 2650,
+              gamesPlayed: 38,
+              ranking: 3,
+              cityRanking: 2,
+              paymentStatus: "Payé",
+              isNewPlayer: false,
+              goals: 22,
+              assists: 12,
+              teamWins: 25,
+              jerseyNumber: 9,
+              team: "Blue Sharks",
+              attackRatio: 82,
+              defenseRatio: 75,
+              teamScore: 2200,
+              soloScore: 450
+            },
+            {
+              id: "demo3",
+              username: "eagle.03",
+              fullName: "Green Defender",
+              globalScore: 2480,
+              gamesPlayed: 42,
+              ranking: 5,
+              cityRanking: 3,
+              paymentStatus: "Payé",
+              isNewPlayer: false,
+              goals: 8,
+              assists: 25,
+              teamWins: 28,
+              jerseyNumber: 5,
+              team: "Green Eagles",
+              attackRatio: 65,
+              defenseRatio: 92,
+              teamScore: 2100,
+              soloScore: 380
+            },
+            {
+              id: "demo4",
+              username: "lion.04",
+              fullName: "Golden Midfielder",
+              globalScore: 2320,
+              gamesPlayed: 35,
+              ranking: 8,
+              cityRanking: 4,
+              paymentStatus: "Payé",
+              isNewPlayer: false,
+              goals: 15,
+              assists: 18,
+              teamWins: 22,
+              jerseyNumber: 8,
+              team: "Gold Lions",
+              attackRatio: 75,
+              defenseRatio: 80,
+              teamScore: 2000,
+              soloScore: 320
+            },
+            {
+              id: "demo5",
+              username: "dragon.05",
+              fullName: "Red Winger",
+              globalScore: 2180,
+              gamesPlayed: 28,
+              ranking: 12,
+              cityRanking: 5,
+              paymentStatus: "Subscription",
+              isNewPlayer: false,
+              goals: 12,
+              assists: 8,
+              teamWins: 18,
+              jerseyNumber: 7,
+              team: "Red Dragons",
+              attackRatio: 78,
+              defenseRatio: 68,
+              teamScore: 1900,
+              soloScore: 280,
+              solde: 3,
+              expirationDate: "2025-01-15"
+            },
+            {
+              id: "demo6",
+              username: "newbie.06",
+              fullName: "Fresh Talent",
+              globalScore: 0,
+              gamesPlayed: 0,
+              ranking: 999,
+              cityRanking: 999,
+              paymentStatus: "Nouveau joueur",
+              isNewPlayer: true,
+              goals: 0,
+              assists: 0,
+              teamWins: 0,
+              jerseyNumber: 22,
+              team: "Blue Sharks",
+              attackRatio: 0,
+              defenseRatio: 0,
+              teamScore: 0,
+              soloScore: 0
+            }
+          ];
+          
+          realRayoBattleMatch.players = demoPlayers;
+          realRayoBattleMatch.captain = "captain.01";
+          console.log('✨ Added demo players to real Rayo Battle match:', realRayoBattleMatch.gameId);
+          console.log('🎮 Demo players:', demoPlayers.map(p => ({ username: p.username, team: p.team })));
+        }
+      } else if (rayoBattleMatches.length === 0) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const dateStr = tomorrow.toISOString().split('T')[0];
+        
+        // Create demo players for Rayo Battle
+        const demoPlayers: Player[] = [
+          {
+            id: "demo1",
+            username: "captain.01",
+            fullName: "Captain Red",
+            globalScore: 2850,
+            gamesPlayed: 45,
+            ranking: 1,
+            cityRanking: 1,
+            paymentStatus: "Payé",
+            isNewPlayer: false,
+            goals: 28,
+            assists: 15,
+            teamWins: 32,
+            jerseyNumber: 10,
+            team: "Red Dragons",
+            attackRatio: 85,
+            defenseRatio: 78,
+            teamScore: 2400,
+            soloScore: 450
+          },
+          {
+            id: "demo2",
+            username: "shark.02",
+            fullName: "Blue Striker",
+            globalScore: 2650,
+            gamesPlayed: 38,
+            ranking: 3,
+            cityRanking: 2,
+            paymentStatus: "Payé",
+            isNewPlayer: false,
+            goals: 22,
+            assists: 12,
+            teamWins: 25,
+            jerseyNumber: 9,
+            team: "Blue Sharks",
+            attackRatio: 82,
+            defenseRatio: 75,
+            teamScore: 2200,
+            soloScore: 450
+          },
+          {
+            id: "demo3",
+            username: "eagle.03",
+            fullName: "Green Defender",
+            globalScore: 2480,
+            gamesPlayed: 42,
+            ranking: 5,
+            cityRanking: 3,
+            paymentStatus: "Payé",
+            isNewPlayer: false,
+            goals: 8,
+            assists: 25,
+            teamWins: 28,
+            jerseyNumber: 5,
+            team: "Green Eagles",
+            attackRatio: 65,
+            defenseRatio: 92,
+            teamScore: 2100,
+            soloScore: 380
+          },
+          {
+            id: "demo4",
+            username: "lion.04",
+            fullName: "Golden Midfielder",
+            globalScore: 2320,
+            gamesPlayed: 35,
+            ranking: 8,
+            cityRanking: 4,
+            paymentStatus: "Payé",
+            isNewPlayer: false,
+            goals: 15,
+            assists: 18,
+            teamWins: 22,
+            jerseyNumber: 8,
+            team: "Gold Lions",
+            attackRatio: 75,
+            defenseRatio: 80,
+            teamScore: 2000,
+            soloScore: 320
+          },
+          {
+            id: "demo5",
+            username: "dragon.05",
+            fullName: "Red Winger",
+            globalScore: 2180,
+            gamesPlayed: 28,
+            ranking: 12,
+            cityRanking: 5,
+            paymentStatus: "Subscription",
+            isNewPlayer: false,
+            goals: 12,
+            assists: 8,
+            teamWins: 18,
+            jerseyNumber: 7,
+            team: "Red Dragons",
+            attackRatio: 78,
+            defenseRatio: 68,
+            teamScore: 1900,
+            soloScore: 280,
+            solde: 3,
+            expirationDate: "2025-01-15"
+          },
+          {
+            id: "demo6",
+            username: "newbie.06",
+            fullName: "Fresh Talent",
+            globalScore: 0,
+            gamesPlayed: 0,
+            ranking: 999,
+            cityRanking: 999,
+            paymentStatus: "Nouveau joueur",
+            isNewPlayer: true,
+            goals: 0,
+            assists: 0,
+            teamWins: 0,
+            jerseyNumber: 22,
+            team: "Blue Sharks",
+            attackRatio: 0,
+            defenseRatio: 0,
+            teamScore: 0,
+            soloScore: 0
+          }
+        ];
+
+        const demoRayoBattleMatch: Match = {
+          id: "DEMO_RAYO_BATTLE",
+          gameId: "RB001",
+          city: "Casablanca",
+          field: "Stade Mohammed V",
+          date: dateStr,
+          time: "19:00 (60min)",
+          format: "Rayo Battle 4x5",
+          status: "Besoin d'autres joueurs",
+          players: demoPlayers,
+          maxPlayers: 20,
+          mode: "Rayo Battle",
+          captain: "captain.01"
+        };
+        
+        parsedMatches.unshift(demoRayoBattleMatch);
+        console.log('✨ Added demo Rayo Battle match for preview');
+        console.log('🎮 Demo players:', demoPlayers.map(p => ({ username: p.username, team: p.team })));
+      }
+      
       setMatches(parsedMatches);
       setLastUpdate(new Date());
       
@@ -929,6 +1459,20 @@ const UpcomingMatchesSection = () => {
       setIsRefreshing(false);
     }
   };
+
+  // Sync saved city preference with local state
+  useEffect(() => {
+    if (savedCity) {
+      setSelectedCity(savedCity);
+    }
+  }, [savedCity]);
+
+  // Show city selection modal for first-time visitors
+  useEffect(() => {
+    if (isFirstVisit && matches.length > 0) {
+      setShowCityModal(true);
+    }
+  }, [isFirstVisit, matches.length]);
 
   // Charger les données au montage du composant
   useEffect(() => {
@@ -1092,7 +1636,9 @@ const UpcomingMatchesSection = () => {
               <div>
                 <h3 className="text-lg font-semibold mb-4 text-center">
                   Composition des équipes
-                  {selectedMatch.status === "Complet" ? " (3 x 5 joueurs)" : ` (${selectedMatch.players.length}/${selectedMatch.maxPlayers} joueurs)`}
+                  {selectedMatch.status === "Complet" ? 
+                    (selectedMatch.mode?.toLowerCase() === 'rayo battle' ? " (4 x 5 joueurs)" : " (3 x 5 joueurs)") : 
+                    ` (${selectedMatch.players.length}/${selectedMatch.maxPlayers} joueurs)`}
                 </h3>
                 
                 {/* Capitaine Rayo - sous le titre et avant les équipes */}
@@ -1123,11 +1669,12 @@ const UpcomingMatchesSection = () => {
                             <span>{team.players.length} joueurs</span>
                             <span className="hidden sm:inline">•</span>
                             <span>Score Moyen: {
-                              (selectedMatch.players
-                                .filter(p => p.team === team.name)
-                                .reduce((sum, p) => sum + p.globalScore, 0) / 
-                               selectedMatch.players.filter(p => p.team === team.name).length
-                              ).toFixed(1)
+                              team.players.length > 0 ? (
+                                team.players.reduce((sum, p) => {
+                                  const player = selectedMatch.players.find(pl => pl.id === p.id);
+                                  return sum + (player?.globalScore || 0);
+                                }, 0) / team.players.length
+                              ).toFixed(1) : '0.0'
                             }</span>
                           </div>
                         </div>
@@ -1138,13 +1685,12 @@ const UpcomingMatchesSection = () => {
                         <div className="text-center text-sm text-gray-700">
                           <span className="font-semibold">Équipe {team.name}</span> • Score moyen: 
                           <span className="font-bold text-blue-600 ml-1">
-                            {selectedMatch.players.filter(p => p.team === team.name).length > 0
-                              ? (selectedMatch.players
-                                  .filter(p => p.team === team.name)
-                                  .reduce((sum, p) => sum + p.globalScore, 0) / 
-                                 selectedMatch.players.filter(p => p.team === team.name).length
-                                ).toFixed(1)
-                              : '0.0'}
+                            {team.players.length > 0 ? (
+                              team.players.reduce((sum, p) => {
+                                const player = selectedMatch.players.find(pl => pl.id === p.id);
+                                return sum + (player?.globalScore || 0);
+                              }, 0) / team.players.length
+                            ).toFixed(1) : '0.0'}
                           </span>
                         </div>
                       </div>
@@ -1471,7 +2017,7 @@ const UpcomingMatchesSection = () => {
               </div>
               <select
                 value={selectedCity}
-                onChange={(e) => setSelectedCity(e.target.value)}
+                onChange={(e) => handleCitySelect(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm"
               >
                 {getUniqueCities().map(city => (
@@ -1489,7 +2035,7 @@ const UpcomingMatchesSection = () => {
                 {getUniqueCities().map((city) => (
                   <button
                     key={city}
-                    onClick={() => setSelectedCity(city)}
+                    onClick={() => handleCitySelect(city)}
                     className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${
                       selectedCity === city
                         ? 'bg-blue-600 text-white shadow-lg'
@@ -1520,7 +2066,11 @@ const UpcomingMatchesSection = () => {
                 </div>
                 
                 <div 
-                  className={`bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer text-white relative ${getMatchCardBorderStyle(parseMatchDateTime(match.date, match.time))}`}
+                  className={`${
+                    match.format.includes('Rayo Battle') 
+                      ? 'bg-gradient-to-br from-yellow-600 via-yellow-700 to-amber-800 border-2 border-yellow-400 shadow-xl shadow-yellow-500/20' 
+                      : 'bg-gradient-to-br from-gray-800 to-gray-900'
+                  } rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer text-white relative ${getMatchCardBorderStyle(parseMatchDateTime(match.date, match.time))}`}
                   onClick={() => setSelectedMatch(match)}
                 >
                   {/* Animated border overlay for today's matches */}
@@ -1533,6 +2083,9 @@ const UpcomingMatchesSection = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-baseline gap-2 mb-1">
                             <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                              {match.format.includes('Rayo Battle') && (
+                                <span className="text-yellow-300 text-lg">👑</span>
+                              )}
                               {match.time}
                               {(() => {
                                 const matchDate = parseMatchDateTime(match.date, match.time);
@@ -1548,9 +2101,7 @@ const UpcomingMatchesSection = () => {
                                 return null;
                               })()}
                             </h3>
-                            <span className="text-gray-400 text-sm whitespace-nowrap">
-                              {match.format}
-                            </span>
+
                           </div>
                           <p className="text-lg text-gray-300 truncate">
                             {match.field}
@@ -1603,6 +2154,16 @@ const UpcomingMatchesSection = () => {
                           <div className="flex items-center gap-2">
                             <FiMapPin className="text-blue-400 w-4 h-4" />
                             <p className="text-white text-lg font-semibold">{match.city}</p>
+                            {match.format.includes('Rayo Battle') && (
+                              <span className="text-yellow-200 bg-yellow-900/30 px-2 py-1 rounded-full font-semibold text-sm">
+                                🏆 {match.format}
+                              </span>
+                            )}
+                            {match.mode?.toLowerCase() === 'rayo rush' && (
+                              <span className="text-green-200 bg-green-900/30 px-2 py-1 rounded-full font-semibold text-sm">
+                                💰 <span className="whitespace-pre-line">1er match ? 25DH{'\n'}💰 déjà joué ? 50 Dhs</span>
+                              </span>
+                            )}
                           </div>
                           
                           {/* Capitaine - visible sur desktop */}
@@ -1814,6 +2375,12 @@ Pour rejoindre : https://wa.me/212649076758`,
       
       {/* Modal WhatsApp */}
       {showWhatsappModal && <WhatsAppModal isOpen={showWhatsappModal} onClose={() => setShowWhatsappModal(false)} />}
+      
+      {/* City Selection Modal */}
+      <CitySelectionModal 
+        isOpen={showCityModal}
+        onCitySelect={handleCitySelect}
+      />
       
       {/* FIFA Player Card Modal */}
       {selectedPlayer && (

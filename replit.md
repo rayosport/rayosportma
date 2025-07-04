@@ -114,6 +114,13 @@ RayoSport is a full-stack web application that combines a modern React frontend 
 
 ```
 Changelog:
+- July 4, 2025. Enhanced game mode system with Rayo Battle support
+  - Added Mode column detection for game type differentiation
+  - Implemented 4-team structure for Rayo Battle matches (Red Dragons, Blue Sharks, Green Eagles, Gold Lions)  
+  - Maintained 3-team structure for regular matches (Orange, Jaune, Blue)
+  - Updated team creation logic with isRayoBattle parameter
+  - Set proper player limits: 20 for Rayo Battle, 15 for regular matches
+  - Updated pricing display format for Rayo Rush matches
 - June 14, 2025. Initial setup
 ```
 

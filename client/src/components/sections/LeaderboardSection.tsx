@@ -24,8 +24,9 @@ interface Player {
   individualScore?: number;
   teamScore?: number;
   isNewPlayer?: boolean;
-  paymentStatus?: "Payé" | "Non payé" | "Nouveau joueur" | "Subscription";
+  paymentStatus: "Payé" | "Non payé" | "Nouveau joueur" | "Subscription";
   solde?: number;
+  expirationDate?: string;  // Expiration date from ExpirationDate column
 }
 
 // Configuration Google Sheets - URL publique CSV
@@ -199,20 +200,37 @@ const LeaderboardSection = () => {
                 {player.city} • Global #{player.rank}
               </div>
 
-              {/* Payment Status and Subscriber Games Left */}
-              {player.paymentStatus && (
-                <div className="text-center mt-2">
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    player.paymentStatus === "Subscription" ? "bg-green-500" :
-                    player.paymentStatus === "Payé" ? "bg-blue-500" :
-                    player.paymentStatus === "Non payé" ? "bg-red-500" :
-                    "bg-yellow-500"
-                  } text-white`}>
-                    {player.paymentStatus}
+              {/* Payment Status and Balance Section */}
+              <div className="text-center mt-2">
+                {/* Payment Status - ONLY show for subscribers */}
+                {player.paymentStatus === "Subscription" && (
+                  <span className="text-xs px-2 py-1 rounded-full bg-green-500 text-white">
+                    Subscription
                   </span>
-
-                </div>
-              )}
+                )}
+                
+                {/* Balance Display - Show for ALL players including -1 values */}
+                {player.solde !== undefined && (
+                  <div className={`text-xs ${player.paymentStatus === "Subscription" ? "mt-1" : "mt-0"} opacity-80`}>
+                    <span className={`${
+                      player.solde === -1 ? "text-red-300" :
+                      player.solde === 0 ? "text-green-300" :
+                      player.solde < 1 ? "text-red-300" :
+                      player.solde === 1 ? "text-yellow-300" :
+                      "text-green-300"
+                    }`}>
+                      Balance: {player.solde}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Expiration Date Display - ONLY for subscribers */}
+                {player.paymentStatus === "Subscription" && player.expirationDate && (
+                  <div className="text-xs mt-1 opacity-80 text-orange-200">
+                    Expire: {player.expirationDate}
+                  </div>
+                )}
+              </div>
 
               {/* Player Stats Grid */}
               <div className="grid grid-cols-3 gap-2 mt-4 text-center text-xs">
@@ -385,9 +403,32 @@ const LeaderboardSection = () => {
                 subGamesLeft = parseInt(subGamesLeftValue) || 0;
               }
             }
+
+            // Parse expiration date from ExpirationDate column
+            let expirationDate = '';
+            const hasExpirationDate = headers.some(h => h.includes('ExpirationDate'));
+            console.log('🔍 ExpirationDate Debug:', {
+              headers: headers,
+              hasExpirationDate: hasExpirationDate,
+              playerUsername: playerUsername
+            });
+            
+            if (hasExpirationDate) {
+              const expirationDateIndex = headers.findIndex(h => h.includes('ExpirationDate'));
+              const expirationDateValue = row[expirationDateIndex]?.trim();
+              console.log('📅 ExpirationDate for', playerUsername, ':', {
+                index: expirationDateIndex,
+                value: expirationDateValue,
+                isValid: expirationDateValue && expirationDateValue !== '#REF!' && expirationDateValue !== '#N/A' && expirationDateValue !== '#ERROR!' && expirationDateValue !== ''
+              });
+              
+              if (expirationDateValue && expirationDateValue !== '#REF!' && expirationDateValue !== '#N/A' && expirationDateValue !== '#ERROR!' && expirationDateValue !== '') {
+                expirationDate = expirationDateValue;
+              }
+            }
             
             // Determine payment status based on payment type and balance
-            let paymentStatus: "Payé" | "Non payé" | "Nouveau joueur" | "Subscription" | undefined;
+            let paymentStatus: "Payé" | "Non payé" | "Nouveau joueur" | "Subscription";
             if (paymentType === 'sub' || paymentType === 'subscription') {
               // All subscribers keep "Subscription" status regardless of balance
               paymentStatus = "Subscription";
@@ -397,6 +438,9 @@ const LeaderboardSection = () => {
               paymentStatus = "Non payé";
             } else if ((parseInt(row[6]) || 0) === 0) {
               paymentStatus = "Nouveau joueur";
+            } else {
+              // Default fallback when payment status is unknown
+              paymentStatus = "Non payé";
             }
 
             return {
@@ -415,6 +459,7 @@ const LeaderboardSection = () => {
               individualScore: parseDecimal(row[12]),    // Colonne M - Individuel Score
               teamScore: parseDecimal(row[13]),          // Colonne N - TEAM SCORE
               solde: subGamesLeft,                       // Colonne O - SubGamesLeft (subscriber balance)
+              expirationDate: expirationDate,            // ExpirationDate column (dynamic index)
               isNewPlayer: (parseInt(row[6]) || 0) === 0, // New player if 0 games played
               paymentStatus: paymentStatus
             };
@@ -831,6 +876,40 @@ const LeaderboardSection = () => {
                       <span className="text-purple-600">{player.assists} assists</span>
                       <span className="text-orange-600">{player.teamWins} wins</span>
                     </div>
+                  </div>
+
+                  {/* Mobile Payment Status and Balance Section */}
+                  <div className="flex items-center justify-between text-xs mt-2 pt-2 border-t border-gray-100">
+                    <div className="flex items-center gap-2">
+                      {/* Payment Status - ONLY show for subscribers */}
+                      {player.paymentStatus === "Subscription" && (
+                        <span className="text-xs px-2 py-1 rounded-full bg-green-500 text-white">
+                          Subscription
+                        </span>
+                      )}
+                      
+                      {/* Expiration Date Display - ONLY for subscribers */}
+                      {player.paymentStatus === "Subscription" && player.expirationDate && (
+                        <span className="text-xs text-orange-600">
+                          Expire: {player.expirationDate}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Balance Display - Show for ALL players */}
+                    {player.solde !== undefined && (
+                      <div className="text-xs">
+                        <span className={`${
+                          player.solde === -1 ? "text-red-600" :
+                          player.solde === 0 ? "text-green-600" :
+                          player.solde < 1 ? "text-red-600" :
+                          player.solde === 1 ? "text-yellow-600" :
+                          "text-green-600"
+                        }`}>
+                          Balance: {player.solde}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

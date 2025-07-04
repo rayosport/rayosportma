@@ -30,10 +30,10 @@ function App() {
     // Initialize Google Analytics when app loads
     initGA();
 
-    // Simulate loading
+    // Simulate loading - reduced for debugging
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2000);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, []);
