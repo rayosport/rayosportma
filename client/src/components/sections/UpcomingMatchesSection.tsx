@@ -739,6 +739,8 @@ const UpcomingMatchesSection = () => {
         }
       }
       
+
+      
       // Filtrer seulement les matchs programmés
       if (status !== 'Scheduled' || !gameId) continue;
       
@@ -751,8 +753,22 @@ const UpcomingMatchesSection = () => {
         
         // Set max players and format based on mode
         const isRayoBattle = gameMode.toLowerCase() === 'rayo battle';
-        const maxPlayers = isRayoBattle ? 20 : 15;
-        const gameFormat = isRayoBattle ? 'Rayo Battle 4x5' : '5vs5';
+        const isRayoRush5 = gameMode.toLowerCase() === 'rayo rush5';
+        const isRayoRush6 = gameMode.toLowerCase() === 'rayo rush6';
+        
+        let maxPlayers = 15;
+        let gameFormat = '5vs5';
+        
+        if (isRayoBattle) {
+          maxPlayers = 20;
+          gameFormat = 'Rayo Battle 4x5';
+        } else if (isRayoRush5) {
+          maxPlayers = 15;
+          gameFormat = 'Rayo Rush 3x5';
+        } else if (isRayoRush6) {
+          maxPlayers = 18;
+          gameFormat = 'Rayo Rush 3x6';
+        }
         // Function to convert cities to French
         const convertToFrench = (cityName: string): string => {
           const cityMap: Record<string, string> = {
@@ -780,7 +796,8 @@ const UpcomingMatchesSection = () => {
             'Berrechid': 'Berrechid',
             'Khemisset': 'Khémisset',
             'Inezgane': 'Inezgane',
-            'Ait Melloul': 'Aït Melloul'
+            'Ait Melloul': 'Aït Melloul',
+            'Bouskoura': 'Bouskoura'
           };
           return cityMap[cityName] || cityName;
         };
@@ -1107,19 +1124,14 @@ const UpcomingMatchesSection = () => {
       const csvData = await response.text();
       const parsedMatches = parseMatchesCSV(csvData);
       
-      // Debug: Check if we have any Rayo Battle matches
-      console.log('🎯 Parsed matches:', parsedMatches.map(m => ({ gameId: m.gameId, format: m.format, mode: m.mode })));
       const rayoBattleMatches = parsedMatches.filter(m => m.mode?.toLowerCase() === 'rayo battle');
-      console.log('⚔️ Rayo Battle matches found:', rayoBattleMatches.length);
       
       // Add demo players to existing Rayo Battle matches or create a demo match
       if (rayoBattleMatches.length > 0) {
         // Add demo players to the first real Rayo Battle match
         const realRayoBattleMatch = parsedMatches.find(m => m.mode?.toLowerCase() === 'rayo battle');
-        console.log('🔍 Real Rayo Battle match found:', realRayoBattleMatch?.gameId, 'players:', realRayoBattleMatch?.players.length);
         if (realRayoBattleMatch && realRayoBattleMatch.players.length > 0) {
           // Keep original team assignments from CSV for Rayo Battle
-          console.log('✨ Using original team assignments from CSV for Rayo Battle');
         } else if (realRayoBattleMatch && realRayoBattleMatch.players.length === 0) {
           // Create demo players for the real Rayo Battle match
           const demoPlayers: Player[] = [
@@ -1461,6 +1473,8 @@ const UpcomingMatchesSection = () => {
   useEffect(() => {
     if (savedCity) {
       setSelectedCity(savedCity);
+    } else {
+      setSelectedCity("All cities");
     }
   }, [savedCity]);
 
@@ -1633,9 +1647,12 @@ const UpcomingMatchesSection = () => {
               <div>
                 <h3 className="text-lg font-semibold mb-4 text-center">
                   Composition des équipes
-                  {selectedMatch.status === "Complet" ? 
-                    (selectedMatch.mode?.toLowerCase() === 'rayo battle' ? " (4 x 5 joueurs)" : " (3 x 5 joueurs)") : 
-                    ` (${selectedMatch.players.length}/${selectedMatch.maxPlayers} joueurs)`}
+                  {selectedMatch.status === "Complet" ? (
+                    selectedMatch.mode?.toLowerCase() === 'rayo battle' ? " (4 x 5 joueurs)" :
+                    selectedMatch.mode?.toLowerCase() === 'rayo rush5' ? " (3 x 5 joueurs)" :
+                    selectedMatch.mode?.toLowerCase() === 'rayo rush6' ? " (3 x 6 joueurs)" :
+                    " (3 x 5 joueurs)"
+                  ) : ` (${selectedMatch.players.length}/${selectedMatch.maxPlayers} joueurs)`}
                 </h3>
                 
                 {/* Capitaine Rayo - sous le titre et avant les équipes */}
@@ -2156,11 +2173,14 @@ const UpcomingMatchesSection = () => {
                                 🏆 {match.format}
                               </span>
                             )}
-                            {match.mode?.toLowerCase() === 'rayo rush' && (
+                            {(match.mode?.toLowerCase() === 'rayo rush5' || match.mode?.toLowerCase() === 'rayo rush6') && (
                               <span className="text-green-200 bg-green-900/30 px-2 py-1 rounded-full font-semibold text-sm">
-                                💰 <span className="whitespace-pre-line">1er match ? 25DH{'\n'}💰 déjà joué ? 50DH</span>
+                                💰 1er match ? 25DH
+                                <br />
+                                💰 déjà joué ? 50DH
                               </span>
                             )}
+
                           </div>
                           
                           {/* Capitaine - visible sur desktop */}
