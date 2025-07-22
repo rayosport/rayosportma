@@ -114,6 +114,29 @@ RayoSport is a full-stack web application that combines a modern React frontend 
 
 ```
 Changelog:
+- July 20, 2025. Fixed CSV column mapping after Score Manuel addition
+  - Corrected all column indices after "Score Manuel" was added at index 8
+  - Updated player data parsing to map: ID, Date&Time, Status, MODE, Game ID, PlayerUsername, Team, Number, Score Manuel, TScore, etc.
+  - Implemented fallback logic: Score Manuel → TScore → Goals for ranking and display
+  - Fixed both desktop table and mobile cards to show correct scores with appropriate labels
+  - Enhanced scoring display to show "pts match" for Score Manuel or "pts" for TScore fallback
+- July 20, 2025. Added Match Score ranking system for past games
+  - Added "Score Manuel" column support for individual match scoring
+  - Players now ranked by Match Score instead of goals in game details
+  - Updated both desktop table and mobile cards to display Match Score prominently
+  - Match Score shown with 1 decimal place precision for accurate ranking
+  - Past games modal now uses same leaderboard-style UI format
+- July 20, 2025. Replaced automatic refresh with manual refresh button
+  - Removed automatic 120-second refresh that was disturbing card details
+  - Added manual refresh button next to "Matchs à venir" title
+  - Button shows loading state with spinning icon during refresh
+  - Added last update timestamp display
+  - Improved user control over data refresh timing
+- July 20, 2025. Fixed Arena match visibility and city filtering
+  - Added "Bouskoura" to city mapping for Arena matches
+  - Resolved city filtering issue that was hiding Arena matches
+  - Removed "6vs6" badge from Rayo Rush6 match cards
+  - Enhanced debugging for city-based match filtering
 - July 4, 2025. Enhanced game mode system with Rayo Battle support
   - Added Mode column detection for game type differentiation
   - Implemented 4-team structure for Rayo Battle matches (Red Dragons, Blue Sharks, Green Eagles, Gold Lions)  

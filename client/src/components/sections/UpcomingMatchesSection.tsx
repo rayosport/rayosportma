@@ -446,7 +446,7 @@ const UpcomingMatchesSection = () => {
   const [showWhatsappModal, setShowWhatsappModal] = useState(false);
   const [selectedCity, setSelectedCity] = useState<string>("All cities");
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
+
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [showPlayerCard, setShowPlayerCard] = useState(false);
   
@@ -1490,29 +1490,7 @@ const UpcomingMatchesSection = () => {
     loadMatchesData();
   }, []);
 
-  // Configurer le rafraîchissement automatique toutes les 120 secondes
-  useEffect(() => {
-    // Commencer le rafraîchissement automatique seulement après le premier chargement
-    if (!loading && matches.length > 0) {
-      const interval = setInterval(silentRefreshData, 120000); // 120 secondes
-      setRefreshInterval(interval);
-      
-      return () => {
-        if (interval) {
-          clearInterval(interval);
-        }
-      };
-    }
-  }, [loading, matches.length]);
-
-  // Nettoyer l'interval au démontage
-  useEffect(() => {
-    return () => {
-      if (refreshInterval) {
-        clearInterval(refreshInterval);
-      }
-    };
-  }, [refreshInterval]);
+  // Remove automatic refresh - now using manual refresh button
 
   // Obtenir la liste unique des villes
   const getUniqueCities = () => {
@@ -1991,27 +1969,36 @@ const UpcomingMatchesSection = () => {
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
                 Matchs à venir
               </h2>
-              {/* Indicateur de mise à jour moderne */}
-              <div className="relative">
-                <div className={`w-3 h-3 rounded-full transition-all duration-500 ${
-                  isRefreshing 
-                    ? 'bg-green-500 shadow-lg shadow-green-500/50' 
-                    : 'bg-gray-300'
-                }`}>
-                  {isRefreshing && (
-                    <div className="absolute inset-0 rounded-full bg-green-500 animate-ping"></div>
-                  )}
-                </div>
-                {isRefreshing && (
-                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                    Mise à jour...
-                  </div>
-                )}
-              </div>
+              {/* Manual Refresh Button */}
+              <button
+                onClick={() => {
+                  if (!isRefreshing) {
+                    silentRefreshData();
+                    trackEvent('manual_refresh', 'user_action', 'upcoming_matches');
+                  }
+                }}
+                disabled={isRefreshing}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  isRefreshing
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-500 text-white hover:bg-blue-600 active:scale-95 shadow-md hover:shadow-lg'
+                }`}
+                title={isRefreshing ? "Mise à jour en cours..." : "Actualiser les données"}
+              >
+                <FiRefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">
+                  {isRefreshing ? 'Actualisation...' : 'Actualiser'}
+                </span>
+              </button>
             </div>
             <p className="text-lg text-gray-600">
               Découvrez les prochains matchs et rejoignez la compétition
             </p>
+            {lastUpdate && (
+              <p className="text-sm text-gray-500 mt-2">
+                Dernière mise à jour: {lastUpdate.toLocaleTimeString('fr-FR')}
+              </p>
+            )}
           </div>
         </RevealAnimation>
 

@@ -7,6 +7,7 @@ import FaqSectionComponent from "@/components/sections/FaqSection";
 import RulesSectionComponent from "@/components/sections/RulesSection";
 import LeaderboardSectionComponent from "@/components/sections/LeaderboardSection";
 import UpcomingMatchesSectionComponent from "@/components/sections/UpcomingMatchesSection";
+import PastGamesSectionComponent from "@/components/sections/PastGamesSection";
 import { useNav } from "@/hooks/use-intersection";
 import { FiUsers, FiCalendar, FiActivity, FiAward, FiX } from "react-icons/fi";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -49,19 +50,34 @@ const HeroSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
             >
               {t("hero_cta_primary")}
             </button>
-            <button 
-              className="btn-outline px-8 py-4 text-lg"
-              onClick={() => {
-                trackEvent('view_matches_click', 'navigation', 'hero_section');
-                // Scroll to upcoming matches section
-                const upcomingMatchesSection = document.getElementById('upcoming-matches');
-                if (upcomingMatchesSection) {
-                  upcomingMatchesSection.scrollIntoView({ behavior: 'smooth' });
-                }
-              }}
-            >
-              {t("hero_cta_secondary")}
-            </button>
+            <div className="flex gap-2">
+              <button 
+                className="btn-outline px-4 py-4 text-lg flex-1"
+                onClick={() => {
+                  trackEvent('view_matches_click', 'navigation', 'hero_section');
+                  // Scroll to upcoming matches section
+                  const upcomingMatchesSection = document.getElementById('upcoming-matches');
+                  if (upcomingMatchesSection) {
+                    upcomingMatchesSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+              >
+                {t("hero_cta_secondary")}
+              </button>
+              <button 
+                className="btn-outline px-4 py-4 text-lg flex-1"
+                onClick={() => {
+                  trackEvent('view_past_games_click', 'navigation', 'hero_section');
+                  // Scroll to past games section
+                  const pastGamesSection = document.getElementById('past-games');
+                  if (pastGamesSection) {
+                    pastGamesSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+              >
+                Matchs passés
+              </button>
+            </div>
           </div>
           
           <div className="mt-16 flex items-center">
@@ -224,6 +240,11 @@ const HowItWorksSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
 // Upcoming Matches Section
 const UpcomingMatchesSection = () => {
   return <UpcomingMatchesSectionComponent />;
+};
+
+// Past Games Section
+const PastGamesSection = () => {
+  return <PastGamesSectionComponent />;
 };
 
 // Leaderboard Section
@@ -412,6 +433,7 @@ const Home = () => {
     <main className="overflow-hidden">
       <HeroSection onJoinClick={handleJoinClick} />
       <UpcomingMatchesSection />
+      <PastGamesSection />
       <LeaderboardSection />
       <AboutSection />
       <HowItWorksSection onJoinClick={handleJoinClick} />
