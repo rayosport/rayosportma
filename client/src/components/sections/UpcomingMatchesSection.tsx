@@ -320,7 +320,7 @@ const MATCHES_SHEET_CONFIG = {
 };
 
 // Fonction pour créer les équipes basées sur les vrais joueurs
-const createTeamsFromPlayers = (players: Player[], isRayoBattle: boolean = false): Team[] => {
+const createTeamsFromPlayers = (players: Player[], isRayoBattle: boolean = false, isRayoClassic7vs7: boolean = false): Team[] => {
   const teamMap = new Map<string, TeamPlayer[]>();
   
   // Grouper les joueurs par équipe
@@ -385,6 +385,28 @@ const createTeamsFromPlayers = (players: Player[], isRayoBattle: boolean = false
         color: colorConfig.color,
         players: teamPlayers
       });
+    });
+  } else if (isRayoClassic7vs7) {
+    // Pour Rayo Classic 7vs7: Seulement 2 équipes
+    const classicTeams = [
+      { name: "Orange", color: "bg-orange-500" },
+      { name: "Blue", color: "bg-blue-500" }
+    ];
+    
+    classicTeams.forEach((teamConfig) => {
+      if (teamMap.has(teamConfig.name)) {
+        const sortedPlayers = teamMap.get(teamConfig.name)!.sort((a, b) => {
+          const playerA = players.find(p => p.id === a.id);
+          const playerB = players.find(p => p.id === b.id);
+          return (playerA?.ranking || 999) - (playerB?.ranking || 999);
+        });
+        
+        teams.push({
+          name: teamConfig.name as "Orange" | "Blue",
+          color: teamConfig.color,
+          players: sortedPlayers
+        });
+      }
     });
   } else {
     // Pour les matchs réguliers: 3 équipes classiques
@@ -752,9 +774,21 @@ const UpcomingMatchesSection = () => {
         const timeStr = dateObj.toTimeString().slice(0, 5) + ' (60min)';
         
         // Set max players and format based on mode
-        const isRayoBattle = gameMode.toLowerCase() === 'rayo battle';
-        const isRayoRush5 = gameMode.toLowerCase() === 'rayo rush5';
-        const isRayoRush6 = gameMode.toLowerCase() === 'rayo rush6';
+        const isRayoBattle = gameMode.toLowerCase().includes('rayo battle');
+        const isRayoRush5 = gameMode.toLowerCase().includes('rayo rush5');
+        const isRayoRush6 = gameMode.toLowerCase().includes('rayo rush6');
+        const isRayoClassic7vs7 = gameMode.toLowerCase().includes('rayo-classic-7vs7');
+        
+        // Debug logging for Rayo Classic 7vs7 detection
+        if (gameMode.toLowerCase().includes('rayo') && gameMode.toLowerCase().includes('7')) {
+          console.log('🎯 Rayo Classic Detection:', {
+            gameMode,
+            trimmed: gameMode.trim(),
+            lowercase: gameMode.toLowerCase().trim(),
+            isRayoClassic7vs7,
+            gameId
+          });
+        }
         
         let maxPlayers = 15;
         let gameFormat = '5vs5';
@@ -768,6 +802,9 @@ const UpcomingMatchesSection = () => {
         } else if (isRayoRush6) {
           maxPlayers = 18;
           gameFormat = 'Rayo Rush 3x6';
+        } else if (isRayoClassic7vs7) {
+          maxPlayers = 14;
+          gameFormat = 'Rayo Classic 7vs7';
         }
         // Function to convert cities to French
         const convertToFrench = (cityName: string): string => {
@@ -814,7 +851,7 @@ const UpcomingMatchesSection = () => {
           players: [],
           maxPlayers: maxPlayers,
           captain: captainName,
-          mode: gameMode
+          mode: gameMode.trim()
         };
         matchesMap.set(gameId, match);
       }
@@ -974,15 +1011,16 @@ const UpcomingMatchesSection = () => {
       // Créer les équipes pour les matchs qui ont des équipes assignées
       // Rayo Battle: 20 joueurs avec 4 équipes de 5
       // Regular: 15 joueurs avec 3 équipes de 5
-      const isRayoBattle = matchItem.mode?.toLowerCase() === 'rayo battle';
+              const isRayoBattle = matchItem.mode?.toLowerCase().includes('rayo battle');
+        const isRayoClassic7vs7 = matchItem.mode?.toLowerCase().includes('rayo-classic-7vs7');
       
       // For Rayo Battle matches, always show teams (even if empty)
-      // For regular matches, only show teams if there are enough players with team assignments
-      const shouldCreateTeams = isRayoBattle || 
+      // For Rayo Classic 7vs7 and regular matches, only show teams if players have team assignments
+      const shouldCreateTeams = isRayoBattle ||
         (matchItem.players.some(p => p.team) && matchItem.players.length >= 3);
       
       if (shouldCreateTeams) {
-        matchItem.teams = createTeamsFromPlayers(matchItem.players, isRayoBattle);
+        matchItem.teams = createTeamsFromPlayers(matchItem.players, isRayoBattle, isRayoClassic7vs7);
       }
     });
     
@@ -1478,12 +1516,12 @@ const UpcomingMatchesSection = () => {
     }
   }, [savedCity]);
 
-  // Show city selection modal for first-time visitors
-  useEffect(() => {
-    if (isFirstVisit && matches.length > 0) {
-      setShowCityModal(true);
-    }
-  }, [isFirstVisit, matches.length]);
+  // Show city selection modal for first-time visitors - DISABLED
+  // useEffect(() => {
+  //   if (isFirstVisit && matches.length > 0) {
+  //     setShowCityModal(true);
+  //   }
+  // }, [isFirstVisit, matches.length]);
 
   // Charger les données au montage du composant
   useEffect(() => {
@@ -1626,9 +1664,10 @@ const UpcomingMatchesSection = () => {
                 <h3 className="text-lg font-semibold mb-4 text-center">
                   Composition des équipes
                   {selectedMatch.status === "Complet" ? (
-                    selectedMatch.mode?.toLowerCase() === 'rayo battle' ? " (4 x 5 joueurs)" :
-                    selectedMatch.mode?.toLowerCase() === 'rayo rush5' ? " (3 x 5 joueurs)" :
-                    selectedMatch.mode?.toLowerCase() === 'rayo rush6' ? " (3 x 6 joueurs)" :
+                                    selectedMatch.mode?.toLowerCase().includes('rayo battle') ? " (4 x 5 joueurs)" :
+                selectedMatch.mode?.toLowerCase().includes('rayo-classic-7vs7') ? " (2 x 7 joueurs)" :
+                selectedMatch.mode?.toLowerCase().includes('rayo rush5') ? " (3 x 5 joueurs)" :
+                selectedMatch.mode?.toLowerCase().includes('rayo rush6') ? " (3 x 6 joueurs)" :
                     " (3 x 5 joueurs)"
                   ) : ` (${selectedMatch.players.length}/${selectedMatch.maxPlayers} joueurs)`}
                 </h3>
@@ -1649,7 +1688,11 @@ const UpcomingMatchesSection = () => {
                   </div>
                 )}
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className={`grid grid-cols-1 gap-6 ${
+                  selectedMatch.mode?.toLowerCase().includes('rayo-classic-7vs7') 
+                    ? 'md:grid-cols-2' 
+                    : 'md:grid-cols-3'
+                }`}>
                   {selectedMatch.teams.map((team, teamIndex) => (
                     <div key={team.name} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden">
                       {/* En-tête de l'équipe avec gradient */}
@@ -2070,6 +2113,8 @@ const UpcomingMatchesSection = () => {
                   className={`${
                     match.format.includes('Rayo Battle') 
                       ? 'bg-gradient-to-br from-yellow-600 via-yellow-700 to-amber-800 border-2 border-yellow-400 shadow-xl shadow-yellow-500/20' 
+                      : (match.mode?.toLowerCase().includes('rayo-classic-7vs7') || match.format?.toLowerCase().includes('rayo classic 7vs7'))
+                      ? 'bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 border-2 border-purple-400 shadow-xl shadow-purple-500/20'
                       : 'bg-gradient-to-br from-gray-800 to-gray-900'
                   } rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer text-white relative ${getMatchCardBorderStyle(parseMatchDateTime(match.date, match.time))}`}
                   onClick={() => setSelectedMatch(match)}
@@ -2160,7 +2205,12 @@ const UpcomingMatchesSection = () => {
                                 🏆 {match.format}
                               </span>
                             )}
-                            {(match.mode?.toLowerCase() === 'rayo rush5' || match.mode?.toLowerCase() === 'rayo rush6') && (
+                            {(match.mode?.toLowerCase().includes('rayo-classic-7vs7') || match.format?.toLowerCase().includes('rayo classic 7vs7')) && (
+                              <span className="text-purple-200 bg-purple-900/30 px-2 py-1 rounded-full font-semibold text-sm">
+                                ⚽ Rayo Classic 7vs7
+                              </span>
+                            )}
+                            {(match.mode?.toLowerCase().includes('rayo rush5') || match.mode?.toLowerCase().includes('rayo rush6')) && (
                               <span className="text-green-200 bg-green-900/30 px-2 py-1 rounded-full font-semibold text-sm">
                                 💰 1er match ? 25DH
                                 <br />

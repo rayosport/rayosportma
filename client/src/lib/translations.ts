@@ -61,6 +61,7 @@ export const translations: Record<Language, TranslationRecord> = {
     "rules_clash_3": "Durée totale : 60 minutes",
     "rules_clash_4": "Système de points cumulatifs : 3 pts pour victoire, 1 pt pour égalité",
     "rules_clash_5": "Intensité maximale et tactique essentielle",
+
     "rules_rankings_title": "Système de Classement",
     "rules_rankings_1": "Tous les joueurs reçoivent une note de performance après chaque match",
     "rules_rankings_2": "Les statistiques incluent : buts, passes décisives, victoires, MVP",
@@ -164,6 +165,7 @@ export const translations: Record<Language, TranslationRecord> = {
     "rules_clash_3": "المدة الإجمالية: 60 دقيقة",
     "rules_clash_4": "نظام النقاط التراكمية: 3 نقاط للفوز، نقطة واحدة للتعادل",
     "rules_clash_5": "كثافة قصوى واستراتيجية ضرورية",
+
     "rules_rankings_title": "نظام التصنيف",
     "rules_rankings_1": "يحصل جميع اللاعبين على تقييم للأداء بعد كل مباراة",
     "rules_rankings_2": "تشمل الإحصائيات: الأهداف، التمريرات الحاسمة، الانتصارات، أفضل لاعب",

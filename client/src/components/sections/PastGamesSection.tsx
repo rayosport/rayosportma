@@ -905,18 +905,18 @@ export default function PastGamesSection() {
                                   🏆 MVP
                                 </span>
                               )}
+                              <div className={`w-3 h-3 rounded-full ${
+                                player.team.toLowerCase() === 'orange' ? 'bg-orange-500' :
+                                player.team.toLowerCase() === 'blue' ? 'bg-blue-500' :
+                                player.team.toLowerCase() === 'jaune' ? 'bg-yellow-500' :
+                                player.team.toLowerCase() === 'red' ? 'bg-red-500' :
+                                player.team.toLowerCase() === 'green' ? 'bg-green-500' :
+                                player.team.toLowerCase() === 'purple' ? 'bg-purple-500' :
+                                player.team.toLowerCase() === 'pink' ? 'bg-pink-500' :
+                                'bg-gray-500'
+                              }`}></div>
                               {player.matchTotalScore && player.matchTotalScore.trim() !== '' && (
-                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${player.mvp === '1' ? 'bg-yellow-100 text-yellow-700 border border-yellow-300' : 'bg-blue-100 text-blue-700 border border-blue-300'} flex items-center gap-1`}>
-                                  <div className={`w-3 h-3 rounded-full ${
-                                    player.team.toLowerCase() === 'orange' ? 'bg-orange-500' :
-                                    player.team.toLowerCase() === 'blue' ? 'bg-blue-500' :
-                                    player.team.toLowerCase() === 'jaune' ? 'bg-yellow-500' :
-                                    player.team.toLowerCase() === 'red' ? 'bg-red-500' :
-                                    player.team.toLowerCase() === 'green' ? 'bg-green-500' :
-                                    player.team.toLowerCase() === 'purple' ? 'bg-purple-500' :
-                                    player.team.toLowerCase() === 'pink' ? 'bg-pink-500' :
-                                    'bg-gray-500'
-                                  }`}></div>
+                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${player.mvp === '1' ? 'bg-yellow-100 text-yellow-700 border border-yellow-300' : 'bg-blue-100 text-blue-700 border border-blue-300'}`}>
                                   Score: {parseFloat(player.matchTotalScore.replace(',', '.')).toFixed(1)}
                                 </span>
                               )}

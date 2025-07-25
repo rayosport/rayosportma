@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLanguage } from "@/hooks/use-language";
 import RevealAnimation from "@/components/ui/RevealAnimation";
 import { 
@@ -14,9 +14,13 @@ import {
 
 const RulesSection = () => {
   const { language } = useLanguage();
+  
+  console.log('📋 RulesSection: Current language is:', language);
+  console.log('📋 RulesSection: Language type check:', typeof language, language === 'ar');
+  console.log('📋 RulesSection: Language trimmed equals ar:', language?.toString().trim() === 'ar');
 
   // Contenu en fonction de la langue
-  const content = language === 'ar' ? {
+  const content = (language?.toString().trim() === 'ar') ? {
     title: "قواعد اللعبة",
     subtitle: "هل أنت جاهز لتسجيل هدف والبقاء في الملعب؟",
     gameFormat: {
@@ -147,6 +151,14 @@ const RulesSection = () => {
     finalCta: "Prêt à briller ?",
     finalTagline: "Joue. Marque. Reste sur le terrain."
   };
+  
+  console.log('📋 RulesSection: Selected content title:', content.title);
+  console.log('📋 RulesSection: Is Arabic?', language === 'ar');
+
+  useEffect(() => {
+    console.log('🔄 RulesSection: useEffect triggered, language changed to:', language);
+    console.log('🔄 RulesSection: Content will be:', language === 'ar' ? 'Arabic' : 'French');
+  }, [language]);
 
   // Composant pour chaque règle avec son icône
   const RuleCard = ({ title, rules, icon }: { title: string, rules: string[], icon: JSX.Element }) => (
