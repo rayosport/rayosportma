@@ -2212,9 +2212,12 @@ const UpcomingMatchesSection = () => {
                             )}
                             {(match.mode?.toLowerCase().includes('rayo rush5') || match.mode?.toLowerCase().includes('rayo rush6')) && (
                               <span className="text-green-200 bg-green-900/30 px-2 py-1 rounded-full font-semibold text-sm">
-                                💰 1er match ? 25DH
-                                <br />
-                                💰 déjà joué ? 50DH
+                                💰 50DH
+                              </span>
+                            )}
+                            {(match.mode?.toLowerCase().includes('rayo-classic-7vs7') || match.format?.toLowerCase().includes('rayo classic 7vs7')) && (
+                              <span className="text-purple-200 bg-purple-900/30 px-2 py-1 rounded-full font-semibold text-sm">
+                                💰 60DH
                               </span>
                             )}
 
