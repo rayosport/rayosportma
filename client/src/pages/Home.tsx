@@ -42,44 +42,107 @@ const HeroSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
           <p className="text-xl md:text-2xl max-w-3xl mb-10">
             {t("hero_subtitle")}
           </p>
-          <div className="flex flex-wrap gap-5">
+          <div className="flex flex-col gap-4 max-w-md">
+            {/* Bouton Rejoindre WhatsApp */}
             <button 
-              className="btn-primary px-8 py-4 text-lg"
+              className="group relative w-full px-6 py-4 bg-gradient-to-r from-green-500 via-green-600 to-green-700 text-white rounded-xl hover:from-green-600 hover:via-green-700 hover:to-green-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 overflow-hidden"
               onClick={() => {
                 trackEvent('join_click', 'user_engagement', 'hero_section');
                 onJoinClick();
               }}
             >
-              {t("hero_cta_primary")}
+              {/* Background animation */}
+              <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+              
+              {/* Content */}
+              <div className="relative z-10 flex items-center gap-3">
+                {/* Icon */}
+                <div className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center group-hover:bg-opacity-30 transition-all duration-300">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.479 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+                  </svg>
+                </div>
+                
+                {/* Text */}
+                <div className="text-left">
+                  <div className="text-sm font-semibold">{t("hero_cta_primary")}</div>
+                  <div className="text-xs opacity-90">Rejoindre la communauté</div>
+                </div>
+              </div>
+              
+              {/* Shine effect */}
+              <div className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 transition-all duration-500 transform translate-x-[-100%] group-hover:translate-x-[100%]"></div>
             </button>
-            <div className="flex gap-2">
-              <button 
-                className="btn-outline px-4 py-4 text-lg flex-1"
-                onClick={() => {
-                  trackEvent('view_matches_click', 'navigation', 'hero_section');
-                  // Scroll to upcoming matches section
-                  const upcomingMatchesSection = document.getElementById('upcoming-matches');
-                  if (upcomingMatchesSection) {
-                    upcomingMatchesSection.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-              >
-                {t("hero_cta_secondary")}
-              </button>
-              <button 
-                className="btn-outline px-4 py-4 text-lg flex-1"
-                onClick={() => {
-                  trackEvent('view_past_games_click', 'navigation', 'hero_section');
-                  // Scroll to past games section
-                  const pastGamesSection = document.getElementById('past-games');
-                  if (pastGamesSection) {
-                    pastGamesSection.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-              >
-                Matchs passés
-              </button>
-            </div>
+
+            {/* Bouton Matchs à venir */}
+            <button 
+              className="group relative w-full px-6 py-4 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-600 hover:via-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 overflow-hidden"
+              onClick={() => {
+                trackEvent('view_matches_click', 'navigation', 'hero_section');
+                // Scroll to upcoming matches section
+                const upcomingMatchesSection = document.getElementById('upcoming-matches');
+                if (upcomingMatchesSection) {
+                  upcomingMatchesSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+            >
+              {/* Background animation */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+              
+              {/* Content */}
+              <div className="relative z-10 flex items-center gap-3">
+                {/* Icon */}
+                <div className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center group-hover:bg-opacity-30 transition-all duration-300">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                </div>
+                
+                {/* Text */}
+                <div className="text-left">
+                  <div className="text-sm font-semibold">{t("hero_cta_secondary")}</div>
+                  <div className="text-xs opacity-90">Prochains matchs</div>
+                </div>
+              </div>
+              
+              {/* Shine effect */}
+              <div className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 transition-all duration-500 transform translate-x-[-100%] group-hover:translate-x-[100%]"></div>
+            </button>
+            
+            {/* Bouton Matchs passés */}
+            <button 
+              className="group relative w-full px-6 py-4 bg-gradient-to-r from-gray-600 via-gray-700 to-gray-800 text-white rounded-xl hover:from-gray-700 hover:via-gray-800 hover:to-gray-900 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 overflow-hidden"
+              onClick={() => {
+                trackEvent('view_past_games_click', 'navigation', 'hero_section');
+                // Scroll to past games section
+                const pastGamesSection = document.getElementById('past-games');
+                if (pastGamesSection) {
+                  pastGamesSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+            >
+              {/* Background animation */}
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-500 to-gray-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+              
+              {/* Content */}
+              <div className="relative z-10 flex items-center gap-3">
+                {/* Icon */}
+                <div className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center group-hover:bg-opacity-30 transition-all duration-300">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
+                </div>
+                
+                {/* Text */}
+                <div className="text-left">
+                  <div className="text-sm font-semibold">Matchs passés</div>
+                  <div className="text-xs opacity-90">Résultats & stats</div>
+                </div>
+              </div>
+              
+              {/* Shine effect */}
+              <div className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 transition-all duration-500 transform translate-x-[-100%] group-hover:translate-x-[100%]"></div>
+            </button>
           </div>
           
           <div className="mt-16 flex items-center">
