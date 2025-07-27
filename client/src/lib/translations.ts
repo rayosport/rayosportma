@@ -106,6 +106,11 @@ export const translations: Record<Language, TranslationRecord> = {
     "testimonial_5_name": "Omar Erriche",
     "testimonial_5_role": "Joueur passionné",
     
+    // Gallery Section
+    "gallery_title": "Galerie Photos",
+    "gallery_subtitle": "Découvrez l'expérience Rayo Sport en images : matchs, équipes, terrains et moments forts de notre communauté",
+    "gallery_view_more": "Voir toutes les photos",
+    
     // CTA Section
     "cta_title": "Prêt à rejoindre le mouvement ?",
     "cta_subtitle": "Rejoins une communauté passionnée et vis une expérience de football unique",
@@ -235,6 +240,11 @@ export const translations: Record<Language, TranslationRecord> = {
     "testimonial_5_quote": "التنظيم المثالي، الزي الموحد عالي الجودة، الحكام المحترفون... رايو سبورت رفع مستوى كرة القدم الهاوية في المغرب. قبعة!",
     "testimonial_5_name": "عمر إريش",
     "testimonial_5_role": "لاعب متحمس",
+    
+    // Gallery Section
+    "gallery_title": "معرض الصور",
+    "gallery_subtitle": "اكتشف تجربة رايو سبورت بالصور: المباريات والفرق والملاعب واللحظات المميزة من مجتمعنا",
+    "gallery_view_more": "عرض جميع الصور",
     
     // CTA Section
     "cta_title": "مستعد للانضمام إلى الحركة؟",

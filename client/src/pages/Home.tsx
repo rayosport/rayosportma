@@ -9,6 +9,7 @@ import LeaderboardSectionComponent from "@/components/sections/LeaderboardSectio
 import UpcomingMatchesSectionComponent from "@/components/sections/UpcomingMatchesSection";
 import PastGamesSectionComponent from "@/components/sections/PastGamesSection";
 import TestimonialsSectionComponent from "@/components/sections/TestimonialsSection";
+import GallerySectionComponent from "@/components/sections/GallerySection";
 import WhatsAppBubble from "@/components/ui/WhatsAppBubble";
 import { useNav } from "@/hooks/use-intersection";
 import { FiUsers, FiCalendar, FiActivity, FiAward, FiX } from "react-icons/fi";
@@ -530,6 +531,7 @@ const Home = () => {
       <PastGamesSection />
       <LeaderboardSection />
       <TestimonialsSectionComponent />
+      <GallerySectionComponent />
       <AboutSection />
       <HowItWorksSection onJoinClick={handleJoinClick} />
       <RulesSection />
