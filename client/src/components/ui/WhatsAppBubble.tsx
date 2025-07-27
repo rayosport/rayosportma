@@ -8,25 +8,52 @@ const WhatsAppBubble = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Show bubble after a short delay when page loads
+  // Show bubble after user scrolls or after a longer delay
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(true);
-    }, 2000);
+    let hasScrolled = false;
+    let timeoutId: NodeJS.Timeout;
 
-    return () => clearTimeout(timer);
+    // Function to show the bubble
+    const showBubble = () => {
+      if (!hasScrolled) {
+        hasScrolled = true;
+        setIsVisible(true);
+      }
+    };
+
+    // Show after scroll
+    const handleScroll = () => {
+      if (window.scrollY > 300) { // Show after scrolling 300px
+        showBubble();
+        window.removeEventListener('scroll', handleScroll);
+      }
+    };
+
+    // Show after 8 seconds if user hasn't scrolled
+    timeoutId = setTimeout(() => {
+      showBubble();
+      window.removeEventListener('scroll', handleScroll);
+    }, 8000);
+
+    // Listen for scroll
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
-  // Auto-expand briefly to get attention, then collapse
+  // Auto-expand briefly to get attention, then collapse (only after more interaction)
   useEffect(() => {
     if (isVisible) {
       const expandTimer = setTimeout(() => {
         setIsExpanded(true);
         const collapseTimer = setTimeout(() => {
           setIsExpanded(false);
-        }, 3000);
+        }, 4000); // Show expanded state longer
         return () => clearTimeout(collapseTimer);
-      }, 1000);
+      }, 2000); // Wait longer before expanding
 
       return () => clearTimeout(expandTimer);
     }
@@ -93,8 +120,17 @@ const WhatsAppBubble = () => {
 
       {/* WhatsApp Button */}
       <motion.button
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ 
+          scale: 1, 
+          opacity: 1,
+          transition: {
+            type: "spring",
+            stiffness: 260,
+            damping: 20,
+            delay: 0.5 // Additional delay for smoother entrance
+          }
+        }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         onClick={isExpanded ? () => setIsExpanded(false) : handleWhatsAppClick}
@@ -103,8 +139,20 @@ const WhatsAppBubble = () => {
       >
         <FaWhatsapp className="h-8 w-8" />
         
-        {/* Pulse animation */}
-        <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-25"></div>
+        {/* Subtle pulse animation - only show after user has seen the button */}
+        <motion.div 
+          className="absolute inset-0 rounded-full bg-green-500 opacity-20"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.2, 0.1, 0.2]
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 5 // Start pulsing only after 5 seconds
+          }}
+        />
         
         {/* Tooltip on hover (when not expanded) */}
         {!isExpanded && (

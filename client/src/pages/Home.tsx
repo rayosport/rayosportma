@@ -21,7 +21,7 @@ const HeroSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
   
   return (
     <section id="hero" className="relative min-h-screen flex items-center bg-jetblack text-white overflow-hidden">
-      {/* Background image with overlay */}
+      {/* Background image with enhanced overlay */}
       <div 
         className="absolute inset-0 z-0"
         style={{
@@ -31,17 +31,39 @@ const HeroSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
           backgroundRepeat: 'no-repeat'
         }}
       >
-        <div className="absolute inset-0 bg-jetblack/40"></div>
+        {/* Multiple overlay layers for better contrast */}
+        <div className="absolute inset-0 bg-jetblack/60"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-jetblack/50 via-transparent to-jetblack/30"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-jetblack/20 via-transparent to-jetblack/70"></div>
       </div>
       
       <div className="container mx-auto px-4 relative z-10">
         <RevealAnimation>
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            {t("hero_title")} <span style={{color: '#ecd71b'}}>{t("hero_title_highlight")}</span>
-          </h1>
-          <p className="text-xl md:text-2xl max-w-3xl mb-10">
-            {t("hero_subtitle")}
-          </p>
+          {/* Enhanced text container with backdrop for readability */}
+          <div className="bg-black/20 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-white/10">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6" style={{
+              textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.5)'
+            }}>
+              <span className="drop-shadow-lg">{t("hero_title")}</span>{" "}
+              <span 
+                style={{
+                  color: '#ecd71b',
+                  textShadow: '2px 2px 8px rgba(0, 0, 0, 0.9), 0 0 20px rgba(236, 215, 27, 0.3)'
+                }}
+                className="drop-shadow-lg"
+              >
+                {t("hero_title_highlight")}
+              </span>
+            </h1>
+            <p 
+              className="text-xl md:text-2xl max-w-3xl mb-6"
+              style={{
+                textShadow: '1px 1px 4px rgba(0, 0, 0, 0.7)'
+              }}
+            >
+              {t("hero_subtitle")}
+            </p>
+          </div>
           <div className="flex flex-col gap-4 max-w-md">
             {/* Bouton Rejoindre WhatsApp */}
             <button 
@@ -146,10 +168,17 @@ const HeroSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
           </div>
           
           <div className="mt-16 flex items-center">
-            <div className="bg-rayoblue rounded-full w-14 h-14 flex items-center justify-center">
-              <span className="text-xl font-bold">500+</span>
+            <div className="bg-rayoblue rounded-full w-14 h-14 flex items-center justify-center shadow-lg border-2 border-white/20">
+              <span className="text-xl font-bold text-white drop-shadow-md">500+</span>
             </div>
-            <p className="ml-4 text-lg opacity-80">{t("hero_players_text")}</p>
+            <p 
+              className="ml-4 text-lg"
+              style={{
+                textShadow: '1px 1px 3px rgba(0, 0, 0, 0.7)'
+              }}
+            >
+              {t("hero_players_text")}
+            </p>
           </div>
         </RevealAnimation>
       </div>
