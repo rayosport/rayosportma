@@ -18,7 +18,7 @@ const Footer = () => {
               <a href="#" className="text-gray-400 hover:text-rayoblue transition-colors">
                 <FaInstagram size={24} />
               </a>
-              <a href="#" className="text-gray-400 hover:text-rayoblue transition-colors">
+              <a href="https://wa.me/+212649076758" className="text-gray-400 hover:text-rayoblue transition-colors">
                 <FaWhatsapp size={24} />
               </a>
               <a href="#" className="text-gray-400 hover:text-rayoblue transition-colors">
@@ -70,8 +70,9 @@ const Footer = () => {
                 </a>
               </li>
               <li>
-                <a href="tel:+212522000000" className="text-gray-400 hover:text-white transition-colors">
-                  +212 522 000 000
+                <a href="https://wa.me/+212649076758" className="text-gray-400 hover:text-white transition-colors flex items-center space-x-2">
+                  <FaWhatsapp className="h-4 w-4" />
+                  <span>+212 649-076758</span>
                 </a>
               </li>
             </ul>

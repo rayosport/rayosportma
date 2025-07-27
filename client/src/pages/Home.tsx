@@ -8,6 +8,8 @@ import RulesSectionComponent from "@/components/sections/RulesSection";
 import LeaderboardSectionComponent from "@/components/sections/LeaderboardSection";
 import UpcomingMatchesSectionComponent from "@/components/sections/UpcomingMatchesSection";
 import PastGamesSectionComponent from "@/components/sections/PastGamesSection";
+import TestimonialsSectionComponent from "@/components/sections/TestimonialsSection";
+import WhatsAppBubble from "@/components/ui/WhatsAppBubble";
 import { useNav } from "@/hooks/use-intersection";
 import { FiUsers, FiCalendar, FiActivity, FiAward, FiX } from "react-icons/fi";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -435,6 +437,7 @@ const Home = () => {
       <UpcomingMatchesSection />
       <PastGamesSection />
       <LeaderboardSection />
+      <TestimonialsSectionComponent />
       <AboutSection />
       <HowItWorksSection onJoinClick={handleJoinClick} />
       <RulesSection />
@@ -447,6 +450,9 @@ const Home = () => {
         isOpen={isWhatsAppModalOpen} 
         onClose={() => setIsWhatsAppModalOpen(false)} 
       />
+      
+      {/* WhatsApp Contact Bubble */}
+      <WhatsAppBubble />
     </main>
   );
 };

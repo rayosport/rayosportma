@@ -87,6 +87,25 @@ export const translations: Record<Language, TranslationRecord> = {
     "faq_more_questions": "Tu as d'autres questions ?",
     "faq_contact_link": "Contacte-nous sur WhatsApp",
     
+    // Testimonials Section
+    "testimonials_title": "Ce que disent nos joueurs",
+    "testimonials_subtitle": "Découvrez les témoignages de notre communauté de joueurs passionnés",
+    "testimonial_1_quote": "Rayo Sport a révolutionné ma façon de jouer au foot ! Les formats innovants comme Rayo Rush rendent chaque match imprévisible et excitant. L'organisation est top niveau !",
+    "testimonial_1_name": "Abdelhak Samrani",
+    "testimonial_1_role": "Joueur régulier depuis 3 mois",
+    "testimonial_2_quote": "Le format 7vs7 de Rayo Classic permet un vrai jeu de possession. Les équipes équilibrées et l'ambiance conviviale font que je reviens chaque semaine. Merci l'équipe !",
+    "testimonial_2_name": "Hamza Khyar",
+    "testimonial_2_role": "Capitaine d'équipe",
+    "testimonial_3_quote": "Rayo Battle avec 4 équipes, c'est du jamais vu ! L'intensité est folle et on progresse énormément. Les stats détaillées nous aident à analyser notre jeu.",
+    "testimonial_3_name": "Youssef Zguioir",
+    "testimonial_3_role": "Joueur compétitif",
+    "testimonial_4_quote": "Les rotations à 3 équipes du Rayo Clash créent une dynamique unique. Plus de temps de banc, plus d'action ! L'expérience est vraiment premium.",
+    "testimonial_4_name": "Abdelkbir A",
+    "testimonial_4_role": "Joueur depuis le début",
+    "testimonial_5_quote": "L'organisation parfaite, les uniformes de qualité, les arbitres professionnels... Rayo Sport a élevé le niveau du foot amateur au Maroc. Chapeau !",
+    "testimonial_5_name": "Omar Erriche",
+    "testimonial_5_role": "Joueur passionné",
+    
     // CTA Section
     "cta_title": "Prêt à rejoindre le mouvement ?",
     "cta_subtitle": "Rejoins une communauté passionnée et vis une expérience de football unique",
@@ -94,6 +113,13 @@ export const translations: Record<Language, TranslationRecord> = {
     "cta_instagram": "Suivre sur Instagram",
     "cta_button_app": "Télécharger l'application (bientôt)",
     
+    // WhatsApp Bubble
+    "whatsapp_bubble_title": "🏆 Rayo Sport",
+    "whatsapp_bubble_text": "Prêt à rejoindre la communauté ? Contactez-nous sur WhatsApp !",
+    "whatsapp_bubble_button": "Contacter",
+    "whatsapp_bubble_tooltip": "Contactez-nous",
+    "whatsapp_bubble_message": "Salut ! Je suis intéressé par Rayo Sport. Pouvez-vous me donner plus d'informations ?",
+
     // Footer
     "footer_about": "Rayo Sport est la plateforme communautaire de football qui révolutionne l'expérience des matchs 5vs5 au Maroc avec des formats innovants, un suivi des performances et une expérience premium pour tous les joueurs.",
     "footer_quick_links": "Liens rapides",
@@ -191,12 +217,38 @@ export const translations: Record<Language, TranslationRecord> = {
     "faq_more_questions": "هل لديك أسئلة أخرى؟",
     "faq_contact_link": "تواصل معنا على واتساب",
     
+    // Testimonials Section
+    "testimonials_title": "ما يقوله لاعبونا",
+    "testimonials_subtitle": "اكتشف شهادات مجتمعنا من اللاعبين المتحمسين",
+    "testimonial_1_quote": "رايو سبورت ثورة حقيقية في طريقة لعب كرة القدم! الأنماط المبتكرة مثل رايو راش تجعل كل مباراة مثيرة وغير متوقعة. التنظيم في أعلى مستوى!",
+    "testimonial_1_name": "عبد الحق صمراني",
+    "testimonial_1_role": "لاعب منتظم منذ 3 أشهر",
+    "testimonial_2_quote": "نمط 7 ضد 7 في رايو كلاسيك يسمح بلعب حقيقي للكرة. الفرق المتوازنة والأجواء الودية تجعلني أعود كل أسبوع. شكراً للفريق!",
+    "testimonial_2_name": "حمزة خيار",
+    "testimonial_2_role": "قائد فريق",
+    "testimonial_3_quote": "رايو باتل مع 4 فرق، هذا لم نره من قبل! الحماس جنوني ونتقدم كثيراً. الإحصائيات التفصيلية تساعدنا في تحليل لعبنا.",
+    "testimonial_3_name": "يوسف زقيور",
+    "testimonial_3_role": "لاعب تنافسي",
+    "testimonial_4_quote": "التناوب مع 3 فرق في رايو كلاش يخلق ديناميكية فريدة. لا مزيد من وقت الاحتياط، مزيد من العمل! التجربة متميزة حقاً.",
+    "testimonial_4_name": "عبد الكبير أ",
+    "testimonial_4_role": "لاعب منذ البداية",
+    "testimonial_5_quote": "التنظيم المثالي، الزي الموحد عالي الجودة، الحكام المحترفون... رايو سبورت رفع مستوى كرة القدم الهاوية في المغرب. قبعة!",
+    "testimonial_5_name": "عمر إريش",
+    "testimonial_5_role": "لاعب متحمس",
+    
     // CTA Section
     "cta_title": "مستعد للانضمام إلى الحركة؟",
     "cta_subtitle": "انضم إلى مجتمع متحمس وعش تجربة كرة قدم فريدة",
     "cta_whatsapp": "انضم عبر واتساب",
     "cta_instagram": "تابعنا على انستغرام",
     "cta_button_app": "تحميل التطبيق (قريبًا)",
+    
+    // WhatsApp Bubble
+    "whatsapp_bubble_title": "🏆 رايو سبورت",
+    "whatsapp_bubble_text": "مستعد للانضمام إلى المجتمع؟ تواصل معنا على واتساب!",
+    "whatsapp_bubble_button": "تواصل",
+    "whatsapp_bubble_tooltip": "تواصل معنا",
+    "whatsapp_bubble_message": "مرحبا! أنا مهتم برايو سبورت. هل يمكنكم إعطائي المزيد من المعلومات؟",
     
     // Footer
     "footer_about": "رايو سبورت هي منصة كرة القدم المجتمعية التي تعيد تشكيل تجربة مباريات 5 ضد 5 في المغرب من خلال أنماط مبتكرة، تتبع الأداء وتجربة متميزة لجميع اللاعبين.",

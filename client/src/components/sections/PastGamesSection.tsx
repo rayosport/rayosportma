@@ -352,7 +352,7 @@ export default function PastGamesSection() {
   // Get games to display (limited or all)
   const displayedGames = useMemo(() => {
     const games = filteredGames;
-    return showAllGames ? games : games.slice(0, 5);
+    return showAllGames ? games : games.slice(0, 3);
   }, [filteredGames, showAllGames]);
 
   const handlePlayerSelect = (player: string) => {
@@ -670,7 +670,7 @@ export default function PastGamesSection() {
               </div>
 
               {/* Show More Button */}
-              {!showAllGames && filteredGames.length > 5 && (
+              {!showAllGames && filteredGames.length > 3 && (
                 <div className="text-center mt-8">
                   <button
                     onClick={() => {
@@ -679,13 +679,13 @@ export default function PastGamesSection() {
                     }}
                     className="inline-flex items-center gap-2 px-4 sm:px-6 py-3 bg-white border-2 border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 transition-all duration-200 shadow-sm hover:shadow-md text-sm sm:text-base"
                   >
-                    <span>Voir plus de matchs ({filteredGames.length - 5} restants)</span>
+                    <span>Voir plus de matchs ({filteredGames.length - 3} restants)</span>
                     <FiChevronDown className="w-4 h-4" />
                   </button>
                 </div>
               )}
 
-              {showAllGames && filteredGames.length > 5 && (
+              {showAllGames && filteredGames.length > 3 && (
                 <div className="text-center mt-8">
                   <button
                     onClick={() => {
