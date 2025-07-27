@@ -387,26 +387,27 @@ const createTeamsFromPlayers = (players: Player[], isRayoBattle: boolean = false
       });
     });
   } else if (isRayoClassic7vs7) {
-    // Pour Rayo Classic 7vs7: Seulement 2 équipes
+    // Pour Rayo Classic 7vs7: Seulement 2 équipes (toujours les afficher, même si vides)
     const classicTeams = [
       { name: "Orange", color: "bg-orange-500" },
-      { name: "Blue", color: "bg-blue-500" }
+      { name: "Jaune", color: "bg-yellow-500" }
     ];
     
     classicTeams.forEach((teamConfig) => {
-      if (teamMap.has(teamConfig.name)) {
-        const sortedPlayers = teamMap.get(teamConfig.name)!.sort((a, b) => {
-          const playerA = players.find(p => p.id === a.id);
-          const playerB = players.find(p => p.id === b.id);
-          return (playerA?.ranking || 999) - (playerB?.ranking || 999);
-        });
-        
-        teams.push({
-          name: teamConfig.name as "Orange" | "Blue",
+      // Toujours créer l'équipe, même si elle est vide
+      const teamPlayers = teamMap.has(teamConfig.name) 
+        ? teamMap.get(teamConfig.name)!.sort((a, b) => {
+            const playerA = players.find(p => p.id === a.id);
+            const playerB = players.find(p => p.id === b.id);
+            return (playerA?.ranking || 999) - (playerB?.ranking || 999);
+          })
+        : []; // Équipe vide si aucun joueur assigné
+      
+              teams.push({
+          name: teamConfig.name as "Orange" | "Jaune",
           color: teamConfig.color,
-          players: sortedPlayers
+          players: teamPlayers
         });
-      }
     });
   } else {
     // Pour les matchs réguliers: 3 équipes classiques
@@ -894,6 +895,17 @@ const UpcomingMatchesSection = () => {
             break;
         }
 
+        // Debug: Log team assignments for 7vs7 matches
+        if (gameMode.toLowerCase().includes('rayo-classic-7vs7')) {
+          console.log('🎯 7vs7 Team Debug:', {
+            gameId,
+            playerUsername,
+            teamLetter,
+            teamName,
+            teamLetterLowerCase: teamLetter.toLowerCase()
+          });
+        }
+
         // Parse subscriber balance from SubGamesLeft column
         let subGamesLeft = 0;
         const hasSubGamesLeft = headers.includes('SubGamesLeft');
@@ -945,6 +957,14 @@ const UpcomingMatchesSection = () => {
         // Extract Goals, Assists, and Wins from CSV if available
         const extractStatByHeader = (statName: string) => {
           const headerIndex = headers.findIndex(h => h.toLowerCase() === statName.toLowerCase());
+          console.log(`🎯 extractStatByHeader Debug for "${statName}":`, {
+            playerUsername,
+            headerIndex,
+            headers: headers.map((h, i) => `${i}: ${h}`),
+            foundHeader: headerIndex !== -1 ? headers[headerIndex] : 'NOT FOUND',
+            rowValue: headerIndex !== -1 ? row[headerIndex] : 'N/A'
+          });
+          
           if (headerIndex !== -1) {
             const value = row[headerIndex]?.trim();
             if (value && value !== '#REF!' && value !== '#N/A' && value !== '#ERROR!' && value !== '') {
@@ -1014,9 +1034,9 @@ const UpcomingMatchesSection = () => {
               const isRayoBattle = matchItem.mode?.toLowerCase().includes('rayo battle');
         const isRayoClassic7vs7 = matchItem.mode?.toLowerCase().includes('rayo-classic-7vs7');
       
-      // For Rayo Battle matches, always show teams (even if empty)
-      // For Rayo Classic 7vs7 and regular matches, only show teams if players have team assignments
-      const shouldCreateTeams = isRayoBattle ||
+      // For Rayo Battle and Rayo Classic 7vs7 matches, always show teams (even if empty)
+      // For regular matches, only show teams if players have team assignments
+      const shouldCreateTeams = isRayoBattle || isRayoClassic7vs7 ||
         (matchItem.players.some(p => p.team) && matchItem.players.length >= 3);
       
       if (shouldCreateTeams) {
@@ -1665,7 +1685,7 @@ const UpcomingMatchesSection = () => {
                   Composition des équipes
                   {selectedMatch.status === "Complet" ? (
                                     selectedMatch.mode?.toLowerCase().includes('rayo battle') ? " (4 x 5 joueurs)" :
-                selectedMatch.mode?.toLowerCase().includes('rayo-classic-7vs7') ? " (2 x 7 joueurs)" :
+                selectedMatch.mode?.toLowerCase().includes('rayo-classic-7vs7') ? " (Orange vs Jaune - 2 x 7 joueurs)" :
                 selectedMatch.mode?.toLowerCase().includes('rayo rush5') ? " (3 x 5 joueurs)" :
                 selectedMatch.mode?.toLowerCase().includes('rayo rush6') ? " (3 x 6 joueurs)" :
                     " (3 x 5 joueurs)"
