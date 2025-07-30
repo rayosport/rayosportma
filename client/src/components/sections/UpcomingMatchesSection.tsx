@@ -1029,14 +1029,17 @@ const UpcomingMatchesSection = () => {
       matchItem.status = matchItem.players.length >= matchItem.maxPlayers ? "Complet" : "Besoin d'autres joueurs";
       
       // Créer les équipes pour les matchs qui ont des équipes assignées
-      // Rayo Battle: 20 joueurs avec 4 équipes de 5
-      // Regular: 15 joueurs avec 3 équipes de 5
-              const isRayoBattle = matchItem.mode?.toLowerCase().includes('rayo battle');
-        const isRayoClassic7vs7 = matchItem.mode?.toLowerCase().includes('rayo-classic-7vs7');
+      // Rayo Battle: 20 joueurs avec 4 équipes de 5 (always show teams, even empty)
+      // Regular/Rayo Rush 5/Rayo Classic 7vs7: only show teams when players have team assignments
+      const isRayoBattle = matchItem.mode?.toLowerCase().includes('rayo battle');
+      const isRayoClassic7vs7 = matchItem.mode?.toLowerCase().includes('rayo-classic-7vs7') || 
+                                matchItem.mode?.toLowerCase().includes('rayo classic 7vs7') ||
+                                matchItem.mode?.toLowerCase().includes('classic 7vs7') ||
+                                (matchItem.mode?.toLowerCase().includes('7vs7') && matchItem.maxPlayers === 14);
       
-      // For Rayo Battle and Rayo Classic 7vs7 matches, always show teams (even if empty)
-      // For regular matches, only show teams if players have team assignments
-      const shouldCreateTeams = isRayoBattle || isRayoClassic7vs7 ||
+      // Only Rayo Battle shows teams always (even if empty)
+      // All other game modes (including Rayo Classic 7vs7) only show teams when players have team assignments
+      const shouldCreateTeams = isRayoBattle ||
         (matchItem.players.some(p => p.team) && matchItem.players.length >= 3);
       
       if (shouldCreateTeams) {
