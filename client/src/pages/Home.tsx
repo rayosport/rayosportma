@@ -11,6 +11,7 @@ import PastGamesSectionComponent from "@/components/sections/PastGamesSection";
 import TestimonialsSectionComponent from "@/components/sections/TestimonialsSection";
 import GallerySectionComponent from "@/components/sections/GallerySection";
 import WhatsAppBubble from "@/components/ui/WhatsAppBubble";
+import NextMatchCountdown from "@/components/ui/NextMatchCountdown";
 import { useNav } from "@/hooks/use-intersection";
 import { FiUsers, FiCalendar, FiActivity, FiAward, FiX } from "react-icons/fi";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -528,6 +529,7 @@ const Home = () => {
     <main className="overflow-hidden">
       <HeroSection onJoinClick={handleJoinClick} />
       <UpcomingMatchesSection />
+      <NextMatchCountdown />
       <PastGamesSection />
       <LeaderboardSection />
       <TestimonialsSectionComponent />

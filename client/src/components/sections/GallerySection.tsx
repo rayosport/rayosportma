@@ -7,6 +7,7 @@ import { FaTimes, FaChevronLeft, FaChevronRight, FaEye } from "react-icons/fa";
 const GallerySection = () => {
   const { t } = useLanguage();
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
+  const [showAllPhotos, setShowAllPhotos] = useState(false);
 
   // Photos Rayo Sport - Images optimisées (98.9% de réduction de taille)
   // Originales: 96.1MB → Optimisées: 1.1MB
@@ -69,6 +70,9 @@ const GallerySection = () => {
     }
   ];
 
+  // Afficher seulement les 4 premières photos si showAllPhotos est false
+  const displayedImages = showAllPhotos ? galleryImages : galleryImages.slice(0, 4);
+
   const openLightbox = (imageId: number) => {
     setSelectedImage(imageId);
     document.body.style.overflow = 'hidden';
@@ -112,7 +116,7 @@ const GallerySection = () => {
         {/* Grille de photos */}
         <RevealAnimation delay={0.2}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {galleryImages.map((image, index) => (
+            {displayedImages.map((image, index) => (
               <motion.div
                 key={image.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -153,17 +157,15 @@ const GallerySection = () => {
           </div>
         </RevealAnimation>
 
-        {/* Bouton voir plus */}
+        {/* Bouton voir plus/moins */}
         <RevealAnimation delay={0.4}>
           <div className="text-center mt-12">
-            <a
-              href="https://drive.google.com/drive/folders/1Ct6LGKEcqz8jlKQdWJYP3K2H0R_oqHwI"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => setShowAllPhotos(!showAllPhotos)}
               className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-rayoblue to-blue-600 text-white font-semibold rounded-full hover:from-blue-600 hover:to-rayoblue transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
-              {t("gallery_view_more")}
-            </a>
+              {showAllPhotos ? 'Voir moins de photos' : t("gallery_view_more")}
+            </button>
           </div>
         </RevealAnimation>
       </div>
