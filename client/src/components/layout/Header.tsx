@@ -1,13 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/hooks/use-language";
 import { useNavContext } from "@/context/NavContext";
 import { trackEvent } from "@/lib/analytics";
+import { FiChevronDown, FiGlobe } from "react-icons/fi";
+import { Language } from "@/lib/i18n";
 
 const Header = () => {
   const { t, setLanguage, language, direction } = useLanguage();
   const { activeSection } = useNavContext();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,17 +22,31 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const toggleLanguage = () => {
-    const newLanguage = language === "fr" ? "ar" : "fr";
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsLanguageDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const changeLanguage = (newLanguage: Language) => {
     setLanguage(newLanguage);
+    setIsLanguageDropdownOpen(false);
   };
 
+  // Navigation links in requested order
   const navLinks = [
     { id: "upcoming-matches", label: "Matchs à venir" },
-    { id: "about", label: t("nav_about") },
-    { id: "how-it-works", label: t("nav_how") },
-    { id: "rules", label: t("nav_rules") },
+    { id: "past-games", label: "Matchs passés" },
     { id: "leaderboard", label: t("nav_leaderboard") },
+    { id: "rules", label: t("nav_rules") },
+    { id: "how-it-works", label: t("nav_how") },
+    { id: "about", label: t("nav_about") },
     { id: "faq", label: t("nav_faq") },
   ];
 
@@ -43,6 +61,13 @@ const Header = () => {
       });
     }
   };
+
+  const languageOptions = [
+    { code: "fr" as Language, label: "Fr", flag: "🇫🇷" },
+    { code: "ar" as Language, label: "Ar", flag: "🇲🇦" }
+  ];
+
+  const currentLanguage = languageOptions.find(lang => lang.code === language);
 
   return (
     <header 
@@ -65,12 +90,12 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-6">
             {navLinks.map((link) => (
               <button
                 key={link.id}
                 onClick={() => scrollToSection(link.id)}
-                className={`font-medium transition-colors ${
+                className={`font-medium transition-colors text-sm ${
                   activeSection === link.id 
                     ? (isScrolled ? "text-rayoblue" : "text-rayoblue") 
                     : (isScrolled ? "text-black hover:text-rayoblue" : "text-white hover:text-rayoblue")
@@ -83,15 +108,44 @@ const Header = () => {
 
           {/* Right side buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Language Toggle */}
-            <button
-              onClick={toggleLanguage}
-              className={`flex items-center text-sm font-medium ${
-                isScrolled ? "text-black hover:text-rayoblue" : "text-white hover:text-rayoblue"
-              } transition-colors`}
-            >
-              {language === "fr" ? "العربية" : "Français"}
-            </button>
+            {/* Language Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isScrolled 
+                    ? "text-black hover:text-rayoblue hover:bg-gray-100" 
+                    : "text-white hover:text-rayoblue hover:bg-white/10"
+                }`}
+              >
+                <FiGlobe className="w-4 h-4" />
+                <span>{currentLanguage?.flag}</span>
+                <span className="hidden lg:inline">{currentLanguage?.label}</span>
+                <FiChevronDown 
+                  className={`w-3 h-3 transition-transform ${
+                    isLanguageDropdownOpen ? "rotate-180" : ""
+                  }`} 
+                />
+              </button>
+
+              {/* Dropdown Menu */}
+              {isLanguageDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                  {languageOptions.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => changeLanguage(lang.code)}
+                      className={`w-full text-left px-3 py-2 hover:bg-gray-100 transition-colors flex items-center space-x-2 ${
+                        language === lang.code ? "bg-rayoblue/10 text-rayoblue" : "text-gray-700"
+                      }`}
+                    >
+                      <span>{lang.flag}</span>
+                      <span className="text-sm font-medium">{lang.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Join button */}
             <button 
@@ -108,7 +162,9 @@ const Header = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-2xl"
+            className={`md:hidden text-2xl transition-colors ${
+              isScrolled ? "text-black" : "text-white"
+            }`}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? "✕" : "☰"}
@@ -121,23 +177,44 @@ const Header = () => {
             <div className="container">
               <nav className="flex flex-col space-y-3">
                 {navLinks.map((link) => (
-                  <a
+                  <button
                     key={link.id}
-                    href={`#${link.id}`}
-                    className={`font-medium py-2 ${
+                    onClick={() => {
+                      scrollToSection(link.id);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`font-medium py-2 text-left ${
                       activeSection === link.id ? "text-rayoblue" : "text-black hover:text-rayoblue"
                     }`}
-                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {link.label}
-                  </a>
+                  </button>
                 ))}
-                <button
-                  onClick={toggleLanguage}
-                  className="text-left font-medium py-2 text-black hover:text-rayoblue"
-                >
-                  {language === "fr" ? "العربية" : "Français"}
-                </button>
+                
+                {/* Mobile Language Selection */}
+                <div className="border-t pt-3 mt-3">
+                  <p className="text-sm text-gray-600 mb-2 font-medium">Fr / Ar</p>
+                  <div className="flex space-x-2">
+                    {languageOptions.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => {
+                          changeLanguage(lang.code);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          language === lang.code 
+                            ? "bg-rayoblue text-white" 
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        <span>{lang.flag}</span>
+                        <span>{lang.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
                 <button 
                   className="btn-primary mt-3"
                   onClick={() => {

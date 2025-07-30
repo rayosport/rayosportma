@@ -17,35 +17,35 @@ const GallerySection = () => {
       src: "/images/gallery/optimized/7I7A9374.jpg",
       alt: "7I7A9374 - Match Rayo Sport",
       category: "Matchs",
-      description: "Action de jeu intense - Photo professionnelle Rayo Sport"
+      description: "jeux collectif des joueurs Rayo"
     },
     {
       id: 2,
       src: "/images/gallery/optimized/7I7A9381.jpg",
       alt: "7I7A9381 - Équipe Rayo Sport",
       category: "Équipes",
-      description: "Formation d'équipe avant le coup d'envoi"
+      description: "Fairplay domine les matchs rayo"
     },
     {
       id: 3,
       src: "/images/gallery/optimized/7I7A9414.jpg",
       alt: "7I7A9414 - Terrain Rayo Sport",
       category: "Terrains",
-      description: "Vue panoramique du terrain de jeu"
+      description: "technique du jeux"
     },
     {
       id: 4,
       src: "/images/gallery/optimized/7I7A9416.jpg",
       alt: "7I7A9416 - Action de match",
       category: "Matchs",
-      description: "Moment fort d'un match Rayo Sport"
+      description: "Arbitre present lors des matchs rayo"
     },
     {
       id: 5,
       src: "/images/gallery/optimized/7I7A9421.jpg",
       alt: "7I7A9421 - Célébration Rayo Sport",
       category: "Célébrations",
-      description: "Joie et célébration après un but"
+      description: "action d'un passe d'un joueur"
     },
     {
       id: 6,
