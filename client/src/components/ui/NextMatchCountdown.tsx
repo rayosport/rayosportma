@@ -10,31 +10,31 @@ interface TimeLeft {
 const NextMatchCountdown: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
-  // Calculer le temps restant jusqu'au prochain dimanche à 10h
+  // Calculer le temps restant jusqu'au prochain vendredi à 00:00 (minuit)
   const calculateTimeLeft = (): TimeLeft => {
     const now = new Date();
-    const nextSunday = new Date();
+    const nextFriday = new Date();
     
-    // Trouver le prochain dimanche à 10h
-    const daysUntilSunday = (7 - now.getDay()) % 7; // 0 = dimanche
+    // Trouver le prochain vendredi à 00:00 (début du vendredi, minuit entre jeudi et vendredi)
+    // 5 = vendredi (0 = dimanche, 1 = lundi, ..., 5 = vendredi, 6 = samedi)
+    const currentDay = now.getDay();
+    let daysUntilFriday = (5 - currentDay + 7) % 7;
     
-    if (daysUntilSunday === 0) {
-      // On est dimanche, vérifier si c'est avant ou après 10h
-      if (now.getHours() < 10) {
-        // Avant 10h aujourd'hui
-        nextSunday.setHours(10, 0, 0, 0);
-      } else {
-        // Après 10h, prochain dimanche
-        nextSunday.setDate(now.getDate() + 7);
-        nextSunday.setHours(10, 0, 0, 0);
-      }
-    } else {
-      // Prochain dimanche
-      nextSunday.setDate(now.getDate() + daysUntilSunday);
-      nextSunday.setHours(10, 0, 0, 0);
+    // Si on est vendredi et qu'il est déjà passé minuit, aller au vendredi suivant
+    if (currentDay === 5 && (now.getHours() > 0 || now.getMinutes() > 0 || now.getSeconds() > 0)) {
+      daysUntilFriday = 7;
     }
+    
+    // Si daysUntilFriday est 0, cela signifie qu'on est vendredi à exactement 00:00:00
+    if (daysUntilFriday === 0) {
+      daysUntilFriday = 7; // Prochain vendredi
+    }
+    
+    // Calculer la date du prochain vendredi à minuit
+    nextFriday.setDate(now.getDate() + daysUntilFriday);
+    nextFriday.setHours(0, 0, 0, 0);
 
-    const difference = nextSunday.getTime() - now.getTime();
+    const difference = nextFriday.getTime() - now.getTime();
 
     if (difference > 0) {
       return {
@@ -89,7 +89,7 @@ const NextMatchCountdown: React.FC = () => {
 
         {/* Information supplémentaire */}
         <p className="text-gray-300 text-sm md:text-base mt-8 opacity-80">
-          Les nouveaux matchs sont publiés chaque dimanche à 10h00
+          Les nouveaux matchs sont publiés chaque vendredi à 00:00
         </p>
       </div>
     </div>
