@@ -1868,8 +1868,9 @@ const UpcomingMatchesSection = () => {
                               </span>
                             )}
                             {(match.mode?.toLowerCase().includes('rayo rush5') || match.mode?.toLowerCase().includes('rayo rush6')) && (
-                              <span className="text-green-200 bg-green-900/30 px-2 py-1 rounded-full font-semibold text-sm">
-                                💰 50DH
+                              <span className="text-green-200 bg-green-900/30 px-2 py-1 rounded-full font-semibold text-sm flex items-center gap-1">
+                                <span className="line-through text-gray-300 text-xs">50DH</span>
+                                <span>💰 40DH</span>
                               </span>
                             )}
                             {(match.mode?.toLowerCase().includes('rayo-classic-7vs7') || match.format?.toLowerCase().includes('rayo classic 7vs7')) && (
