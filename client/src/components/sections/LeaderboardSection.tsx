@@ -3,7 +3,7 @@ import { useLanguage } from "@/hooks/use-language";
 import RevealAnimation from "@/components/ui/RevealAnimation";
 import { FaTrophy, FaMedal, FaAward, FaUser, FaGamepad } from "react-icons/fa";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { FiTrendingUp, FiTarget, FiAward, FiUsers, FiStar, FiX, FiShield, FiZap } from "react-icons/fi";
+import { FiTrendingUp, FiTarget, FiAward, FiUsers, FiStar, FiX, FiShield, FiZap, FiAlertTriangle } from "react-icons/fi";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { trackEvent } from "@/lib/analytics";
 
@@ -333,33 +333,25 @@ const LeaderboardSection = () => {
     });
   };
 
-  // Fonction pour récupérer les données depuis Google Sheets CSV
+  // Fonction pour récupérer les données depuis Google Sheets CSV avec fallback vers fichier statique
   const fetchLeaderboardData = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
-      setError(null);
-      // console.log('🎯 LeaderboardSection: Starting data fetch...');
-      
-      // Récupérer des données fraîches à chaque requête
-      // console.log('🎯 LeaderboardSection: Fetching from URL:', GOOGLE_SHEETS_CONFIG.csvUrl);
-      const response = await fetch(GOOGLE_SHEETS_CONFIG.csvUrl, {
-        cache: 'no-store',
-        headers: {
-          'Accept': 'text/csv,text/plain,*/*'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Erreur HTTP: ${response.status}`);
+      // Essayer d'abord Google Sheets
+      const response = await fetch(GOOGLE_SHEETS_CONFIG.csvUrl, { cache: 'no-store', headers: { 'Accept': 'text/csv,text/plain,*/*' } });
+      if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+      const csvText = await response.text();
+      if (csvText.includes('<!DOCTYPE html>') || csvText.includes('Page introuvable')) {
+        throw new Error('Google Sheets a retourné une page d\'erreur HTML au lieu des données CSV');
       }
       
-      const csvText = await response.text();
       const rows = parseCSV(csvText);
       
       if (rows.length > 1) { // Ignorer la première ligne (en-têtes)
         // Extract headers from first row
         const headers = rows[0] || [];
-        // console.log('🎯 LeaderboardSection: CSV Headers:', headers);
         
         const playersData = rows.slice(1)
           .filter(row => row[1] && row[1].trim() !== '' && row[1] !== '#VALUE!') // Filtrer les lignes avec des noms valides
@@ -391,14 +383,13 @@ const LeaderboardSection = () => {
             const firstName = playerUsername.split(' ')[0] || playerUsername; // Extract first part as name
             
             // Parse payment type from CSV to determine payment status
-            const paymentType = row[4] ? row[4].toString().toLowerCase().trim() : '';
+            const paymentType = row[16] ? row[16].toString().toLowerCase().trim() : '';
             // Parse subscriber balance from SubGamesLeft column
             let subGamesLeft = 0;
             const hasSubGamesLeft = headers.some(h => h.includes('SubGamesLeft'));
             if (hasSubGamesLeft) {
               const subGamesLeftIndex = headers.findIndex(h => h.includes('SubGamesLeft'));
               const subGamesLeftValue = row[subGamesLeftIndex]?.trim();
-              // console.log(`📊 LeaderboardSection - Player: ${playerUsername}, SubGamesLeft value: "${subGamesLeftValue}", Index: ${subGamesLeftIndex}`);
               if (subGamesLeftValue && subGamesLeftValue !== '#REF!' && subGamesLeftValue !== '#N/A' && subGamesLeftValue !== '#ERROR!' && subGamesLeftValue !== '') {
                 subGamesLeft = parseInt(subGamesLeftValue) || 0;
               }
@@ -407,42 +398,16 @@ const LeaderboardSection = () => {
             // Parse expiration date from ExpirationDate column
             let expirationDate = '';
             const hasExpirationDate = headers.some(h => h.includes('ExpirationDate'));
-            console.log('🔍 ExpirationDate Debug:', {
-              headers: headers,
-              hasExpirationDate: hasExpirationDate,
-              playerUsername: playerUsername
-            });
             
             if (hasExpirationDate) {
               const expirationDateIndex = headers.findIndex(h => h.includes('ExpirationDate'));
               const expirationDateValue = row[expirationDateIndex]?.trim();
-              console.log('📅 ExpirationDate for', playerUsername, ':', {
-                index: expirationDateIndex,
-                value: expirationDateValue,
-                isValid: expirationDateValue && expirationDateValue !== '#REF!' && expirationDateValue !== '#N/A' && expirationDateValue !== '#ERROR!' && expirationDateValue !== ''
-              });
               
               if (expirationDateValue && expirationDateValue !== '#REF!' && expirationDateValue !== '#N/A' && expirationDateValue !== '#ERROR!' && expirationDateValue !== '') {
                 expirationDate = expirationDateValue;
               }
             }
             
-            // Determine payment status based on payment type and balance
-            let paymentStatus: "Payé" | "Non payé" | "Nouveau joueur" | "Subscription";
-            if (paymentType === 'sub' || paymentType === 'subscription') {
-              // All subscribers keep "Subscription" status regardless of balance
-              paymentStatus = "Subscription";
-            } else if (paymentType === 'payé' || paymentType === 'paid') {
-              paymentStatus = "Payé";
-            } else if (paymentType === 'non payé' || paymentType === 'unpaid') {
-              paymentStatus = "Non payé";
-            } else if ((parseInt(row[6]) || 0) === 0) {
-              paymentStatus = "Nouveau joueur";
-            } else {
-              // Default fallback when payment status is unknown
-              paymentStatus = "Non payé";
-            }
-
             return {
               rank: parseInt(row[0]) || 0,               // Colonne A - Rank
               cityRank: parseInt(row[1]) || 0,          // Colonne B - City Rank
@@ -461,7 +426,19 @@ const LeaderboardSection = () => {
               solde: subGamesLeft,                       // Colonne O - SubGamesLeft (subscriber balance)
               expirationDate: expirationDate,            // ExpirationDate column (dynamic index)
               isNewPlayer: (parseInt(row[6]) || 0) === 0, // New player if 0 games played
-              paymentStatus: paymentStatus
+              paymentStatus: (() => {
+                if (paymentType === 'sub' || paymentType === 'subscription') {
+                  return "Subscription" as const;
+                } else if (paymentType === 'payé' || paymentType === 'paid') {
+                  return "Payé" as const;
+                } else if (paymentType === 'non payé' || paymentType === 'unpaid') {
+                  return "Non payé" as const;
+                } else if ((parseInt(row[6]) || 0) === 0) {
+                  return "Nouveau joueur" as const;
+                } else {
+                  return "Non payé" as const;
+                }
+              })()
             };
           });
         
@@ -487,17 +464,125 @@ const LeaderboardSection = () => {
         setPlayers([]);
         setFilteredPlayers([]);
       }
-    } catch (err) {
-      console.error('🚨 LeaderboardSection - Erreur lors du chargement des données:', err);
-      console.error('🚨 LeaderboardSection - Error details:', {
-        message: err instanceof Error ? err.message : 'Unknown error',
-        stack: err instanceof Error ? err.stack : 'No stack trace',
-        type: typeof err,
-        fullError: err
-      });
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.warn('Échec du chargement depuis Google Sheets, essai avec le fichier statique:', error);
+      try {
+        const staticResponse = await fetch('/staticfolder/PublicLeaderBoard.csv', { cache: 'no-store', headers: { 'Accept': 'text/csv,text/plain,*/*' } });
+        if (!staticResponse.ok) throw new Error(`Erreur HTTP fichier statique: ${staticResponse.status}`);
+        const staticCsvText = await staticResponse.text();
+        
+        const rows = parseCSV(staticCsvText);
+        
+        if (rows.length > 1) {
+          const headers = rows[0] || [];
+          
+          const playersData = rows.slice(1)
+            .filter(row => row[1] && row[1].trim() !== '' && row[1] !== '#VALUE!')
+            .map((row: string[]) => {
+              const rawScore = row[5];
+              let parsedScore = 0;
+              
+              if (rawScore) {
+                const cleanScore = rawScore.toString().replace(',', '.').trim();
+                parsedScore = parseFloat(cleanScore);
+                if (isNaN(parsedScore)) {
+                  parsedScore = 0;
+                }
+              }
+              
+              const parseDecimal = (value: string) => {
+                if (!value || value.trim() === '') return undefined;
+                const cleanValue = value.toString().replace(',', '.').trim();
+                const parsed = parseFloat(cleanValue);
+                return isNaN(parsed) ? undefined : parsed;
+              };
+
+              const playerUsername = row[2] || 'Username';
+              const firstName = playerUsername.split(' ')[0] || playerUsername;
+              const paymentType = row[16] ? row[16].toString().toLowerCase().trim() : '';
+              
+              let subGamesLeft = 0;
+              const hasSubGamesLeft = headers.some(h => h.includes('SubGamesLeft'));
+              if (hasSubGamesLeft) {
+                const subGamesLeftIndex = headers.findIndex(h => h.includes('SubGamesLeft'));
+                const subGamesLeftValue = row[subGamesLeftIndex]?.trim();
+                if (subGamesLeftValue && subGamesLeftValue !== '#REF!' && subGamesLeftValue !== '#N/A' && subGamesLeftValue !== '#ERROR!' && subGamesLeftValue !== '') {
+                  subGamesLeft = parseInt(subGamesLeftValue) || 0;
+                }
+              }
+
+              let expirationDate = '';
+              const hasExpirationDate = headers.some(h => h.includes('ExpirationDate'));
+              if (hasExpirationDate) {
+                const expirationDateIndex = headers.findIndex(h => h.includes('ExpirationDate'));
+                const expirationDateValue = row[expirationDateIndex]?.trim();
+                if (expirationDateValue && expirationDateValue !== '#REF!' && expirationDateValue !== '#N/A' && expirationDateValue !== '#ERROR!' && expirationDateValue !== '') {
+                  expirationDate = expirationDateValue;
+                }
+              }
+              
+              return {
+                rank: parseInt(row[0]) || 0,
+                cityRank: parseInt(row[1]) || 0,
+                firstName: firstName,
+                username: playerUsername,
+                city: convertToFrench(row[3] || 'Non spécifié'),
+                globalScore: parseDecimal(row[5]) || 0,
+                gamesPlayed: parseInt(row[6]) || 0,
+                goals: parseInt(row[7]) || 0,
+                assists: parseInt(row[8]) || 0,
+                teamWins: parseInt(row[9]) || 0,
+                attackRatio: parseDecimal(row[10]),
+                defenseRatio: parseDecimal(row[11]),
+                individualScore: parseDecimal(row[12]),
+                teamScore: parseDecimal(row[13]),
+                solde: subGamesLeft,
+                expirationDate: expirationDate,
+                isNewPlayer: (parseInt(row[6]) || 0) === 0,
+                paymentStatus: (() => {
+                  if (paymentType === 'sub' || paymentType === 'subscription') {
+                    return "Subscription" as const;
+                  } else if (paymentType === 'payé' || paymentType === 'paid') {
+                    return "Payé" as const;
+                  } else if (paymentType === 'non payé' || paymentType === 'unpaid') {
+                    return "Non payé" as const;
+                  } else if ((parseInt(row[6]) || 0) === 0) {
+                    return "Nouveau joueur" as const;
+                  } else {
+                    return "Non payé" as const;
+                  }
+                })()
+              };
+            });
+          
+          // Sort players by Global Score (descending order) and assign proper ranks
+          const sortedPlayers = playersData.sort((a, b) => b.globalScore - a.globalScore);
+          const rankedPlayers = sortedPlayers.map((player, index) => ({
+            ...player,
+            rank: index + 1,
+            cityRank: index + 1
+          }));
+
+          // Extract unique cities
+          const validCityNames = ['Casablanca', 'Fès', 'Tanger', 'Kénitra', 'Rabat', 'Marrakech', 'Agadir', 'Meknès', 'Oujda', 'Tétouan'];
+          const allCities = rankedPlayers.flatMap(player => 
+            player.city.split(',').map(city => city.trim())
+          ).filter(city => validCityNames.includes(city));
+          const cities = Array.from(new Set(allCities)).sort();
+          setAvailableCities(cities);
+          
+          setPlayers(rankedPlayers);
+          setFilteredPlayers(rankedPlayers);
+          setError('static-fallback'); // Use a special code instead of text message
+        } else {
+          throw new Error('Aucune donnée trouvée dans le fichier statique');
+        }
+      } catch (staticError) {
+        console.error('Échec du chargement depuis le fichier statique:', staticError);
+        setError('Impossible de charger le classement depuis Google Sheets et le fichier statique');
+      }
+    } finally { 
+      setLoading(false); 
     }
   };
 
@@ -540,6 +625,7 @@ const LeaderboardSection = () => {
 
   // Effect to handle city filtering and search
   useEffect(() => {
+    
     setShowMorePlayers(false);
     
     // If there's an active search query, don't apply city filtering
@@ -566,7 +652,7 @@ const LeaderboardSection = () => {
       }));
       setFilteredPlayers(rerankedFiltered);
     }
-  }, [selectedCity, players, searchQuery]);
+  }, [selectedCity, players, searchQuery, loading, error]);
 
   // Fonction pour obtenir l'icône en fonction du rang
   const getRankIcon = (rank: number) => {
@@ -589,7 +675,7 @@ const LeaderboardSection = () => {
     );
   }
 
-  if (error) {
+  if (error && error !== 'static-fallback') {
     return (
       <section id="leaderboard" className="py-24 bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="container mx-auto px-4">
@@ -622,6 +708,16 @@ const LeaderboardSection = () => {
             </p>
           </div>
         </RevealAnimation>
+
+        {/* Warning triangle for static fallback */}
+        {error === 'static-fallback' && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 max-w-md mx-auto">
+            <div className="flex items-center justify-center gap-2">
+              <FiAlertTriangle className="text-yellow-500 text-xl" />
+              <span className="text-yellow-600 text-sm">MHL</span>
+            </div>
+          </div>
+        )}
 
         {/* Filtre par ville */}
         <RevealAnimation delay={0.15}>

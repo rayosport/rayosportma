@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useLanguage } from "@/hooks/use-language";
 import RevealAnimation from "@/components/ui/RevealAnimation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { FiCalendar, FiMapPin, FiClock, FiUsers, FiStar, FiRefreshCw, FiBarChart2, FiTarget, FiAward, FiSearch, FiChevronDown } from "react-icons/fi";
+import { FiCalendar, FiMapPin, FiClock, FiUsers, FiStar, FiRefreshCw, FiBarChart2, FiTarget, FiAward, FiSearch, FiChevronDown, FiAlertTriangle } from "react-icons/fi";
 import { TbBuildingStadium } from "react-icons/tb";
 import { trackEvent } from "@/lib/analytics";
 // Configuration for Past Games Google Sheets
@@ -102,7 +102,10 @@ const getDayNameInFrench = (dateString: string) => {
 // Parse CSV data for past games
 const parsePastGamesCSV = (csvData: string): PastGame[] => {
   const lines = csvData.split('\n').filter(line => line.trim());
-  if (lines.length < 2) return [];
+  if (lines.length < 2) {
+    console.warn('⚠️ PastGamesSection: Not enough lines in CSV');
+    return [];
+  }
 
   const headers = lines[0].split(',').map(h => h.trim().replace(/\r/g, ''));
   const players: PastGamePlayer[] = [];
@@ -220,28 +223,58 @@ const parsePastGamesCSV = (csvData: string): PastGame[] => {
     }
   });
 
-  return Array.from(gamesMap.values()).sort((a, b) => 
+  const result = Array.from(gamesMap.values()).sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
+  return result;
 };
 
-// Load past games data from Google Sheets
-const loadPastGamesData = async (): Promise<PastGame[]> => {
-  // Add cache-busting parameters
-  const timestamp = new Date().getTime();
-  const random = Math.random().toString(36).substring(7);
-  const urlWithCache = `${PAST_GAMES_SHEET_CONFIG.csvUrl}&_t=${timestamp}&v=${random}&refresh=true`;
-  
-  const response = await fetch(urlWithCache, {
-    cache: 'no-store'
-  });
-  
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+// Load past games data from Google Sheets with static file fallback
+const loadPastGamesData = async (): Promise<{ data: PastGame[], usedFallback: boolean }> => {
+  try {
+    // First, try to load from Google Sheets
+    const timestamp = new Date().getTime();
+    const random = Math.random().toString(36).substring(7);
+    const urlWithCache = `${PAST_GAMES_SHEET_CONFIG.csvUrl}&_t=${timestamp}&v=${random}&refresh=true`;
+    
+    const response = await fetch(urlWithCache, {
+      cache: 'no-store'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const csvData = await response.text();
+    
+    // Check if the response is actually CSV data (not HTML error page)
+    if (csvData.includes('<!DOCTYPE html>') || csvData.includes('Page introuvable')) {
+      throw new Error('Google Sheets returned HTML error page instead of CSV data');
+    }
+    
+    const data = parsePastGamesCSV(csvData);
+    return { data, usedFallback: false };
+  } catch (error) {
+    console.warn('Failed to load from Google Sheets, trying static file:', error);
+    
+    // Fallback to static CSV file
+    try {
+      const staticResponse = await fetch('/staticfolder/pastGames.csv', {
+        cache: 'no-store'
+      });
+      
+      if (!staticResponse.ok) {
+        throw new Error(`Static file HTTP error! status: ${staticResponse.status}`);
+      }
+      
+      const staticCsvData = await staticResponse.text();
+      const data = parsePastGamesCSV(staticCsvData);
+      return { data, usedFallback: true };
+    } catch (staticError) {
+      console.error('Failed to load from static file:', staticError);
+      throw new Error('Impossible de charger les données des matchs passés depuis Google Sheets et le fichier statique');
+    }
   }
-  
-  const csvData = await response.text();
-  return parsePastGamesCSV(csvData);
 };
 
 // Team color mapping
@@ -259,7 +292,7 @@ const getTeamColor = (teamName: string): { bg: string; text: string; border: str
 };
 
 export default function PastGamesSection() {
-  const { currentLanguage, t } = useLanguage();
+  const { language, t } = useLanguage();
   const [selectedGame, setSelectedGame] = useState<PastGame | null>(null);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [pastGames, setPastGames] = useState<PastGame[]>([]);
@@ -279,8 +312,11 @@ export default function PastGamesSection() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await loadPastGamesData();
+      const { data, usedFallback } = await loadPastGamesData();
       setPastGames(data);
+      if (usedFallback) {
+        setError('static-fallback');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       console.error('Error loading past games:', err);
@@ -293,8 +329,11 @@ export default function PastGamesSection() {
     try {
       setIsRefetching(true);
       setError(null);
-      const data = await loadPastGamesData();
+      const { data, usedFallback } = await loadPastGamesData();
       setPastGames(data);
+      if (usedFallback) {
+        setError('static-fallback');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       console.error('Error refreshing past games:', err);
@@ -329,6 +368,7 @@ export default function PastGamesSection() {
 
   // Filter games based on search
   const filteredGames = useMemo(() => {
+    
     if (!searchPlayer.trim()) {
       return pastGames;
     }
@@ -386,7 +426,7 @@ export default function PastGamesSection() {
     }
   };
 
-  if (error) {
+  if (error && error !== 'static-fallback') {
     return (
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
@@ -436,6 +476,16 @@ export default function PastGamesSection() {
               Découvrez les résultats et statistiques des matchs passés
             </p>
           </div>
+
+          {/* Warning triangle for static fallback */}
+          {error === 'static-fallback' && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 max-w-md mx-auto">
+              <div className="flex items-center justify-center gap-2">
+                <FiAlertTriangle className="text-yellow-500 text-xl" />
+                <span className="text-yellow-600 text-sm">MHL</span>
+              </div>
+            </div>
+          )}
 
           {/* Search Bar */}
           <div className="relative max-w-lg mx-auto mb-8 px-4 sm:px-0">

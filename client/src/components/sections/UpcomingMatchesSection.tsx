@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "@/hooks/use-language";
 import RevealAnimation from "@/components/ui/RevealAnimation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { FiCalendar, FiMapPin, FiClock, FiUsers, FiCheck, FiX, FiStar, FiRefreshCw, FiFilter, FiTrendingUp, FiTarget, FiAward, FiZap, FiShield } from "react-icons/fi";
+import { FiCalendar, FiMapPin, FiClock, FiUsers, FiCheck, FiX, FiStar, FiRefreshCw, FiFilter, FiTrendingUp, FiTarget, FiAward, FiZap, FiShield, FiAlertTriangle } from "react-icons/fi";
 import { TbBuildingStadium } from "react-icons/tb";
 import { trackEvent } from "@/lib/analytics";
 import { useCityPreference } from "@/hooks/use-city-preference";
@@ -1080,13 +1080,13 @@ const UpcomingMatchesSection = () => {
     return Array.from(matchesMap.values());
   };
 
-  // Fonction pour charger les données depuis Google Sheets
+  // Fonction pour charger les données depuis Google Sheets avec fallback vers fichier statique
   const loadMatchesData = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Ajouter plusieurs paramètres anti-cache pour forcer la récupération de données fraîches
+      // Essayer d'abord Google Sheets
       const timestamp = new Date().getTime();
       const random = Math.random().toString(36).substring(7);
       const urlWithCache = `${MATCHES_SHEET_CONFIG.csvUrl}&_t=${timestamp}&v=${random}&refresh=true`;
@@ -1100,25 +1100,51 @@ const UpcomingMatchesSection = () => {
       }
       
       const csvData = await response.text();
-      const parsedMatches = parseMatchesCSV(csvData);
       
+      // Vérifier si la réponse est bien du CSV (pas une page d'erreur HTML)
+      if (csvData.includes('<!DOCTYPE html>') || csvData.includes('Page introuvable')) {
+        throw new Error('Google Sheets a retourné une page d\'erreur HTML au lieu des données CSV');
+      }
+      
+      const parsedMatches = parseMatchesCSV(csvData);
       setMatches(parsedMatches);
       setLastUpdate(new Date());
       
     } catch (err) {
-      console.error('Erreur lors du chargement des matchs:', err);
-      setError('Impossible de charger les matchs à venir');
+      console.warn('Échec du chargement depuis Google Sheets, essai avec le fichier statique:', err);
+      
+      // Fallback vers le fichier CSV statique
+      try {
+        const staticResponse = await fetch('/staticfolder/WebsiteGame.csv', {
+          cache: 'no-store'
+        });
+        
+        if (!staticResponse.ok) {
+          throw new Error(`Erreur HTTP fichier statique: ${staticResponse.status}`);
+        }
+        
+        const staticCsvData = await staticResponse.text();
+        const parsedMatches = parseMatchesCSV(staticCsvData);
+        
+        setMatches(parsedMatches);
+        setLastUpdate(new Date());
+        setError('static-fallback'); // Use a special code instead of text message
+        
+      } catch (staticErr) {
+        console.error('Échec du chargement depuis le fichier statique:', staticErr);
+        setError('Impossible de charger les matchs à venir depuis Google Sheets et le fichier statique');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // Fonction de rafraîchissement silencieux (sans loading)
+  // Fonction de rafraîchissement silencieux (sans loading) avec fallback
   const silentRefreshData = async () => {
     try {
       setIsRefreshing(true);
       
-      // Ajouter plusieurs paramètres anti-cache pour forcer la récupération de données fraîches
+      // Essayer d'abord Google Sheets
       const timestamp = new Date().getTime();
       const random = Math.random().toString(36).substring(7);
       const urlWithCache = `${MATCHES_SHEET_CONFIG.csvUrl}&_t=${timestamp}&v=${random}&refresh=true`;
@@ -1132,6 +1158,12 @@ const UpcomingMatchesSection = () => {
       }
       
       const csvData = await response.text();
+      
+      // Vérifier si la réponse est bien du CSV (pas une page d'erreur HTML)
+      if (csvData.includes('<!DOCTYPE html>') || csvData.includes('Page introuvable')) {
+        throw new Error('Google Sheets a retourné une page d\'erreur HTML au lieu des données CSV');
+      }
+      
       const parsedMatches = parseMatchesCSV(csvData);
       
       // Ne pas mettre à jour si le modal est ouvert
@@ -1145,12 +1177,43 @@ const UpcomingMatchesSection = () => {
       if (hasChanges) {
         setMatches(parsedMatches);
         setLastUpdate(new Date());
-        console.log('🔄 Données mises à jour silencieusement');
+        console.log('🔄 Données mises à jour silencieusement depuis Google Sheets');
       }
       
     } catch (err) {
-      console.error('Erreur lors du rafraîchissement silencieux:', err);
-      // En cas d'erreur, on ne change pas l'état d'erreur pour éviter de perturber l'UI
+      console.warn('Échec du rafraîchissement depuis Google Sheets, essai avec le fichier statique:', err);
+      
+      // Fallback vers le fichier CSV statique
+      try {
+        const staticResponse = await fetch('/staticfolder/WebsiteGame.csv', {
+          cache: 'no-store'
+        });
+        
+        if (!staticResponse.ok) {
+          throw new Error(`Erreur HTTP fichier statique: ${staticResponse.status}`);
+        }
+        
+        const staticCsvData = await staticResponse.text();
+        const parsedMatches = parseMatchesCSV(staticCsvData);
+        
+        // Ne pas mettre à jour si le modal est ouvert
+        if (selectedMatch) {
+          return;
+        }
+        
+        // Comparer avec les données existantes avant de mettre à jour
+        const hasChanges = JSON.stringify(parsedMatches) !== JSON.stringify(matches);
+        
+        if (hasChanges) {
+          setMatches(parsedMatches);
+          setLastUpdate(new Date());
+          console.log('🔄 Données mises à jour silencieusement depuis le fichier statique');
+        }
+        
+      } catch (staticErr) {
+        console.error('Erreur lors du rafraîchissement silencieux:', staticErr);
+        // En cas d'erreur, on ne change pas l'état d'erreur pour éviter de perturber l'UI
+      }
     } finally {
       setIsRefreshing(false);
     }
@@ -1697,7 +1760,16 @@ const UpcomingMatchesSection = () => {
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-800 text-center">{error}</p>
+            {error === 'static-fallback' ? (
+              // Show only warning triangle for static fallback
+              <div className="flex items-center justify-center gap-2">
+                <FiAlertTriangle className="text-yellow-500 text-xl" />
+                <span className="text-yellow-600 text-sm">MHL</span>
+              </div>
+            ) : (
+              // Show normal error message for other errors
+              <p className="text-red-800 text-center">{error}</p>
+            )}
           </div>
         )}
 
