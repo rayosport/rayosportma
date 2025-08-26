@@ -237,9 +237,10 @@ const loadPastGamesData = async (): Promise<{ data: PastGame[], usedFallback: bo
     const random = Math.random().toString(36).substring(7);
     const urlWithCache = `${PAST_GAMES_SHEET_CONFIG.csvUrl}&_t=${timestamp}&v=${random}&refresh=true`;
     
-    const response = await fetch(urlWithCache, {
-      cache: 'no-store'
-    });
+          const response = await fetch(urlWithCache, {
+        cache: 'no-store',
+        redirect: 'follow'
+      });
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -248,7 +249,7 @@ const loadPastGamesData = async (): Promise<{ data: PastGame[], usedFallback: bo
     const csvData = await response.text();
     
     // Check if the response is actually CSV data (not HTML error page)
-    if (csvData.includes('<!DOCTYPE html>') || csvData.includes('Page introuvable')) {
+    if (csvData.includes('<!DOCTYPE html>') || csvData.includes('Page introuvable') || csvData.includes('<TITLE>Temporary Redirect</TITLE>')) {
       throw new Error('Google Sheets returned HTML error page instead of CSV data');
     }
     

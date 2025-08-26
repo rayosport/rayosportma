@@ -1092,7 +1092,8 @@ const UpcomingMatchesSection = () => {
       const urlWithCache = `${MATCHES_SHEET_CONFIG.csvUrl}&_t=${timestamp}&v=${random}&refresh=true`;
       
       const response = await fetch(urlWithCache, {
-        cache: 'no-store'
+        cache: 'no-store',
+        redirect: 'follow'
       });
       
       if (!response.ok) {
@@ -1102,7 +1103,7 @@ const UpcomingMatchesSection = () => {
       const csvData = await response.text();
       
       // Vérifier si la réponse est bien du CSV (pas une page d'erreur HTML)
-      if (csvData.includes('<!DOCTYPE html>') || csvData.includes('Page introuvable')) {
+      if (csvData.includes('<!DOCTYPE html>') || csvData.includes('Page introuvable') || csvData.includes('<TITLE>Temporary Redirect</TITLE>')) {
         throw new Error('Google Sheets a retourné une page d\'erreur HTML au lieu des données CSV');
       }
       
@@ -1150,7 +1151,8 @@ const UpcomingMatchesSection = () => {
       const urlWithCache = `${MATCHES_SHEET_CONFIG.csvUrl}&_t=${timestamp}&v=${random}&refresh=true`;
       
       const response = await fetch(urlWithCache, {
-        cache: 'no-store'
+        cache: 'no-store',
+        redirect: 'follow'
       });
       
       if (!response.ok) {
@@ -1160,7 +1162,7 @@ const UpcomingMatchesSection = () => {
       const csvData = await response.text();
       
       // Vérifier si la réponse est bien du CSV (pas une page d'erreur HTML)
-      if (csvData.includes('<!DOCTYPE html>') || csvData.includes('Page introuvable')) {
+      if (csvData.includes('<!DOCTYPE html>') || csvData.includes('Page introuvable') || csvData.includes('<TITLE>Temporary Redirect</TITLE>')) {
         throw new Error('Google Sheets a retourné une page d\'erreur HTML au lieu des données CSV');
       }
       

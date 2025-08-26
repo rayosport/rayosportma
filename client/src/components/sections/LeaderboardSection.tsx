@@ -340,10 +340,10 @@ const LeaderboardSection = () => {
     
     try {
       // Essayer d'abord Google Sheets
-      const response = await fetch(GOOGLE_SHEETS_CONFIG.csvUrl, { cache: 'no-store', headers: { 'Accept': 'text/csv,text/plain,*/*' } });
+      const response = await fetch(GOOGLE_SHEETS_CONFIG.csvUrl, { cache: 'no-store', redirect: 'follow', headers: { 'Accept': 'text/csv,text/plain,*/*' } });
       if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
       const csvText = await response.text();
-      if (csvText.includes('<!DOCTYPE html>') || csvText.includes('Page introuvable')) {
+              if (csvText.includes('<!DOCTYPE html>') || csvText.includes('Page introuvable') || csvText.includes('<TITLE>Temporary Redirect</TITLE>')) {
         throw new Error('Google Sheets a retourné une page d\'erreur HTML au lieu des données CSV');
       }
       
