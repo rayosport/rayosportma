@@ -1894,7 +1894,7 @@ const UpcomingMatchesSection = () => {
                                 const message = isMatchFull 
                                   ? `Bonjour, je souhaite rejoindre la liste d'attente pour ce match:%0A%0AGame ${match.gameId}%0ADate: ${formatDate(match.date)}%0AHeure: ${match.time}%0AEndroit: ${match.field}, ${match.city}%0A%0AMerci!`
                                   : `Bonjour, je souhaite jouer ce match:%0A%0AGame ${match.gameId}%0ADate: ${formatDate(match.date)}%0AHeure: ${match.time}%0AEndroit: ${match.field}, ${match.city}%0A%0AMerci!`;
-                                const whatsappUrl = `https://wa.me/212649076758?text=${message}`;
+                                const whatsappUrl = `https://wa.me/212720707190?text=${message}`;
                                 window.open(whatsappUrl, '_blank');
                               }}
                               disabled={isPastMatch}
@@ -2101,7 +2101,7 @@ const UpcomingMatchesSection = () => {
 ⏰ ${match.time}
 ⚽ ${match.format}
 
-Pour rejoindre : https://wa.me/212649076758`,
+Pour rejoindre : https://wa.me/212720707190`,
                                 url: window.location.href
                               };
 
