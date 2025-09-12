@@ -106,7 +106,12 @@ const HeroSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
                 // Scroll to upcoming matches section
                 const upcomingMatchesSection = document.getElementById('upcoming-matches');
                 if (upcomingMatchesSection) {
-                  upcomingMatchesSection.scrollIntoView({ behavior: 'smooth' });
+                  const headerHeight = 80;
+                  const elementPosition = upcomingMatchesSection.offsetTop - headerHeight;
+                  window.scrollTo({
+                    top: elementPosition,
+                    behavior: 'smooth'
+                  });
                 }
               }}
             >

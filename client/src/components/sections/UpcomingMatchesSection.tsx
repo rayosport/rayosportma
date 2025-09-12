@@ -1705,19 +1705,6 @@ const UpcomingMatchesSection = () => {
     );
   };
 
-  if (loading) {
-    return (
-      <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rayoblue mx-auto"></div>
-            <p className="mt-4 text-gray-600">Chargement des matchs...</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   return (
     <section id="upcoming-matches" className="py-12 bg-gray-50">
       <div className="container mx-auto px-4">
@@ -1819,7 +1806,13 @@ const UpcomingMatchesSection = () => {
         </RevealAnimation>
 
         <div className="space-y-6">
-          {filteredMatches.map((match, index) => (
+          {loading ? (
+            // État de chargement des cards
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rayoblue mx-auto"></div>
+              <p className="mt-4 text-gray-600">Chargement des matchs...</p>
+            </div>
+          ) : filteredMatches.map((match, index) => (
             <RevealAnimation key={match.id} delay={index * 0.1}>
               <div className="space-y-2">
                 {/* Date en dehors de la carte */}
