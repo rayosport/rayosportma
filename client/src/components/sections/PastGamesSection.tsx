@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { useLanguage } from "@/hooks/use-language";
+import { useCompanyContext } from "@/hooks/use-company-context";
 import RevealAnimation from "@/components/ui/RevealAnimation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FiCalendar, FiMapPin, FiClock, FiUsers, FiStar, FiRefreshCw, FiBarChart2, FiTarget, FiAward, FiSearch, FiChevronDown, FiAlertTriangle } from "react-icons/fi";
 import { TbBuildingStadium } from "react-icons/tb";
 import { trackEvent } from "@/lib/analytics";
 // Configuration for Past Games Google Sheets
-const PAST_GAMES_SHEET_CONFIG = {
+const DEFAULT_PAST_GAMES_SHEET_CONFIG = {
   csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSDgQfkyS5KdTwQABcUDgu673_fSDrwX0HNgGeZiZ5DbSK6UEmYIcUrWPGsAGN5yuL50M6I3rYIJInL/pub?gid=876296498&single=true&output=csv"
 };
 
@@ -230,16 +231,22 @@ const parsePastGamesCSV = (csvData: string): PastGame[] => {
 };
 
 // Load past games data from Google Sheets with static file fallback
-const loadPastGamesData = async (): Promise<{ data: PastGame[], usedFallback: boolean }> => {
+const loadPastGamesData = async (customDataSources?: any): Promise<{ data: PastGame[], usedFallback: boolean }> => {
   try {
     // First, try to load from Google Sheets
     const timestamp = new Date().getTime();
     const random = Math.random().toString(36).substring(7);
-    const urlWithCache = `${PAST_GAMES_SHEET_CONFIG.csvUrl}&_t=${timestamp}&v=${random}&refresh=true`;
+    const csvUrl = customDataSources?.pastGames || DEFAULT_PAST_GAMES_SHEET_CONFIG.csvUrl;
+    const urlWithCache = `${csvUrl}&_t=${timestamp}&v=${random}&refresh=true`;
+    
+    console.log('🔍 PastGames fetching from:', urlWithCache);
     
           const response = await fetch(urlWithCache, {
         cache: 'no-store',
-        redirect: 'follow'
+        redirect: 'follow',
+        headers: {
+          'Accept': 'text/csv,text/plain,*/*'
+        }
       });
     
     if (!response.ok) {
@@ -248,12 +255,17 @@ const loadPastGamesData = async (): Promise<{ data: PastGame[], usedFallback: bo
     
     const csvData = await response.text();
     
+    console.log("📊 PastGames CSV Data loaded successfully, length:", csvData.length);
+    console.log("📊 PastGames CSV preview (first 500 chars):", csvData.substring(0, 500));
+    
     // Check if the response is actually CSV data (not HTML error page)
     if (csvData.includes('<!DOCTYPE html>') || csvData.includes('Page introuvable') || csvData.includes('<TITLE>Temporary Redirect</TITLE>')) {
       throw new Error('Google Sheets returned HTML error page instead of CSV data');
     }
     
     const data = parsePastGamesCSV(csvData);
+    console.log('🎯 PastGames parsed games count:', data.length);
+    console.log('🎯 Sample past game:', data[0]);
     return { data, usedFallback: false };
   } catch (error) {
     console.warn('Failed to load from Google Sheets, trying static file:', error);
@@ -294,6 +306,7 @@ const getTeamColor = (teamName: string): { bg: string; text: string; border: str
 
 export default function PastGamesSection() {
   const { language, t } = useLanguage();
+  const { customDataSources } = useCompanyContext();
   const [selectedGame, setSelectedGame] = useState<PastGame | null>(null);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [pastGames, setPastGames] = useState<PastGame[]>([]);
@@ -313,7 +326,7 @@ export default function PastGamesSection() {
     try {
       setIsLoading(true);
       setError(null);
-      const { data, usedFallback } = await loadPastGamesData();
+      const { data, usedFallback } = await loadPastGamesData(customDataSources);
       setPastGames(data);
       if (usedFallback) {
         setError('static-fallback');
@@ -330,7 +343,7 @@ export default function PastGamesSection() {
     try {
       setIsRefetching(true);
       setError(null);
-      const { data, usedFallback } = await loadPastGamesData();
+      const { data, usedFallback } = await loadPastGamesData(customDataSources);
       setPastGames(data);
       if (usedFallback) {
         setError('static-fallback');

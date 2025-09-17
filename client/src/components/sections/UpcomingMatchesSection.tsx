@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/hooks/use-language";
+import { useCompanyContext } from "@/hooks/use-company-context";
 import RevealAnimation from "@/components/ui/RevealAnimation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FiCalendar, FiMapPin, FiClock, FiUsers, FiCheck, FiX, FiStar, FiRefreshCw, FiFilter, FiTrendingUp, FiTarget, FiAward, FiZap, FiShield, FiAlertTriangle } from "react-icons/fi";
@@ -314,8 +315,8 @@ interface Match {
   mode?: string;
 }
 
-// Configuration Google Sheets
-const MATCHES_SHEET_CONFIG = {
+// Configuration Google Sheets par défaut
+const DEFAULT_MATCHES_SHEET_CONFIG = {
   csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSDgQfkyS5KdTwQABcUDgu673_fSDrwX0HNgGeZiZ5DbSK6UEmYIcUrWPGsAGN5yuL50M6I3rYIJInL/pub?gid=216631647&output=csv"
 };
 
@@ -484,6 +485,7 @@ const createTeamsFromPlayers = (players: Player[], isRayoBattle: boolean = false
 
 const UpcomingMatchesSection = () => {
   const { t } = useLanguage();
+  const { customDataSources } = useCompanyContext();
   const [matches, setMatches] = useState<Match[]>([]);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1089,11 +1091,15 @@ const UpcomingMatchesSection = () => {
       // Essayer d'abord Google Sheets
       const timestamp = new Date().getTime();
       const random = Math.random().toString(36).substring(7);
-      const urlWithCache = `${MATCHES_SHEET_CONFIG.csvUrl}&_t=${timestamp}&v=${random}&refresh=true`;
+      const csvUrl = customDataSources?.upcomingMatches || DEFAULT_MATCHES_SHEET_CONFIG.csvUrl;
+      const urlWithCache = `${csvUrl}&_t=${timestamp}&v=${random}&refresh=true`;
       
       const response = await fetch(urlWithCache, {
         cache: 'no-store',
-        redirect: 'follow'
+        redirect: 'follow',
+        headers: {
+          'Accept': 'text/csv,text/plain,*/*'
+        }
       });
       
       if (!response.ok) {
@@ -1148,11 +1154,15 @@ const UpcomingMatchesSection = () => {
       // Essayer d'abord Google Sheets
       const timestamp = new Date().getTime();
       const random = Math.random().toString(36).substring(7);
-      const urlWithCache = `${MATCHES_SHEET_CONFIG.csvUrl}&_t=${timestamp}&v=${random}&refresh=true`;
+      const csvUrl = customDataSources?.upcomingMatches || DEFAULT_MATCHES_SHEET_CONFIG.csvUrl;
+      const urlWithCache = `${csvUrl}&_t=${timestamp}&v=${random}&refresh=true`;
       
       const response = await fetch(urlWithCache, {
         cache: 'no-store',
-        redirect: 'follow'
+        redirect: 'follow',
+        headers: {
+          'Accept': 'text/csv,text/plain,*/*'
+        }
       });
       
       if (!response.ok) {
