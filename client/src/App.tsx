@@ -3,6 +3,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
+import UniversitiesHubPage from "@/pages/universite/index";
+import UM6SSPage from "@/pages/universite/um6ss";
+import CompaniesHubPage from "@/pages/entreprise/index";
+import DemoEntreprisePage from "@/pages/entreprise/demo-entreprise";
+import NemoPage from "@/pages/entreprise/nemo";
 import { useLanguage } from "./hooks/use-language";
 import Loader from "./components/ui/Loader";
 import Header from "./components/layout/Header";
@@ -17,6 +22,11 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/universite" component={UniversitiesHubPage} />
+      <Route path="/universite/um6ss" component={UM6SSPage} />
+      <Route path="/entreprise" component={CompaniesHubPage} />
+      <Route path="/entreprise/demo-entreprise" component={DemoEntreprisePage} />
+      <Route path="/entreprise/nemo" component={NemoPage} />
       <Route component={NotFound} />
     </Switch>
   );

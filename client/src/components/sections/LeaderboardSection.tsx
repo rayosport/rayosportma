@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/hooks/use-language";
+import { useCompanyContext } from "@/hooks/use-company-context";
 import RevealAnimation from "@/components/ui/RevealAnimation";
 import { FaTrophy, FaMedal, FaAward, FaUser, FaGamepad } from "react-icons/fa";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -30,13 +31,14 @@ interface Player {
 }
 
 // Configuration Google Sheets - URL publique CSV
-const GOOGLE_SHEETS_CONFIG = {
+const DEFAULT_GOOGLE_SHEETS_CONFIG = {
   csvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSDgQfkyS5KdTwQABcUDgu673_fSDrwX0HNgGeZiZ5DbSK6UEmYIcUrWPGsAGN5yuL50M6I3rYIJInL/pub?gid=1779046147&single=true&output=csv',
 };
 
 const LeaderboardSection = () => {
   // console.log('🎯 LeaderboardSection: Component rendering...');
   const { language } = useLanguage();
+  const { customDataSources } = useCompanyContext();
   const [players, setPlayers] = useState<Player[]>([]);
   const [filteredPlayers, setFilteredPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
@@ -340,10 +342,15 @@ const LeaderboardSection = () => {
     
     try {
       // Essayer d'abord Google Sheets
-      const response = await fetch(GOOGLE_SHEETS_CONFIG.csvUrl, { cache: 'no-store', redirect: 'follow', headers: { 'Accept': 'text/csv,text/plain,*/*' } });
+      const csvUrl = customDataSources?.leaderboard || DEFAULT_GOOGLE_SHEETS_CONFIG.csvUrl;
+      console.log('🔍 Leaderboard fetching from:', csvUrl);
+      const response = await fetch(csvUrl, { cache: 'no-store', redirect: 'follow', headers: { 'Accept': 'text/csv,text/plain,*/*' } });
       if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
       const csvText = await response.text();
-              if (csvText.includes('<!DOCTYPE html>') || csvText.includes('Page introuvable') || csvText.includes('<TITLE>Temporary Redirect</TITLE>')) {
+      console.log('📄 Leaderboard CSV length:', csvText.length);
+      console.log('📄 Leaderboard CSV first 300 chars:', csvText.substring(0, 300));
+      
+      if (csvText.includes('<!DOCTYPE html>') || csvText.includes('Page introuvable') || csvText.includes('<TITLE>Temporary Redirect</TITLE>')) {
         throw new Error('Google Sheets a retourné une page d\'erreur HTML au lieu des données CSV');
       }
       
@@ -458,6 +465,8 @@ const LeaderboardSection = () => {
         const cities = Array.from(new Set(allCities)).sort();
         setAvailableCities(cities);
         
+        console.log('🎯 Leaderboard parsed players count:', rankedPlayers.length);
+        console.log('🎯 Sample player:', rankedPlayers[0]);
         setPlayers(rankedPlayers);
         setFilteredPlayers(rankedPlayers);
       } else {
