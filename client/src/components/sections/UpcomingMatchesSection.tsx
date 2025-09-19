@@ -1882,7 +1882,7 @@ const UpcomingMatchesSection = () => {
                             {match.field}
                           </p>
                         </div>
-                        {(() => {
+                        {!customDataSources && (() => {
                           const matchDate = parseMatchDateTime(match.date, match.time);
                           const isPastMatch = getCountdownInfo(matchDate).isPast;
                           const isMatchFull = match.players.length >= match.maxPlayers;
@@ -1944,18 +1944,18 @@ const UpcomingMatchesSection = () => {
                                 ⚽ Rayo Classic 5vs5
                               </span>
                             )}
-                            {(match.mode?.toLowerCase().includes('rayo rush5') || match.mode?.toLowerCase().includes('rayo rush6')) && (
+                            {!customDataSources && (match.mode?.toLowerCase().includes('rayo rush5') || match.mode?.toLowerCase().includes('rayo rush6')) && (
                               <span className="text-green-200 bg-green-900/30 px-2 py-1 rounded-full font-semibold text-sm flex items-center gap-1">
                                 <span className="line-through text-gray-300 text-xs">50DH</span>
                                 <span>💰 40DH</span>
                               </span>
                             )}
-                            {(match.mode?.toLowerCase().includes('rayo-classic-7vs7') || match.format?.toLowerCase().includes('rayo classic 7vs7')) && (
+                            {!customDataSources && (match.mode?.toLowerCase().includes('rayo-classic-7vs7') || match.format?.toLowerCase().includes('rayo classic 7vs7')) && (
                               <span className="text-purple-200 bg-purple-900/30 px-2 py-1 rounded-full font-semibold text-sm">
                                 💰 60DH
                               </span>
                             )}
-                            {(match.mode?.toLowerCase().includes('rayo-classic-5') || match.format?.toLowerCase().includes('rayo classic 5')) && (
+                            {!customDataSources && (match.mode?.toLowerCase().includes('rayo-classic-5') || match.format?.toLowerCase().includes('rayo classic 5')) && (
                               <span className="text-pink-200 bg-pink-900/30 px-2 py-1 rounded-full font-semibold text-sm">
                                 💰 60DH
                               </span>
