@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useCompanyContext } from "@/hooks/use-company-context";
 import { getCompany } from "@/config/companies";
 import RevealAnimation from "@/components/ui/RevealAnimation";
 import { trackEvent } from "@/lib/analytics";
@@ -69,14 +70,99 @@ const CompanyWhatsAppModal = ({ isOpen, onClose, company }: {
 
 const CompanyHeroSection = ({ companyCode, onJoinClick }: CompanyHeroSectionProps) => {
   const company = getCompany(companyCode);
-  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const { customDataSources } = useCompanyContext();
+  const [metrics, setMetrics] = useState({ 
+    totalMatches: 0, 
+    activePlayers: 0 
+  });
+
+  // Récupérer les métriques pour les entreprises avec sources de données personnalisées
+  useEffect(() => {
+    if (!customDataSources?.pastGames) return;
+    
+    const fetchMetrics = async () => {
+      try {
+        const timestamp = new Date().getTime();
+        const random = Math.random().toString(36).substring(7);
+        const urlWithCache = `${customDataSources.pastGames}&_t=${timestamp}&v=${random}&refresh=true`;
+        
+        const response = await fetch(urlWithCache, {
+          cache: 'no-store',
+          redirect: 'follow',
+          headers: { 'Accept': 'text/csv,text/plain,*/*' }
+        });
+        
+        if (!response.ok) return;
+        
+        const csvData = await response.text();
+        
+        // Check if the response is actually CSV data (not HTML error page)
+        if (csvData.includes('<!DOCTYPE html>') || csvData.includes('Page introuvable') || csvData.includes('<TITLE>Temporary Redirect</TITLE>')) {
+          return;
+        }
+        
+        const lines = csvData.split('\n').filter(line => line.trim());
+        if (lines.length < 2) return;
+
+        // Parse using the same logic as PastGamesSection
+        const players = [];
+        
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i];
+          if (!line.trim()) continue;
+
+          // Parse CSV handling quoted values - same as PastGamesSection
+          const row = [];
+          let current = '';
+          let inQuotes = false;
+          
+          for (let j = 0; j < line.length; j++) {
+            const char = line[j];
+            if (char === '"') {
+              inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+              row.push(current.trim().replace(/"/g, '').replace(/\r/g, ''));
+              current = '';
+            } else {
+              current += char;
+            }
+          }
+          row.push(current.trim().replace(/"/g, '').replace(/\r/g, ''));
+
+          const player = {
+            gameId: row[4] || '',        // Game ID
+            playerUsername: row[5] || '', // PlayerUsername
+            date: row[1] || ''           // Date&Time
+          };
+
+          if (player.gameId && player.playerUsername) {
+            players.push(player);
+          }
+        }
+
+        // Group by game ID and date to count unique games
+        const gamesMap = new Map();
+        const uniquePlayers = new Set();
+
+        players.forEach(player => {
+          const gameKey = `${player.gameId}_${player.date}`;
+          gamesMap.set(gameKey, true);
+          uniquePlayers.add(player.playerUsername);
+        });
+        
+        setMetrics({
+          totalMatches: gamesMap.size,
+          activePlayers: uniquePlayers.size
+        });
+      } catch (error) {
+        console.warn('Erreur lors du chargement des métriques:', error);
+      }
+    };
+    
+    fetchMetrics();
+  }, [customDataSources]);
 
   if (!company) return null;
-
-  const handleJoinClick = () => {
-    setIsWhatsAppModalOpen(true);
-    trackEvent('company_join_click', 'user_engagement', company.shortName);
-  };
 
   return (
     <>
@@ -149,40 +235,30 @@ const CompanyHeroSection = ({ companyCode, onJoinClick }: CompanyHeroSectionProp
               {/* Stats entreprise */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8 max-w-3xl mx-auto">
                 <div className="text-center bg-white/10 rounded-xl p-4 backdrop-blur-sm border border-white/10">
-                  <div className="text-2xl font-bold text-blue-300">{company.totalEmployees}</div>
-                  <div className="text-sm opacity-80">Collaborateurs</div>
+                  <div className="text-2xl font-bold text-blue-300">
+                    {customDataSources ? metrics.totalMatches : company.totalEmployees}
+                  </div>
+                  <div className="text-sm opacity-80">
+                    {customDataSources ? 'Matchs joués' : 'Collaborateurs'}
+                  </div>
                 </div>
                 <div className="text-center bg-white/10 rounded-xl p-4 backdrop-blur-sm border border-white/10">
                   <div className="text-2xl font-bold text-yellow-300">{company.sportsPrograms.length}</div>
                   <div className="text-sm opacity-80">Programmes</div>
                 </div>
                 <div className="text-center bg-white/10 rounded-xl p-4 backdrop-blur-sm border border-white/10">
-                  <div className="text-2xl font-bold text-green-300">{company.totalEmployees}</div>
-                  <div className="text-sm opacity-80">Employés</div>
+                  <div className="text-2xl font-bold text-green-300">
+                    {customDataSources ? metrics.activePlayers : company.totalEmployees}
+                  </div>
+                  <div className="text-sm opacity-80">
+                    {customDataSources ? 'Joueurs actifs' : 'Employés'}
+                  </div>
                 </div>
               </div>
             </div>
             
             {/* Boutons d'action */}
             <div className="flex flex-col gap-4 max-w-md mx-auto">
-              <button 
-                className="group relative w-full px-6 py-4 bg-gradient-to-r from-green-500 via-green-600 to-green-700 text-white rounded-xl hover:from-green-600 hover:via-green-700 hover:to-green-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 overflow-hidden"
-                onClick={handleJoinClick}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-                <div className="relative z-10 flex items-center gap-3">
-                  <div className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center group-hover:bg-opacity-30 transition-all duration-300">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.479 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
-                    </svg>
-                  </div>
-                  <div className="text-left">
-                    <div className="text-sm font-semibold">Rejoindre {company.shortName} Rayo</div>
-                    <div className="text-xs opacity-90">Communauté corporate</div>
-                  </div>
-                </div>
-              </button>
-
               <button 
                 className="group relative w-full px-6 py-4 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-600 hover:via-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 overflow-hidden"
                 onClick={() => {
@@ -212,13 +288,13 @@ const CompanyHeroSection = ({ companyCode, onJoinClick }: CompanyHeroSectionProp
             </div>
 
             {/* Programmes sportifs */}
-            <div className="mt-12 text-center">
-              <h3 className="text-lg font-semibold mb-4 text-blue-300">Programmes disponibles</h3>
-              <div className="flex flex-wrap justify-center gap-3 max-w-2xl mx-auto">
+            <div className="mt-16 text-center mb-20">
+              <h3 className="text-lg font-semibold mb-6 text-blue-300">Programmes disponibles</h3>
+              <div className="flex flex-wrap justify-center gap-4 max-w-3xl mx-auto">
                 {company.sportsPrograms.map((program: string, index: number) => (
                   <span 
                     key={index}
-                    className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium border border-white/20"
+                    className="px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium border border-white/20 hover:bg-white/20 transition-all duration-200"
                   >
                     {program}
                   </span>
@@ -230,13 +306,6 @@ const CompanyHeroSection = ({ companyCode, onJoinClick }: CompanyHeroSectionProp
         
         <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#121212] to-transparent z-10"></div>
       </section>
-
-      {/* Modal WhatsApp spécifique à l'entreprise */}
-      <CompanyWhatsAppModal 
-        isOpen={isWhatsAppModalOpen}
-        onClose={() => setIsWhatsAppModalOpen(false)}
-        company={company}
-      />
     </>
   );
 };
