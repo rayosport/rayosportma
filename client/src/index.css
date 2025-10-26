@@ -1,4 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -11,6 +14,23 @@
 
   body {
     @apply font-montserrat antialiased bg-background text-foreground;
+  }
+  
+  /* Language-specific font classes */
+  .font-fr {
+    font-family: 'Montserrat', sans-serif;
+  }
+  
+  .font-en {
+    font-family: 'Inter', sans-serif;
+  }
+  
+  .font-ar {
+    font-family: 'Noto Sans Arabic', sans-serif;
+  }
+  
+  .font-es {
+    font-family: 'Roboto', sans-serif;
   }
 
   html {
@@ -46,6 +66,66 @@
   
   .btn-outline-white {
     @apply border-2 border-white text-white hover:bg-white/20 font-semibold py-3 px-6 rounded-md transition-all transform hover:-translate-y-1;
+  }
+
+  /* Modern Professional Scrollbar Styles */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-gutter: stable;
+  }
+  
+  .scrollbar-thumb-gray-600 {
+    scrollbar-color: #4b5563 #1f2937;
+  }
+  
+  .scrollbar-track-gray-800 {
+    scrollbar-color: #4b5563 #1f2937;
+  }
+  
+  .hover\:scrollbar-thumb-gray-500:hover {
+    scrollbar-color: #6b7280 #1f2937;
+  }
+  
+  .scrollbar-thumb-rounded-full {
+    scrollbar-color: #4b5563 #1f2937;
+  }
+  
+  .scrollbar-track-rounded-full {
+    scrollbar-color: #4b5563 #1f2937;
+  }
+  
+  /* Webkit scrollbar styles for better browser support */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #1f2937;
+    border-radius: 4px;
+    margin: 2px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #4b5563 0%, #374151 100%);
+    border-radius: 4px;
+    border: 1px solid #1f2937;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #6b7280 0%, #4b5563 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 8px rgba(107, 114, 128, 0.3);
+    transform: scale(1.05);
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, #9ca3af 0%, #6b7280 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 12px rgba(156, 163, 175, 0.4);
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-corner {
+    background: #1f2937;
   }
 
   .section-title {

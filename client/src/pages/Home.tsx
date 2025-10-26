@@ -10,7 +10,6 @@ import UpcomingMatchesSectionComponent from "@/components/sections/UpcomingMatch
 import PastGamesSectionComponent from "@/components/sections/PastGamesSection";
 import TestimonialsSectionComponent from "@/components/sections/TestimonialsSection";
 import GallerySectionComponent from "@/components/sections/GallerySection";
-import WhatsAppBubble from "@/components/ui/WhatsAppBubble";
 import NextMatchCountdown from "@/components/ui/NextMatchCountdown";
 import { useNav } from "@/hooks/use-intersection";
 import { FiUsers, FiCalendar, FiActivity, FiAward, FiX } from "react-icons/fi";
@@ -552,8 +551,6 @@ const Home = () => {
         onClose={() => setIsWhatsAppModalOpen(false)} 
       />
       
-      {/* WhatsApp Contact Bubble */}
-      <WhatsAppBubble />
     </main>
   );
 };

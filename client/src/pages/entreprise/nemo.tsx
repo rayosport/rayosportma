@@ -9,7 +9,6 @@ import PastGamesSectionComponent from "@/components/sections/PastGamesSection";
 import RulesSectionComponent from "@/components/sections/RulesSection";
 import FaqSectionComponent from "@/components/sections/FaqSection";
 import RevealAnimation from "@/components/ui/RevealAnimation";
-import WhatsAppBubble from "@/components/ui/WhatsAppBubble";
 import NextMatchCountdown from "@/components/ui/NextMatchCountdown";
 import { getCompany } from "@/config/companies";
 
@@ -201,8 +200,6 @@ const NemoPage = () => {
         <PastGamesSectionComponent />
         <LeaderboardSectionComponent />
         
-        {/* WhatsApp Contact Bubble */}
-        <WhatsAppBubble />
       </main>
     </CompanyLayout>
   );

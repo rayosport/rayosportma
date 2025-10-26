@@ -34,7 +34,7 @@ export const LanguageProvider = ({ children }: LanguageProviderProps) => {
   useEffect(() => {
     // Check if there's a language preference in localStorage
     const savedLanguage = localStorage.getItem("language") as Language;
-    if (savedLanguage && (savedLanguage === "fr" || savedLanguage === "ar")) {
+    if (savedLanguage && (savedLanguage === "fr" || savedLanguage === "en" || savedLanguage === "ar" || savedLanguage === "es")) {
       setLanguageState(savedLanguage);
     }
   }, []);

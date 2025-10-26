@@ -9,7 +9,6 @@ import PastGamesSectionComponent from "@/components/sections/PastGamesSection";
 import RulesSectionComponent from "@/components/sections/RulesSection";
 import FaqSectionComponent from "@/components/sections/FaqSection";
 import RevealAnimation from "@/components/ui/RevealAnimation";
-import WhatsAppBubble from "@/components/ui/WhatsAppBubble";
 import NextMatchCountdown from "@/components/ui/NextMatchCountdown";
 import { getUniversity } from "@/config/universities";
 
@@ -180,8 +179,6 @@ const UM6SSPage = () => {
         <FaqSectionComponent />
         <UniversityCTASection universityCode="um6ss" />
         
-        {/* WhatsApp Contact Bubble */}
-        <WhatsAppBubble />
       </main>
     </UniversityLayout>
   );

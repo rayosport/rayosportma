@@ -1,8 +1,10 @@
-export type Language = 'fr' | 'ar';
+export type Language = 'fr' | 'en' | 'ar' | 'es';
 
 export const LANGUAGES: { [key in Language]: string } = {
   fr: 'Français',
+  en: 'English',
   ar: 'العربية',
+  es: 'Español',
 };
 
 export const getDirection = (language: Language): 'ltr' | 'rtl' => {
@@ -10,5 +12,8 @@ export const getDirection = (language: Language): 'ltr' | 'rtl' => {
 };
 
 export const getFontFamily = (language: Language): string => {
-  return language === 'ar' ? 'font-ar' : 'font-fr';
+  if (language === 'ar') return 'font-ar';
+  if (language === 'es') return 'font-es';
+  if (language === 'en') return 'font-en';
+  return 'font-fr';
 };

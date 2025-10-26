@@ -28,6 +28,7 @@ interface Player {
   paymentStatus: "Payé" | "Non payé" | "Nouveau joueur" | "Subscription";
   solde?: number;
   expirationDate?: string;  // Expiration date from ExpirationDate column
+  mvpCount?: number;  // MVP count from TMVP🔒 column
 }
 
 // Configuration Google Sheets - URL publique CSV
@@ -35,7 +36,11 @@ const DEFAULT_GOOGLE_SHEETS_CONFIG = {
   csvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSDgQfkyS5KdTwQABcUDgu673_fSDrwX0HNgGeZiZ5DbSK6UEmYIcUrWPGsAGN5yuL50M6I3rYIJInL/pub?gid=1779046147&single=true&output=csv',
 };
 
-const LeaderboardSection = () => {
+interface LeaderboardSectionProps {
+  onPlayerClick?: (username: string) => void;
+}
+
+const LeaderboardSection = ({ onPlayerClick }: LeaderboardSectionProps = {}) => {
   // console.log('🎯 LeaderboardSection: Component rendering...');
   const { language } = useLanguage();
   const { customDataSources } = useCompanyContext();
@@ -45,15 +50,25 @@ const LeaderboardSection = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedCity, setSelectedCity] = useState<string>("Toutes les villes");
   const [availableCities, setAvailableCities] = useState<string[]>([]);
-  const [showMorePlayers, setShowMorePlayers] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const playersPerPage = 10;
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [showPlayerCard, setShowPlayerCard] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchSuggestions, setSearchSuggestions] = useState<Player[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [sortBy, setSortBy] = useState<string>("score");
 
   // Handler pour ouvrir la carte joueur
   const handlePlayerClick = (player: Player) => {
+    // If onPlayerClick prop is provided, use the new player analytics dashboard
+    if (onPlayerClick) {
+      trackEvent('leaderboard_player_click', 'user_engagement', player.username);
+      onPlayerClick(player.username);
+      return;
+    }
+    
+    // Fallback to old FIFA card if no prop provided
     setSelectedPlayer(player);
     setShowPlayerCard(true);
     trackEvent('leaderboard_player_card_view', 'interaction', player.username);
@@ -91,175 +106,387 @@ const LeaderboardSection = () => {
     // This will be handled by the useEffect that watches selectedCity and players
   };
 
-  // FIFA Player Card Component for Leaderboard
+  // Player Dashboard Component
   const FIFAPlayerCard = ({ player, onClose }: { player: Player; onClose: () => void }) => {
-    const getCardGradient = (score: number, rank: number) => {
-      // Gold theme for top 3 players
-      if (rank <= 3) return 'from-yellow-500 via-yellow-600 to-yellow-800';
-      
-      // Score-based colors for other players
-      if (score >= 8.5) return 'from-yellow-500 via-yellow-600 to-yellow-800';
-      if (score >= 7.5) return 'from-green-600 via-emerald-600 to-teal-800';
-      if (score >= 6.5) return 'from-blue-600 via-indigo-600 to-purple-800';
-      if (score >= 5.5) return 'from-purple-600 via-violet-600 to-pink-800';
-      return 'from-gray-600 via-slate-600 to-gray-800';
+    // Calculate performance metrics
+    const performanceData = {
+      goals: player.goals || 0,
+      assists: player.assists || 0,
+      matches: player.gamesPlayed || 0,
+      attack: Math.round(player.attackRatio || 0),
+      defense: Math.round(player.defenseRatio || 0),
+      score: parseFloat((player.globalScore || 0).toFixed(1))
     };
 
-    // Map our stats with full words instead of abbreviations
-    const baseStats = {
-      Matches: player.gamesPlayed || 0,
-      Score: parseFloat((player.globalScore || 0).toFixed(2)), // Show as 8.80 instead of 880
-      Goals: player.goals || 0,
-      Assists: player.assists || 0,
-      Wins: player.teamWins || 0,
-      Rank: player.rank || 0
-    };
-
-    // Add advanced stats if available (percentages and decimal scores)
-    const advancedStats: Record<string, number> = {};
-    if (player.attackRatio !== undefined) {
-      advancedStats['Attack %'] = parseFloat((player.attackRatio || 0).toFixed(1));
-    }
-    if (player.defenseRatio !== undefined) {
-      advancedStats['Defense %'] = parseFloat((player.defenseRatio || 0).toFixed(1));
-    }
-    if (player.individualScore !== undefined) {
-      advancedStats['Individual Score'] = parseFloat((player.individualScore || 0).toFixed(2));
-    }
-    if (player.teamScore !== undefined) {
-      advancedStats['Team Score'] = parseFloat((player.teamScore || 0).toFixed(2));
-    }
-    // Balance hidden per user request
-    // if (typeof player.solde === 'number') {
-    //   advancedStats['Balance'] = player.solde;
-    // }
-
-    const playerStats = { ...baseStats, ...advancedStats };
+    // Calculate averages
+    const goalsPerMatch = performanceData.matches > 0 ? (performanceData.goals / performanceData.matches).toFixed(2) : 0;
+    const assistsPerMatch = performanceData.matches > 0 ? (performanceData.assists / performanceData.matches).toFixed(2) : 0;
 
     return (
       <Dialog open={showPlayerCard} onOpenChange={() => onClose()}>
-        <DialogContent className="max-w-sm w-full mx-auto p-0 bg-transparent border-none flex items-center justify-center" aria-describedby="player-card-description">
+        <DialogContent className="max-w-7xl w-full mx-auto p-0 bg-transparent border-none" aria-describedby="player-dashboard-description">
           <DialogHeader className="sr-only">
-            <DialogTitle>Player Statistics for {player.username}</DialogTitle>
+            <DialogTitle>Player Dashboard for {player.username}</DialogTitle>
           </DialogHeader>
-          <div className="relative flex items-center justify-center w-full">
-            {/* FIFA Card */}
-            <div className={`w-72 max-w-[90vw] sm:w-72 rounded-3xl bg-gradient-to-br ${getCardGradient(player.globalScore, player.rank)} p-5 shadow-2xl text-white font-sans transform hover:scale-105 transition duration-300 ease-in-out relative`}>
               
+          <div className="relative w-full bg-white rounded-2xl shadow-2xl overflow-hidden">
               {/* Close Button */}
               <button
                 onClick={onClose}
-                className="absolute top-2 right-2 w-8 h-8 bg-black/20 rounded-full flex items-center justify-center hover:bg-black/40 transition-colors z-10"
+              className="absolute top-4 right-4 w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors z-10"
               >
-                <FiX className="w-4 h-4 text-white" />
+              <FiX className="w-5 h-5 text-gray-600" />
               </button>
 
-              {/* Header with Rating only */}
-              <div className="flex justify-between items-center text-2xl font-extrabold drop-shadow-md">
-                <span>{(player.globalScore || 0).toFixed(2)}</span>
-              </div>
-
-              {/* Moroccan Flag and Rank */}
-              <div className="flex justify-between mt-3 mb-4">
-                <div className="h-6 w-10 rounded shadow-md relative overflow-hidden">
-                  {/* Red section */}
-                  <div className="absolute top-0 left-0 w-full h-full bg-red-600"></div>
-                  {/* Green pentagram star in center */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-green-600" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                  </div>
-                </div>
-                <div className="h-6 px-2 bg-orange-500 rounded shadow-md flex items-center justify-center">
-                  <span className="text-xs font-bold text-white">#{player.rank}</span>
-                </div>
-              </div>
-
-              {/* Player Avatar Area */}
-              <div className="relative h-40 flex justify-center items-center">
-                <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center">
-                  <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-3xl font-bold text-white">
+            {/* Desktop Layout */}
+            <div className="hidden md:flex h-[80vh]">
+              {/* Left Side - Player Body Placeholder */}
+              <div className="w-1/3 bg-gradient-to-br from-blue-50 to-indigo-100 p-8 flex flex-col items-center justify-center">
+                <div className="text-center">
+                  <div className="w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg mb-6">
+                    <span className="text-4xl font-bold text-white">
                       {player.firstName.charAt(0).toUpperCase()}
                     </span>
                   </div>
-                </div>
-                {player.isNewPlayer && (
-                  <div className="absolute top-2 right-8 bg-yellow-400 text-black px-2 py-1 rounded-full text-xs font-bold">
-                    NEW
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{player.firstName}</h2>
+                  <p className="text-gray-600 mb-4">@{player.username}</p>
+                  <div className="bg-white rounded-lg p-4 shadow-md">
+                    <div className="text-3xl font-bold text-blue-600 mb-1">{performanceData.score}</div>
+                    <div className="text-sm text-gray-500">Global Score</div>
                   </div>
-                )}
+                </div>
               </div>
 
-              {/* Player Name */}
-              <div className="text-center text-lg mt-3 font-bold uppercase tracking-wide border-t border-white pt-2">
-                {player.username}
+              {/* Right Side - Statistics Dashboard */}
+              <div className="w-2/3 p-8 overflow-y-auto">
+                <div className="mb-6">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Player Dashboard</h1>
+                  <p className="text-gray-600">Detailed statistics and performance analytics</p>
+                  </div>
+
+                {/* Key Metrics Grid */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-green-600 mb-1">{performanceData.goals}</div>
+                    <div className="text-sm text-gray-600">Goals</div>
+                </div>
+                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-purple-600 mb-1">{performanceData.assists}</div>
+                    <div className="text-sm text-gray-600">Assists</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-orange-600 mb-1">{performanceData.attack}%</div>
+                    <div className="text-sm text-gray-600">Attack</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-blue-600 mb-1">{performanceData.defense}%</div>
+                    <div className="text-sm text-gray-600">Defense</div>
+                </div>
               </div>
 
-              {/* City and Rank */}
-              <div className="text-center mt-1 text-sm opacity-90">
-                {player.city} • Global #{player.rank}
+                {/* Performance Charts */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                  {/* Goals vs Assists Chart */}
+                  <div className="bg-white rounded-xl p-6 shadow-lg border">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Goals vs Assists</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Goals</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-32 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-green-500 h-2 rounded-full" 
+                              style={{ width: `${Math.min((performanceData.goals / 20) * 100, 100)}%` }}
+                            ></div>
+                  </div>
+                          <span className="text-sm font-medium">{performanceData.goals}</span>
+                </div>
+                  </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Assists</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-32 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-purple-500 h-2 rounded-full" 
+                              style={{ width: `${Math.min((performanceData.assists / 20) * 100, 100)}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm font-medium">{performanceData.assists}</span>
+                        </div>
+                      </div>
+                    </div>
               </div>
 
-              {/* Payment Status and Balance Section */}
-              <div className="text-center mt-2">
-                {/* Payment Status - ONLY show for subscribers */}
-                {player.paymentStatus === "Subscription" && (
-                  <span className="text-xs px-2 py-1 rounded-full bg-green-500 text-white">
-                    Subscription
-                  </span>
-                )}
-                
-                {/* Balance Display - Show for ALL players including -1 values */}
-                {player.solde !== undefined && (
-                  <div className={`text-xs ${player.paymentStatus === "Subscription" ? "mt-1" : "mt-0"} opacity-80`}>
-                    <span className={`${
-                      player.solde === -1 ? "text-red-300" :
-                      player.solde === 0 ? "text-green-300" :
-                      player.solde < 1 ? "text-red-300" :
-                      player.solde === 1 ? "text-yellow-300" :
-                      "text-green-300"
-                    }`}>
-                      Balance: {player.solde}
+                  {/* Attack vs Defense Chart */}
+                  <div className="bg-white rounded-xl p-6 shadow-lg border">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Attack vs Defense</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Attack</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-32 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-orange-500 h-2 rounded-full" 
+                              style={{ width: `${performanceData.attack}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm font-medium">{performanceData.attack}%</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Defense</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-32 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-blue-500 h-2 rounded-full" 
+                              style={{ width: `${performanceData.defense}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm font-medium">{performanceData.defense}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+
+                {/* Detailed Statistics */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="bg-white rounded-xl p-6 shadow-lg border">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Match Statistics</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total Matches</span>
+                        <span className="font-semibold">{performanceData.matches}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Goals per Match</span>
+                        <span className="font-semibold">{goalsPerMatch}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Assists per Match</span>
+                        <span className="font-semibold">{assistsPerMatch}</span>
+                      </div>
+                    </div>
+              </div>
+
+                  <div className="bg-white rounded-xl p-6 shadow-lg border">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Rating</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Global Score</span>
+                        <span className="font-semibold text-blue-600">{performanceData.score}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Global Rank</span>
+                        <span className="font-semibold">#{player.rank}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">City</span>
+                        <span className="font-semibold">{player.city}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-xl p-6 shadow-lg border">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Advanced Stats</h3>
+                    <div className="space-y-3">
+                      {player.individualScore && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Individual Score</span>
+                          <span className="font-semibold">{player.individualScore.toFixed(1)}</span>
+                        </div>
+                      )}
+                      {player.teamScore && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Team Score</span>
+                          <span className="font-semibold">{player.teamScore.toFixed(1)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Team Wins</span>
+                        <span className="font-semibold">{player.teamWins || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Layout */}
+            <div className="md:hidden max-h-[90vh] overflow-y-auto">
+              {/* Mobile Header - Player Info */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg mx-auto mb-4">
+                  <span className="text-2xl font-bold text-white">
+                    {player.firstName.charAt(0).toUpperCase()}
                     </span>
                   </div>
-                )}
-                
-                {/* Expiration Date Display - ONLY for subscribers */}
-                {player.paymentStatus === "Subscription" && player.expirationDate && (
-                  <div className="text-xs mt-1 opacity-80 text-orange-200">
-                    Expire: {player.expirationDate}
-                  </div>
-                )}
-              </div>
-
-              {/* Player Stats Grid */}
-              <div className="grid grid-cols-3 gap-2 mt-4 text-center text-xs">
-                {Object.entries(playerStats).slice(0, 6).map(([stat, value]) => (
-                  <div key={stat} className="bg-black/20 rounded-lg p-2">
-                    <div className="font-bold text-sm">{value}</div>
-                    <div className="text-xs opacity-80">{stat}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Additional Stats for advanced players */}
-              {Object.keys(advancedStats).length > 0 && (
-                <div className="grid grid-cols-2 gap-2 mt-2 text-center text-xs">
-                  {Object.entries(advancedStats).map(([stat, value]) => (
-                    <div key={stat} className="bg-black/20 rounded-lg p-2">
-                      <div className="font-bold text-sm">{value}</div>
-                      <div className="text-xs opacity-80">{stat}</div>
-                    </div>
-                  ))}
+                <h2 className="text-xl font-bold text-gray-900 mb-1">{player.firstName}</h2>
+                <p className="text-gray-600 mb-3">@{player.username}</p>
+                <div className="bg-white rounded-lg p-3 shadow-md inline-block">
+                  <div className="text-2xl font-bold text-blue-600 mb-1">{performanceData.score}</div>
+                  <div className="text-xs text-gray-500">Global Score</div>
                 </div>
-              )}
+              </div>
 
+              {/* Mobile Content */}
+              <div className="p-4">
+                <div className="mb-4">
+                  <h1 className="text-xl font-bold text-gray-900 mb-1">Player Dashboard</h1>
+                  <p className="text-sm text-gray-600">Performance analytics</p>
+                  </div>
+
+                {/* Mobile Key Metrics Grid */}
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-3 text-center">
+                    <div className="text-xl font-bold text-green-600 mb-1">{performanceData.goals}</div>
+                    <div className="text-xs text-gray-600">Goals</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-3 text-center">
+                    <div className="text-xl font-bold text-purple-600 mb-1">{performanceData.assists}</div>
+                    <div className="text-xs text-gray-600">Assists</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-3 text-center">
+                    <div className="text-xl font-bold text-orange-600 mb-1">{performanceData.attack}%</div>
+                    <div className="text-xs text-gray-600">Attack</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3 text-center">
+                    <div className="text-xl font-bold text-blue-600 mb-1">{performanceData.defense}%</div>
+                    <div className="text-xs text-gray-600">Defense</div>
+                  </div>
+              </div>
+
+                {/* Mobile Performance Charts */}
+                <div className="space-y-4 mb-6">
+                  {/* Goals vs Assists Chart */}
+                  <div className="bg-white rounded-lg p-4 shadow-md border">
+                    <h3 className="text-base font-semibold text-gray-900 mb-3">Goals vs Assists</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600">Goals</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-20 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-green-500 h-2 rounded-full" 
+                              style={{ width: `${Math.min((performanceData.goals / 20) * 100, 100)}%` }}
+                            ></div>
+                  </div>
+                          <span className="text-xs font-medium">{performanceData.goals}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600">Assists</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-20 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-purple-500 h-2 rounded-full" 
+                              style={{ width: `${Math.min((performanceData.assists / 20) * 100, 100)}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-xs font-medium">{performanceData.assists}</span>
+                        </div>
+                      </div>
+                    </div>
+              </div>
+
+                  {/* Attack vs Defense Chart */}
+                  <div className="bg-white rounded-lg p-4 shadow-md border">
+                    <h3 className="text-base font-semibold text-gray-900 mb-3">Attack vs Defense</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600">Attack</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-20 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-orange-500 h-2 rounded-full" 
+                              style={{ width: `${performanceData.attack}%` }}
+                            ></div>
+                    </div>
+                          <span className="text-xs font-medium">{performanceData.attack}%</span>
+                </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600">Defense</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-20 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-blue-500 h-2 rounded-full" 
+                              style={{ width: `${performanceData.defense}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-xs font-medium">{performanceData.defense}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mobile Detailed Statistics */}
+                <div className="space-y-4">
+                  <div className="bg-white rounded-lg p-4 shadow-md border">
+                    <h3 className="text-base font-semibold text-gray-900 mb-3">Match Statistics</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-xs text-gray-600">Total Matches</span>
+                        <span className="text-sm font-semibold">{performanceData.matches}</span>
+            </div>
+                      <div className="flex justify-between">
+                        <span className="text-xs text-gray-600">Goals per Match</span>
+                        <span className="text-sm font-semibold">{goalsPerMatch}</span>
+          </div>
+                      <div className="flex justify-between">
+                        <span className="text-xs text-gray-600">Assists per Match</span>
+                        <span className="text-sm font-semibold">{assistsPerMatch}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-md border">
+                    <h3 className="text-base font-semibold text-gray-900 mb-3">Performance Rating</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-xs text-gray-600">Global Score</span>
+                        <span className="text-sm font-semibold text-blue-600">{performanceData.score}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-xs text-gray-600">Global Rank</span>
+                        <span className="text-sm font-semibold">#{player.rank}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-xs text-gray-600">City</span>
+                        <span className="text-sm font-semibold">{player.city}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-md border">
+                    <h3 className="text-base font-semibold text-gray-900 mb-3">Advanced Stats</h3>
+                    <div className="space-y-2">
+                      {player.individualScore && (
+                        <div className="flex justify-between">
+                          <span className="text-xs text-gray-600">Individual Score</span>
+                          <span className="text-sm font-semibold">{player.individualScore.toFixed(1)}</span>
+                        </div>
+                      )}
+                      {player.teamScore && (
+                        <div className="flex justify-between">
+                          <span className="text-xs text-gray-600">Team Score</span>
+                          <span className="text-sm font-semibold">{player.teamScore.toFixed(1)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span className="text-xs text-gray-600">Team Wins</span>
+                        <span className="text-sm font-semibold">{player.teamWins || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <div id="player-card-description" className="sr-only">
-            FIFA-style player card showing detailed statistics for {player.username}
+          
+          <div id="player-dashboard-description" className="sr-only">
+            Comprehensive player dashboard showing detailed statistics, charts, and analytics for {player.username}
           </div>
         </DialogContent>
       </Dialog>
@@ -414,6 +641,19 @@ const LeaderboardSection = () => {
                 expirationDate = expirationDateValue;
               }
             }
+
+            // Parse MVP count from TMVP🔒 column
+            let mvpCount = 0;
+            const hasMvpCount = headers.some(h => h.includes('TMVP🔒'));
+            
+            if (hasMvpCount) {
+              const mvpCountIndex = headers.findIndex(h => h.includes('TMVP🔒'));
+              const mvpCountValue = row[mvpCountIndex]?.trim();
+              
+              if (mvpCountValue && mvpCountValue !== '#REF!' && mvpCountValue !== '#N/A' && mvpCountValue !== '#ERROR!' && mvpCountValue !== '') {
+                mvpCount = parseInt(mvpCountValue) || 0;
+              }
+            }
             
             return {
               rank: parseInt(row[0]) || 0,               // Colonne A - Rank
@@ -432,6 +672,7 @@ const LeaderboardSection = () => {
               teamScore: parseDecimal(row[13]),          // Colonne N - TEAM SCORE
               solde: subGamesLeft,                       // Colonne O - SubGamesLeft (subscriber balance)
               expirationDate: expirationDate,            // ExpirationDate column (dynamic index)
+              mvpCount: mvpCount,                        // TMVP🔒 column - MVP count
               isNewPlayer: (parseInt(row[6]) || 0) === 0, // New player if 0 games played
               paymentStatus: (() => {
                 if (paymentType === 'sub' || paymentType === 'subscription') {
@@ -632,36 +873,85 @@ const LeaderboardSection = () => {
     return cityMap[city] || city;
   };
 
-  // Effect to handle city filtering and search
+  // Effect to handle city filtering, sorting and search
   useEffect(() => {
     
-    setShowMorePlayers(false);
+    setCurrentPage(1);
     
     // If there's an active search query, don't apply city filtering
     if (searchQuery.trim().length > 0) {
       return; // Search results are handled by handleSuggestionClick
     }
     
+    let filtered = players;
+    
     // Apply city filtering when no search is active
-    if (selectedCity === "Toutes les villes" || selectedCity === "جميع المدن") {
-      setFilteredPlayers(players);
-    } else {
-      const filtered = players.filter(player => {
+    if (selectedCity !== "Toutes les villes" && selectedCity !== "جميع المدن") {
+      filtered = players.filter(player => {
         const cities = player.city.split(',').map(city => city.trim());
         return cities.includes(selectedCity);
       });
-      
-      // Sort by Global Score for this city
-      const sortedFiltered = filtered.sort((a, b) => b.globalScore - a.globalScore);
-      
-      // Recalculate ranks for filtered city (cityRank)
-      const rerankedFiltered = sortedFiltered.map((player, index) => ({
+    }
+    
+    // Apply sorting
+    const sortedPlayers = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "goals":
+          return b.goals - a.goals;
+        case "assists":
+          return b.assists - a.assists;
+        case "attack":
+          return (b.attackRatio || 0) - (a.attackRatio || 0);
+        case "defense":
+          return (b.defenseRatio || 0) - (a.defenseRatio || 0);
+        case "matches":
+          return b.gamesPlayed - a.gamesPlayed;
+        case "mvp_count":
+          return (b.mvpCount || 0) - (a.mvpCount || 0);
+        case "mvp_average":
+          const aMvpAvg = a.gamesPlayed > 0 ? (a.mvpCount || 0) / a.gamesPlayed : 0;
+          const bMvpAvg = b.gamesPlayed > 0 ? (b.mvpCount || 0) / b.gamesPlayed : 0;
+          return bMvpAvg - aMvpAvg;
+        case "goals_average":
+          const aGoalsAvg = a.gamesPlayed > 0 ? a.goals / a.gamesPlayed : 0;
+          const bGoalsAvg = b.gamesPlayed > 0 ? b.goals / b.gamesPlayed : 0;
+          return bGoalsAvg - aGoalsAvg;
+        case "assists_average":
+          const aAssistsAvg = a.gamesPlayed > 0 ? a.assists / a.gamesPlayed : 0;
+          const bAssistsAvg = b.gamesPlayed > 0 ? b.assists / b.gamesPlayed : 0;
+          return bAssistsAvg - aAssistsAvg;
+        case "score":
+        default:
+          return b.globalScore - a.globalScore;
+      }
+    });
+    
+    // Recalculate ranks
+    const rerankedFiltered = sortedPlayers.map((player, index) => ({
         ...player,
         cityRank: index + 1
       }));
       setFilteredPlayers(rerankedFiltered);
+  }, [selectedCity, players, searchQuery, loading, error, sortBy]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredPlayers.length / playersPerPage);
+  const startIndex = (currentPage - 1) * playersPerPage;
+  const endIndex = startIndex + playersPerPage;
+  const currentPlayers = filteredPlayers.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
     }
-  }, [selectedCity, players, searchQuery, loading, error]);
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   // Fonction pour obtenir l'icône en fonction du rang
   const getRankIcon = (rank: number) => {
@@ -669,6 +959,13 @@ const LeaderboardSection = () => {
     if (rank === 2) return <FaMedal className="text-gray-400" />;
     if (rank === 3) return <FaAward className="text-amber-600" />;
     return <FaUser className="text-gray-600" />;
+  };
+
+  // Fonction pour obtenir l'affichage du rang (numéro seulement)
+  const getRankDisplay = (rank: number) => {
+    return (
+      <span className="text-xs font-bold">{rank}</span>
+    );
   };
 
   if (loading) {
@@ -703,18 +1000,38 @@ const LeaderboardSection = () => {
   }
 
   return (
-    <section id="leaderboard" className="py-24 bg-gradient-to-br from-slate-50 to-blue-50">
+    <section id="leaderboard" className="py-16 bg-gradient-to-br from-slate-50 to-blue-50">
       <div className="container mx-auto px-4">
 
         
         <RevealAnimation>
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              {content.title}
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              {content.subtitle}
-            </p>
+          <div className="mb-8">
+            {/* Ultra Compact Modern Pro Banner */}
+            <div className="relative bg-gradient-to-r from-gray-900/90 via-gray-800/90 to-gray-900/90 backdrop-blur-sm rounded-2xl p-3 mb-6 overflow-hidden border border-gray-700/50">
+              {/* Minimal background accent */}
+              <div className="absolute top-0 right-0 w-12 h-12 bg-blue-500/20 rounded-full -translate-y-6 translate-x-6"></div>
+              
+              <div className="relative z-10">
+                {/* Ultra compact single line layout */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <FiAward className="w-3 h-3 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-white leading-none">Classement</h2>
+                      <p className="text-gray-400 text-xs font-medium">Meilleurs joueurs & Statistiques</p>
+                    </div>
+                  </div>
+                  
+                  {/* Stats indicator */}
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-gray-400 text-xs font-medium">{players.length} joueurs</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </RevealAnimation>
 
@@ -729,363 +1046,484 @@ const LeaderboardSection = () => {
         )}
 
         {/* Filtre par ville */}
+        {/* Ultra Modern Compact Filters - Stacked on Mobile, Side by Side on Desktop */}
         <RevealAnimation delay={0.15}>
-          <div className="mb-8">
-            {/* Desktop filter */}
-            <div className="hidden md:flex flex-wrap items-center justify-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-700 font-medium">{content.filterBy}:</span>
+          <div className="mb-4 flex flex-col gap-3">
+            {/* Filters Row */}
+            <div className="flex flex-col md:flex-row justify-center gap-2 md:gap-3">
+            {/* City Filter */}
+            <div className="relative">
+              {/* Filter Box */}
+              <div className="bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl md:rounded-2xl p-0.5 md:p-1 shadow-lg">
+                <div className="bg-white rounded-lg md:rounded-xl px-2 md:px-4 py-1.5 md:py-2 flex items-center gap-2 md:gap-3 min-w-[140px] md:min-w-[200px]">
+                  {/* Filter Icon */}
+                  <div className="w-4 h-4 md:w-5 md:h-5 bg-gradient-to-br from-pink-500 to-pink-600 rounded-md md:rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FiTarget className="w-2.5 h-2.5 md:w-3 md:h-3 text-white" />
               </div>
+                  
+                  {/* Filter Label */}
+                  <span className="text-gray-700 font-semibold text-xs md:text-sm truncate">{selectedCity}</span>
+                  
+                  {/* Dropdown Arrow */}
+                  <div className="ml-auto">
+                    <ChevronDown className="w-3 h-3 md:w-4 md:h-4 text-gray-500" />
+                  </div>
+                  
+                  {/* Dropdown Select */}
               <select
                 value={selectedCity}
                 onChange={(e) => setSelectedCity(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm"
-              >
-                <option value="Toutes les villes">{content.allCities}</option>
-                <option value="Casablanca">Casablanca</option>
-                <option value="Berrechid">Berrechid</option>
-                {availableCities.filter(city => !['Casablanca', 'Berrechid'].includes(city)).map(city => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Mobile filter - Boutons horizontaux */}
-            <div className="md:hidden">
-              <div className="text-center mb-4">
-                <span className="text-gray-700 font-medium text-sm">{content.filterBy}</span>
-              </div>
-              <div className="flex flex-wrap justify-center gap-2">
-                <button
-                  onClick={() => setSelectedCity("Toutes les villes")}
-                  className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${
-                    selectedCity === "Toutes les villes"
-                      ? 'bg-blue-600 text-white shadow-lg'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{
+                      appearance: 'none',
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'none'
+                    }}
+                  >
+                    <option 
+                      value="Toutes les villes"
+                      className="bg-pink-800 text-white hover:bg-gradient-to-r hover:from-pink-600 hover:to-pink-700 hover:text-white focus:bg-gradient-to-r focus:from-pink-600 focus:to-pink-700 focus:text-white"
+                      style={{
+                        backgroundColor: '#9d174d',
+                        color: '#ffffff',
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '600'
+                      }}
                 >
                   {content.allCities}
-                </button>
-                <button
-                  onClick={() => setSelectedCity("Casablanca")}
-                  className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${
-                    selectedCity === "Casablanca"
-                      ? 'bg-blue-600 text-white shadow-lg'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
+                    </option>
+                    <option 
+                      value="Casablanca"
+                      className="bg-pink-800 text-white hover:bg-gradient-to-r hover:from-pink-600 hover:to-pink-700 hover:text-white focus:bg-gradient-to-r focus:from-pink-600 focus:to-pink-700 focus:text-white"
+                      style={{
+                        backgroundColor: '#9d174d',
+                        color: '#ffffff',
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '600'
+                      }}
                 >
                   Casablanca
-                </button>
-                <button
-                  onClick={() => setSelectedCity("Berrechid")}
-                  className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${
-                    selectedCity === "Berrechid"
-                      ? 'bg-blue-600 text-white shadow-lg'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
+                    </option>
+                    <option 
+                      value="Berrechid"
+                      className="bg-pink-800 text-white hover:bg-gradient-to-r hover:from-pink-600 hover:to-pink-700 hover:text-white focus:bg-gradient-to-r focus:from-pink-600 focus:to-pink-700 focus:text-white"
+                      style={{
+                        backgroundColor: '#9d174d',
+                        color: '#ffffff',
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '600'
+                      }}
                 >
                   Berrechid
-                </button>
+                    </option>
                 {availableCities.filter(city => !['Casablanca', 'Berrechid'].includes(city)).map(city => (
-                  <button
+                      <option 
                     key={city}
-                    onClick={() => setSelectedCity(city)}
-                    className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${
-                      selectedCity === city
-                        ? 'bg-blue-600 text-white shadow-lg'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
+                        value={city}
+                        className="bg-pink-800 text-white hover:bg-gradient-to-r hover:from-pink-600 hover:to-pink-700 hover:text-white focus:bg-gradient-to-r focus:from-pink-600 focus:to-pink-700 focus:text-white"
+                        style={{
+                          backgroundColor: '#9d174d',
+                          color: '#ffffff',
+                          padding: '0.5rem 0.75rem',
+                          fontSize: '0.75rem',
+                          fontWeight: '600'
+                        }}
                   >
                     {city}
-                  </button>
+                      </option>
                 ))}
+                  </select>
               </div>
             </div>
           </div>
-        </RevealAnimation>
 
-        {/* Search Bar with Autocomplete */}
-        <div className="mb-8 max-w-md mx-auto relative" style={{ zIndex: 30 }}>
-          <RevealAnimation delay={0.2}>
+            {/* Sort Filter */}
             <div className="relative">
-              <input
-                type="text"
-                placeholder={language === 'ar' ? "البحث عن لاعب..." : "Rechercher un joueur..."}
-                value={searchQuery}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full px-4 py-3 pl-10 pr-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm text-gray-900"
-              />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              {searchQuery && (
-                <button
-                  onClick={clearSearch}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
-                  <FiX className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                </button>
-              )}
+              {/* Sort Filter Box */}
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl md:rounded-2xl p-0.5 md:p-1 shadow-lg">
+                <div className="bg-white rounded-lg md:rounded-xl px-2 md:px-4 py-1.5 md:py-2 flex items-center gap-2 md:gap-3 min-w-[140px] md:min-w-[200px]">
+                  {/* Sort Icon */}
+                  <div className="w-4 h-4 md:w-5 md:h-5 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md md:rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FiTrendingUp className="w-2.5 h-2.5 md:w-3 md:h-3 text-white" />
+                  </div>
+                  
+                  {/* Sort Label */}
+                  <span className="text-gray-700 font-semibold text-xs md:text-sm truncate">{sortBy === 'score' ? 'Score' : sortBy === 'goals' ? 'Buts' : sortBy === 'assists' ? 'Passes' : sortBy === 'attack' ? 'Attaque' : sortBy === 'defense' ? 'Défense' : sortBy === 'matches' ? 'Matches' : sortBy === 'mvp_count' ? 'MVP Count' : sortBy === 'mvp_average' ? 'MVP Average' : sortBy === 'goals_average' ? 'Goals Average' : 'Assists Average'}</span>
+                  
+                  {/* Dropdown Arrow */}
+                  <div className="ml-auto">
+                    <ChevronDown className="w-3 h-3 md:w-4 md:h-4 text-gray-500" />
+                  </div>
+                  
+                  {/* Dropdown Select */}
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{
+                      appearance: 'none',
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'none'
+                    }}
+                  >
+                    <option 
+                      value="score"
+                      className="bg-blue-800 text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white focus:bg-gradient-to-r focus:from-blue-600 focus:to-blue-700 focus:text-white"
+                      style={{
+                        backgroundColor: '#1e40af',
+                        color: '#ffffff',
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '600'
+                      }}
+                    >
+                      Score
+                    </option>
+                    <option 
+                      value="goals"
+                      className="bg-blue-800 text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white focus:bg-gradient-to-r focus:from-blue-600 focus:to-blue-700 focus:text-white"
+                      style={{
+                        backgroundColor: '#1e40af',
+                        color: '#ffffff',
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '600'
+                      }}
+                    >
+                      Buts
+                    </option>
+                    <option 
+                      value="assists"
+                      className="bg-blue-800 text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white focus:bg-gradient-to-r focus:from-blue-600 focus:to-blue-700 focus:text-white"
+                      style={{
+                        backgroundColor: '#1e40af',
+                        color: '#ffffff',
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '600'
+                      }}
+                    >
+                      Passes
+                    </option>
+                    <option 
+                      value="attack"
+                      className="bg-blue-800 text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white focus:bg-gradient-to-r focus:from-blue-600 focus:to-blue-700 focus:text-white"
+                      style={{
+                        backgroundColor: '#1e40af',
+                        color: '#ffffff',
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '600'
+                      }}
+                    >
+                      Attaque
+                    </option>
+                    <option 
+                      value="defense"
+                      className="bg-blue-800 text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white focus:bg-gradient-to-r focus:from-blue-600 focus:to-blue-700 focus:text-white"
+                      style={{
+                        backgroundColor: '#1e40af',
+                        color: '#ffffff',
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '600'
+                      }}
+                    >
+                      Défense
+                    </option>
+                    <option 
+                      value="matches"
+                      className="bg-blue-800 text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white focus:bg-gradient-to-r focus:from-blue-600 focus:to-blue-700 focus:text-white"
+                      style={{
+                        backgroundColor: '#1e40af',
+                        color: '#ffffff',
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '600'
+                      }}
+                    >
+                      Matches
+                    </option>
+                    <option 
+                      value="mvp_count"
+                      className="bg-blue-800 text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white focus:bg-gradient-to-r focus:from-blue-600 focus:to-blue-700 focus:text-white"
+                      style={{
+                        backgroundColor: '#1e40af',
+                        color: '#ffffff',
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '600'
+                      }}
+                    >
+                      MVP Count
+                    </option>
+                    <option 
+                      value="mvp_average"
+                      className="bg-blue-800 text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white focus:bg-gradient-to-r focus:from-blue-600 focus:to-blue-700 focus:text-white"
+                      style={{
+                        backgroundColor: '#1e40af',
+                        color: '#ffffff',
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '600'
+                      }}
+                    >
+                      MVP Average
+                    </option>
+                    <option 
+                      value="goals_average"
+                      className="bg-blue-800 text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white focus:bg-gradient-to-r focus:from-blue-600 focus:to-blue-700 focus:text-white"
+                      style={{
+                        backgroundColor: '#1e40af',
+                        color: '#ffffff',
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '600'
+                      }}
+                    >
+                      Goals Average
+                    </option>
+                    <option 
+                      value="assists_average"
+                      className="bg-blue-800 text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white focus:bg-gradient-to-r focus:from-blue-600 focus:to-blue-700 focus:text-white"
+                      style={{
+                        backgroundColor: '#1e40af',
+                        color: '#ffffff',
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '600'
+                      }}
+                    >
+                      Assists Average
+                    </option>
+              </select>
             </div>
-          </RevealAnimation>
-
-          {/* Autocomplete Suggestions - Outside RevealAnimation to avoid stacking context issues */}
-          {showSuggestions && searchSuggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-2xl max-h-60 overflow-y-auto" style={{ zIndex: 40 }}>
-              {searchSuggestions.map((suggestion) => (
-                <button
-                  key={suggestion.username}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 border-b border-gray-100 last:border-b-0"
-                >
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">
-                      {suggestion.firstName.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900">{suggestion.firstName}</div>
-                    <div className="text-sm text-gray-500">@{suggestion.username} • {suggestion.city}</div>
-                  </div>
-                  <div className="ml-auto text-right">
-                    <div className="text-sm font-medium text-blue-600">#{suggestion.rank}</div>
-                    <div className="text-xs text-gray-500">{suggestion.globalScore.toFixed(2)}</div>
-                  </div>
-                </button>
-              ))}
+        </div>
             </div>
-          )}
         </div>
 
-        {/* Tableau des scores - Desktop */}
-        <RevealAnimation delay={0.4}>
-          <div className="hidden md:block bg-white rounded-2xl shadow-xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-                  <tr>
-                    <th className="px-4 py-4 text-left font-semibold">{content.rank}</th>
-                    <th className="px-4 py-4 text-left font-semibold">{content.firstName}</th>
-                    <th className="px-4 py-4 text-left font-semibold">{content.username}</th>
-                    <th className="px-4 py-4 text-left font-semibold">{content.city}</th>
-                    <th className="px-4 py-4 text-center font-semibold">{content.score}</th>
-                    <th className="px-4 py-4 text-center font-semibold">{content.matches}</th>
-                    <th className="px-4 py-4 text-center font-semibold">{content.goals}</th>
-                    <th className="px-4 py-4 text-center font-semibold">{content.assists}</th>
-                    <th className="px-4 py-4 text-center font-semibold">{content.teamWins}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPlayers.length > 0 ? (
-                    filteredPlayers.slice(0, showMorePlayers ? 50 : 10).map((player, index) => (
-                      <tr 
-                        key={`${player.username}-${index}`}
-                        className={`border-b border-gray-100 hover:bg-blue-50 transition-colors cursor-pointer hover:scale-[1.01] ${
-                          (selectedCity === "All Cities" ? player.rank : player.cityRank) <= 3 ? 'bg-gradient-to-r from-yellow-50 to-orange-50' : ''
-                        }`}
-                        onClick={() => handlePlayerClick(player)}
-                      >
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-3">
-                            {getRankIcon(selectedCity !== "All Cities" ? player.cityRank : player.rank)}
-                            <span className="font-bold text-lg">
-                              {selectedCity !== "All Cities" ? player.cityRank : player.rank}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="font-semibold text-gray-900">{player.firstName}</div>
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="text-gray-700">{player.username}</div>
-                        </td>
-                        <td className="px-4 py-4">
-                          <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                            {player.city}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <span className="font-bold text-2xl text-blue-600">
-                            {player.globalScore.toLocaleString()}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <FaGamepad className="text-gray-500" />
-                            <span className="font-medium">{player.gamesPlayed}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <span className="font-medium text-green-600">{player.goals}</span>
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <span className="font-medium text-purple-600">{player.assists}</span>
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <span className="font-medium text-orange-600">{player.teamWins}</span>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
-                        {content.noData}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+            {/* Pagination Controls - Desktop: Right side, Mobile: Below */}
+            {totalPages > 1 && (
+              <div className="hidden md:flex items-center justify-center gap-2">
+                {/* Compact Page Info */}
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl px-3 py-1.5 shadow-sm border border-gray-200">
+                  <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
+                    <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md">
+                      {currentPage}/{totalPages}
+                    </span>
+                    <span className="text-gray-500">
+                      {startIndex + 1}-{Math.min(endIndex, filteredPlayers.length)}
+                    </span>
+                  </div>
+                </div>
 
+                {/* Navigation Buttons */}
+                <div className="flex items-center gap-1">
+                  {/* Previous Button */}
+                  <button
+                    onClick={goToPreviousPage}
+                    disabled={currentPage === 1}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                        : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg hover:scale-105 active:scale-95'
+                    }`}
+                  >
+                    <ChevronUp size={16} />
+                  </button>
+
+                  {/* Next Button */}
+                  <button
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                        : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg hover:scale-105 active:scale-95'
+                    }`}
+                  >
+                    <ChevronDown size={16} />
+                  </button>
+                              </div>
+                          </div>
+            )}
+
+            {/* Pagination Controls - Mobile: Below filters */}
+            {totalPages > 1 && (
+              <div className="flex md:hidden items-center justify-center gap-3">
+                {/* Compact Page Info */}
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl px-4 py-2 shadow-sm border border-gray-200">
+                  <div className="flex items-center gap-3 text-xs font-medium text-gray-600">
+                    <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-md">
+                      {currentPage}/{totalPages}
+                          </span>
+                    <span className="text-gray-500">
+                      {startIndex + 1}-{Math.min(endIndex, filteredPlayers.length)} sur {filteredPlayers.length}
+                          </span>
+                          </div>
+            </div>
+
+                {/* Navigation Buttons */}
+                <div className="flex items-center gap-2">
+                  {/* Previous Button */}
+                  <button
+                    onClick={goToPreviousPage}
+                    disabled={currentPage === 1}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                        : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg hover:scale-105 active:scale-95'
+                    }`}
+                  >
+                    <ChevronUp size={18} />
+                  </button>
+
+                  {/* Next Button */}
+                  <button
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                        : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg hover:scale-105 active:scale-95'
+                    }`}
+                  >
+                    <ChevronDown size={18} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </RevealAnimation>
 
-        {/* Vue mobile - Cartes compactes */}
-        <div className="md:hidden space-y-2">
-          {filteredPlayers.length > 0 ? (
+        {/* Ultra Compact Modern Leaderboard */}
+        <RevealAnimation delay={0.4}>
+          <div className="space-y-1">
+          {currentPlayers.length > 0 ? (
             <>
-              {filteredPlayers.slice(0, showMorePlayers ? 50 : 10).map((player, index) => (
+              {currentPlayers.map((player, index) => {
+                const currentRank = selectedCity !== "All Cities" ? player.cityRank : player.rank;
+                const isTopThree = currentRank <= 3;
+                
+                return (
                 <div 
-                  key={`mobile-${player.username}-${index}`}
-                  className={`bg-white rounded-lg shadow-md p-3 border-l-4 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200 ${
-                    (selectedCity === "All Cities" ? player.rank : player.cityRank) <= 3 
-                      ? 'border-l-yellow-500 bg-gradient-to-r from-yellow-50 to-orange-50' 
-                      : 'border-l-blue-500'
+                      key={`${player.username}-${index}`}
+                      className={`group relative bg-white/80 backdrop-blur-sm rounded-lg border transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-lg ${
+                      isTopThree 
+                          ? 'border-yellow-400/50 bg-gradient-to-r from-yellow-50/80 to-orange-50/80 shadow-yellow-200/50' 
+                          : 'border-gray-200/50 hover:border-blue-300/50 hover:bg-blue-50/30'
                   }`}
                   onClick={() => handlePlayerClick(player)}
                 >
-                  {/* En-tête compact */}
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div>
-                        <div className="font-bold text-base text-gray-900">{player.firstName}</div>
-                        <div className="text-xs text-gray-600">@{player.username}</div>
+                      <div className="p-2">
+                        {/* Responsive Layout - Single Row with All Stats on Right */}
+                      <div className="flex items-center justify-between">
+                          {/* Left: Rank + Avatar + Name */}
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            {/* Rank Badge */}
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                            isTopThree 
+                              ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white' 
+                              : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
+                          }`}>
+                              {getRankDisplay(currentRank)}
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-blue-600">#{selectedCity !== "All Cities" ? player.cityRank : player.rank}</div>
-                    </div>
-                  </div>
-
-                  {/* Score et stats sur une ligne */}
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-1">
-                      <span className="font-semibold text-blue-600">{player.globalScore.toFixed(2)}</span>
-                      <span className="text-gray-500">pts</span>
-                    </div>
-                    <div className="flex gap-3 text-xs">
-                      <span className="text-gray-600">{player.gamesPlayed} matchs</span>
-                      <span className="text-green-600">{player.goals} buts</span>
-                      <span className="text-purple-600">{player.assists} assists</span>
-                      <span className="text-orange-600">{player.teamWins} wins</span>
+                            
+                            {/* Player Info */}
+                          <div className="min-w-0 flex-1">
+                              <div className="font-bold text-sm text-gray-900 truncate">{player.username}</div>
+                              <div className="text-xs text-gray-500 truncate">{player.globalScore.toFixed(1)} • {player.city}</div>
                     </div>
                   </div>
 
-                  {/* Mobile Payment Status and Balance Section */}
-                  <div className="flex items-center justify-between text-xs mt-2 pt-2 border-t border-gray-100">
-                    <div className="flex items-center gap-2">
-                      {/* Payment Status - ONLY show for subscribers */}
-                      {player.paymentStatus === "Subscription" && (
-                        <span className="text-xs px-2 py-1 rounded-full bg-green-500 text-white">
-                          Subscription
-                        </span>
-                      )}
-                      
-                      {/* Expiration Date Display - ONLY for subscribers */}
-                      {player.paymentStatus === "Subscription" && player.expirationDate && (
-                        <span className="text-xs text-orange-600">
-                          Expire: {player.expirationDate}
-                        </span>
-                      )}
+                          {/* Right: All Stats in One Row */}
+                          <div className="flex items-center gap-1 md:gap-3 text-xs font-semibold flex-shrink-0">
+                            {/* Dynamic Sort Stat - hide when sorting by matches since it's already shown */}
+                            {sortBy !== 'matches' && (
+                              <div className="text-center min-w-[35px] md:min-w-[50px]">
+                                <div className={`font-bold text-xs ${
+                                  sortBy === 'score' ? 'text-blue-600' :
+                                  sortBy === 'goals' ? 'text-green-600' :
+                                  sortBy === 'assists' ? 'text-purple-600' :
+                                  sortBy === 'attack' ? 'text-orange-600' :
+                                  sortBy === 'defense' ? 'text-blue-600' :
+                                sortBy === 'mvp_count' ? 'text-yellow-600' :
+                                sortBy === 'mvp_average' ? 'text-yellow-600' :
+                                sortBy === 'goals_average' ? 'text-green-600' :
+                                sortBy === 'assists_average' ? 'text-purple-600' :
+                                'text-gray-600'
+                                }`}>
+                                  {sortBy === 'score' ? player.globalScore.toFixed(1) :
+                                   sortBy === 'goals' ? player.goals :
+                                   sortBy === 'assists' ? player.assists :
+                                   sortBy === 'attack' ? (player.attackRatio ? Math.round(player.attackRatio) : 0) + '%' :
+                                   sortBy === 'defense' ? (player.defenseRatio ? Math.round(player.defenseRatio) : 0) + '%' :
+                                   sortBy === 'mvp_count' ? (player.mvpCount || 0) :
+                                   sortBy === 'mvp_average' ? (player.gamesPlayed > 0 ? ((player.mvpCount || 0) / player.gamesPlayed).toFixed(1) : '0.0') :
+                                   sortBy === 'goals_average' ? (player.gamesPlayed > 0 ? (player.goals / player.gamesPlayed).toFixed(1) : '0.0') :
+                                   sortBy === 'assists_average' ? (player.gamesPlayed > 0 ? (player.assists / player.gamesPlayed).toFixed(1) : '0.0') :
+                                   player.gamesPlayed}
+                    </div>
+                                <div className="text-gray-400 text-xs">
+                                  {sortBy === 'score' ? 'Score' :
+                                   sortBy === 'goals' ? 'Buts' :
+                                   sortBy === 'assists' ? 'Pass' :
+                                   sortBy === 'attack' ? 'ATT' :
+                                   sortBy === 'defense' ? 'DEF' :
+                                   sortBy === 'mvp_count' ? 'MVP' :
+                                   sortBy === 'mvp_average' ? 'MVP Avg' :
+                                   sortBy === 'goals_average' ? 'Goals Avg' :
+                                   sortBy === 'assists_average' ? 'Pass Avg' :
+                                   'Match'}
+                    </div>
+                  </div>
+                            )}
+                            
+                            {/* Always show matches */}
+                            <div className="text-center min-w-[25px] md:min-w-[30px]">
+                              <div className="text-gray-600 font-bold text-xs">{player.gamesPlayed}</div>
+                              <div className="text-gray-400 text-xs">Match</div>
+                          </div>
+                            
+                            {/* Show additional stats for score, goals, assists, and matches */}
+                            {(sortBy === 'score' || sortBy === 'goals' || sortBy === 'assists' || sortBy === 'matches') && (
+                              <>
+                                {/* Attack/Defense */}
+                                <div className="text-center min-w-[35px] md:min-w-[50px]">
+                                  <div className="text-orange-600 font-bold text-xs">
+                                    {player.attackRatio ? Math.round(player.attackRatio) : 0}%
+                        </div>
+                                  <div className="text-gray-400 text-xs">ATT</div>
                     </div>
                     
-                    {/* Balance Display - Show for ALL players */}
-                    {player.solde !== undefined && (
-                      <div className="text-xs">
-                        <span className={`${
-                          player.solde === -1 ? "text-red-600" :
-                          player.solde === 0 ? "text-green-600" :
-                          player.solde < 1 ? "text-red-600" :
-                          player.solde === 1 ? "text-yellow-600" :
-                          "text-green-600"
-                        }`}>
-                          Balance: {player.solde}
-                        </span>
+                                <div className="text-center min-w-[35px] md:min-w-[50px]">
+                                  <div className="text-blue-600 font-bold text-xs">
+                                    {player.defenseRatio ? Math.round(player.defenseRatio) : 0}%
                       </div>
-                    )}
+                                  <div className="text-gray-400 text-xs">DEF</div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
                   </div>
                 </div>
-              ))}
-              
-              {/* Bouton Voir plus / Voir moins */}
-              {filteredPlayers.length > 10 && (
-                <div className="flex justify-center pt-4">
-                  <button
-                    onClick={() => setShowMorePlayers(!showMorePlayers)}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200 shadow-md"
-                  >
-                    {showMorePlayers ? content.showLess : content.showMore}
-                  </button>
-                </div>
-              )}
+                );
+              })}
             </>
           ) : (
-            <div className="bg-white rounded-lg shadow-md p-6 text-center text-gray-500">
-              {content.noData}
+              <div className="text-center py-12 text-gray-500">
+                <div className="text-lg">{content.noData}</div>
             </div>
           )}
-        </div>
-
-        {/* Bouton Voir plus/moins - Desktop uniquement */}
-        {filteredPlayers.length > 10 && (
-          <RevealAnimation delay={0.5}>
-            <div className="hidden md:flex justify-center mt-6">
-              <button
-                onClick={() => setShowMorePlayers(!showMorePlayers)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200 flex items-center gap-2"
-              >
-                {showMorePlayers ? (
-                  <>
-                    <ChevronUp size={16} />
-                    {content.showLess}
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown size={16} />
-                    {content.showMore}
-                  </>
-                )}
-              </button>
             </div>
           </RevealAnimation>
-        )}
 
-        {/* Statistiques - Fixed values not affected by search */}
-        {players.length > 0 && (
-          <RevealAnimation delay={0.6}>
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-              <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 text-center">
-                <div className="text-2xl md:text-3xl font-bold text-blue-600">{players.length}</div>
-                <div className="text-gray-600 text-sm md:text-base">Joueurs actifs</div>
-              </div>
-              <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 text-center">
-                <div className="text-2xl md:text-3xl font-bold text-green-600">
-                  {players.reduce((sum, player) => sum + player.goals, 0)}
-                </div>
-                <div className="text-gray-600 text-sm md:text-base">Total des buts</div>
-              </div>
-              <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 text-center">
-                <div className="text-2xl md:text-3xl font-bold text-purple-600">
-                  {players.reduce((sum, player) => sum + player.assists, 0)}
-                </div>
-                <div className="text-gray-600 text-sm md:text-base">Total des assists</div>
-              </div>
 
-            </div>
-          </RevealAnimation>
-        )}
+
       </div>
 
       {/* FIFA Player Card Modal */}

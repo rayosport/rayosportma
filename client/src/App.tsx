@@ -2,7 +2,11 @@ import { Switch, Route } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
-import Home from "@/pages/Home";
+import Accueil from "@/pages/Accueil";
+import Football from "@/pages/Football";
+import Paddel from "@/pages/Paddel";
+import Kids from "@/pages/Kids";
+import FAQ from "@/pages/FAQ";
 import UniversitiesHubPage from "@/pages/universite/index";
 import UM6SSPage from "@/pages/universite/um6ss";
 import CompaniesHubPage from "@/pages/entreprise/index";
@@ -21,7 +25,11 @@ function Router() {
   
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={Accueil} />
+      <Route path="/football" component={Football} />
+      <Route path="/padel" component={Paddel} />
+      <Route path="/kids" component={Kids} />
+      <Route path="/faq" component={FAQ} />
       <Route path="/universite" component={UniversitiesHubPage} />
       <Route path="/universite/um6ss" component={UM6SSPage} />
       <Route path="/entreprise" component={CompaniesHubPage} />

@@ -1,118 +1,46 @@
-import { useLanguage } from "@/hooks/use-language";
-import { FaFacebook, FaInstagram, FaWhatsapp, FaTiktok } from "react-icons/fa";
+import { FaFacebook, FaInstagram, FaWhatsapp } from "react-icons/fa";
+import { FiMail, FiPhone } from "react-icons/fi";
 
 const Footer = () => {
-  const { t, setLanguage } = useLanguage();
-  
   return (
-    <footer className="bg-jetblack text-white pt-16 pb-8">
-      <div className="container">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-          {/* Column 1 - About */}
-          <div>
-            <h3 className="text-xl font-bold mb-4">Rayo Sport</h3>
-            <p className="text-gray-400 mb-4">
-              {t("footer_about")}
-            </p>
-            <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-rayoblue transition-colors">
-                <FaInstagram size={24} />
-              </a>
-              <a href="https://wa.me/+212649076758" className="text-gray-400 hover:text-rayoblue transition-colors">
-                <FaWhatsapp size={24} />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-rayoblue transition-colors">
-                <FaFacebook size={24} />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-rayoblue transition-colors">
-                <FaTiktok size={24} />
-              </a>
-            </div>
+    <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+      <div className="container mx-auto px-4 py-4">
+        {/* Row 1 - Social, Contact */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-3 mb-3">
+          {/* Social Media */}
+          <div className="flex gap-2">
+            <a href="https://www.instagram.com/rayosport.ma/?hl=en" target="_blank" rel="noopener noreferrer" className="w-8 h-8 bg-gray-700 hover:bg-pink-600 rounded-md flex items-center justify-center transition-all duration-200 hover:scale-105">
+              <FaInstagram size={12} />
+            </a>
+            <a href="https://wa.me/+212649076758?text=Salut%20!%20Je%20suis%20intéressé%20par%20Rayo%20Sport.%20Pouvez-vous%20me%20donner%20plus%20d'informations%20?" target="_blank" rel="noopener noreferrer" className="w-8 h-8 bg-gray-700 hover:bg-green-600 rounded-md flex items-center justify-center transition-all duration-200 hover:scale-105">
+              <FaWhatsapp size={12} />
+            </a>
+            <a href="https://www.facebook.com/people/RAYO-SPORT/61575298053441/" target="_blank" rel="noopener noreferrer" className="w-8 h-8 bg-gray-700 hover:bg-blue-600 rounded-md flex items-center justify-center transition-all duration-200 hover:scale-105">
+              <FaFacebook size={12} />
+            </a>
           </div>
-          
-          {/* Column 2 - Quick Links */}
-          <div>
-            <h3 className="text-xl font-bold mb-4">{t("footer_quick_links")}</h3>
-            <ul className="space-y-2">
-              <li>
-                <a href="#about" className="text-gray-400 hover:text-white transition-colors">
-                  {t("nav_about")}
-                </a>
-              </li>
-              <li>
-                <a href="#how-it-works" className="text-gray-400 hover:text-white transition-colors">
-                  {t("nav_how")}
-                </a>
-              </li>
-              <li>
-                <a href="#rules" className="text-gray-400 hover:text-white transition-colors">
-                  {t("nav_rules")}
-                </a>
-              </li>
-              <li>
-                <a href="#faq" className="text-gray-400 hover:text-white transition-colors">
-                  {t("nav_faq")}
-                </a>
-              </li>
-            </ul>
-          </div>
-          
-          {/* Column 3 - Contact */}
-          <div>
-            <h3 className="text-xl font-bold mb-4">{t("footer_contact")}</h3>
-            <ul className="space-y-2">
-              <li className="text-gray-400">
-                <span className="block">{t("footer_address")}</span>
-              </li>
-              <li>
-                <a href="mailto:info@rayosport.com" className="text-gray-400 hover:text-white transition-colors">
-                  info@rayosport.com
-                </a>
-              </li>
-              <li>
-                <a href="https://wa.me/+212649076758" className="text-gray-400 hover:text-white transition-colors flex items-center space-x-2">
-                  <FaWhatsapp className="h-4 w-4" />
-                  <span>+212 649-076758</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-          
-          {/* Column 4 - Language */}
-          <div>
-            <h3 className="text-xl font-bold mb-4">{t("footer_language")}</h3>
-            <div className="space-y-2">
-              <button 
-                onClick={() => setLanguage('fr')}
-                className="block w-full text-left px-4 py-2 rounded bg-darkgrey text-gray-300 hover:bg-rayoblue hover:text-white transition-colors"
-              >
-                Français
-              </button>
-              <button 
-                onClick={() => setLanguage('ar')}
-                className="block w-full text-left px-4 py-2 rounded bg-darkgrey text-gray-300 hover:bg-rayoblue hover:text-white transition-colors"
-              >
-                العربية
-              </button>
-            </div>
+
+          {/* Contact Info */}
+          <div className="flex gap-4">
+            <a href="mailto:contact@rayosport.ma" className="flex items-center gap-1 text-gray-400 hover:text-white text-xs transition-colors duration-200">
+              <FiMail className="w-3 h-3" />
+              <span>contact@rayosport.ma</span>
+            </a>
+            <a href="https://wa.me/+212649076758" className="flex items-center gap-1 text-gray-400 hover:text-white text-xs transition-colors duration-200">
+              <FiPhone className="w-3 h-3" />
+              <span>+212 649-076758</span>
+            </a>
           </div>
         </div>
-        
-        {/* Bottom bar */}
-        <div className="pt-8 border-t border-gray-800">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-500 text-sm mb-4 md:mb-0">
-              &copy; {new Date().getFullYear()} Rayo Sport. {t("footer_rights")}
-            </p>
-            <div className="flex space-x-6">
-              <a href="#" className="text-gray-500 hover:text-white text-sm transition-colors">
-                {t("footer_privacy")}
-              </a>
-              <a href="#" className="text-gray-500 hover:text-white text-sm transition-colors">
-                {t("footer_terms")}
-              </a>
-            </div>
-          </div>
+
+        {/* Row 2 - Copyright & Made with Love */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-2 pt-3 border-t border-gray-700">
+          <p className="text-gray-500 text-xs">
+            &copy; {new Date().getFullYear()} Rayo Sport. Tous droits réservés.
+          </p>
+          <p className="text-gray-500 text-xs">
+            Made with ❤️ in Morocco
+          </p>
         </div>
       </div>
     </footer>
