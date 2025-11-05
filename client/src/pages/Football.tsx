@@ -873,7 +873,7 @@ const CitiesOverviewSection = ({ onJoinClick, onPlayerClick, onVoteClick }: {
   }
   
   return (
-    <section id="cities-overview" className="relative py-16 md:py-20 bg-gradient-to-br from-gray-50 to-white overflow-hidden">
+    <section id="cities-overview" className="relative py-16 md:py-20 bg-gradient-to-br from-gray-50 to-white overflow-hidden w-full">
       {/* Background image */}
       <div 
         className="absolute inset-0 z-0"
@@ -892,7 +892,7 @@ const CitiesOverviewSection = ({ onJoinClick, onPlayerClick, onVoteClick }: {
         <div className="absolute top-1/3 right-1/4 w-32 h-32 bg-gradient-to-r from-yellow-500/5 to-orange-500/5 rounded-full blur-2xl"></div>
       </div>
       
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 relative z-10 w-full">
         <div className="text-center mb-12">
           <RevealAnimation>
             {/* Compact header with badge */}
@@ -923,7 +923,7 @@ const CitiesOverviewSection = ({ onJoinClick, onPlayerClick, onVoteClick }: {
               <div className="text-xs sm:text-sm md:text-base text-gray-200 leading-relaxed text-center">
                 <span className="inline-block">Débutant ou Pro • Junior ou Senior</span>
                 <br className="sm:hidden" />
-                <span className="inline-block sm:ml-2">Homme ou Femmes</span>
+                <span className="inline-block sm:ml-2">Homme ou Femme</span>
               </div>
             </div>
             
@@ -946,9 +946,9 @@ const CitiesOverviewSection = ({ onJoinClick, onPlayerClick, onVoteClick }: {
               </div>
             </div>
                 {/* Ultra Compact action buttons */}
-                <div className="flex flex-col sm:flex-row gap-1.5 sm:gap-2 justify-center max-w-xs sm:max-w-2xl mx-auto px-4">
+                <div className="flex flex-col sm:flex-row gap-1.5 sm:gap-2 justify-center max-w-2xl mx-auto px-2">
                   <button 
-                    className="group flex-1 px-2 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-green-600 to-emerald-700 text-white font-medium rounded-md hover:from-green-700 hover:to-emerald-800 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.01] flex items-center justify-center gap-1"
+                    className="group w-full px-2 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-green-600 to-emerald-700 text-white font-medium rounded-md hover:from-green-700 hover:to-emerald-800 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.01] flex items-center justify-center gap-1"
                     onClick={() => {
                       trackEvent('join_match_click', 'user_engagement', 'cities_overview');
                       const upcomingMatchesSection = document.getElementById('upcoming-matches');
@@ -1070,9 +1070,14 @@ const CitiesOverviewSection = ({ onJoinClick, onPlayerClick, onVoteClick }: {
                                   {player.username}
                                 </div>
                                 
-                                {/* Rank Badge */}
-                                <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold flex-shrink-0">
-                                  #{player.rank}
+                                {/* Rank & Match Count Badge */}
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                  <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
+                                    #{player.rank}
+                                  </div>
+                                  <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
+                                    {player.gamesPlayed || 0}M
+                                  </div>
                                 </div>
                               </button>
                             ))}
@@ -1096,7 +1101,11 @@ const CitiesOverviewSection = ({ onJoinClick, onPlayerClick, onVoteClick }: {
                                 {/* Player Info */}
                                 <div className="flex-1 text-left min-w-0">
                                   <div className="font-medium text-gray-900 text-sm sm:text-base truncate">{player.username}</div>
-                                  <div className="text-xs sm:text-sm text-gray-500 truncate">#{player.rank}</div>
+                                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+                                    <span>#{player.rank}</span>
+                                    <span>•</span>
+                                    <span>{player.gamesPlayed || 0} matches</span>
+                                  </div>
                                 </div>
                                 
                                 {/* Rank Badge */}
@@ -1786,19 +1795,21 @@ const Football = () => {
   }
 
   return (
-    <main className="overflow-hidden">
-      <CitiesOverviewSection 
-        onJoinClick={handleJoinClick} 
-        onPlayerClick={setSelectedPlayerUsername}
-        onVoteClick={handleVoteClick}
-      />
-      <UpcomingMatchesSectionComponent onPlayerClick={setSelectedPlayerUsername} />
-      <PastGamesSectionComponent 
-        initialPlayerUsername={selectedPlayerUsername || undefined}
-        onPlayerModalClose={() => setSelectedPlayerUsername(null)}
-      />
-      <LeaderboardSectionComponent onPlayerClick={setSelectedPlayerUsername} />
-      <Footer />
+    <main className="overflow-hidden w-full">
+      <div className="w-full max-w-[100vw] mx-auto">
+        <CitiesOverviewSection 
+          onJoinClick={handleJoinClick} 
+          onPlayerClick={setSelectedPlayerUsername}
+          onVoteClick={handleVoteClick}
+        />
+        <UpcomingMatchesSectionComponent onPlayerClick={setSelectedPlayerUsername} />
+        <PastGamesSectionComponent 
+          initialPlayerUsername={selectedPlayerUsername || undefined}
+          onPlayerModalClose={() => setSelectedPlayerUsername(null)}
+        />
+        <LeaderboardSectionComponent onPlayerClick={setSelectedPlayerUsername} />
+        <Footer />
+      </div>
       
       {/* WhatsApp Groups Modal */}
       <WhatsAppGroupsModal 
@@ -1808,7 +1819,7 @@ const Football = () => {
       
       {/* City Voting Modal - Ultra Compact Dark Theme */}
       <Dialog open={isVoteModalOpen} onOpenChange={setIsVoteModalOpen}>
-        <DialogContent className="max-w-xs sm:max-w-lg max-h-[75vh] sm:max-h-[80vh] overflow-hidden bg-gray-900 border-gray-700 p-2 sm:p-3">
+        <DialogContent className="max-w-xs sm:max-w-lg bg-gray-900 border-gray-700 p-2 sm:p-3 overflow-y-auto">
           <DialogHeader className="pb-0.5 relative min-h-[2rem]">
             <button
               onClick={() => {

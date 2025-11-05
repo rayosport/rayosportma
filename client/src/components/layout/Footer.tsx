@@ -3,8 +3,8 @@ import { FiMail, FiPhone } from "react-icons/fi";
 
 const Footer = () => {
   return (
-    <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-      <div className="container mx-auto px-4 py-4">
+    <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white w-full">
+      <div className="max-w-7xl mx-auto px-4 py-4 w-full">
         {/* Row 1 - Social, Contact */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-3 mb-3">
           {/* Social Media */}

@@ -12,8 +12,27 @@
     @apply border-border;
   }
 
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+  }
+
   body {
-    @apply font-montserrat antialiased bg-background text-foreground;
+    @apply font-montserrat antialiased text-foreground;
+    width: 100%;
+    margin: 0 auto;
+    background-color: #ffffff;
+  }
+  
+  html {
+    width: 100%;
+    margin: 0 auto;
+    background-color: #ffffff;
+  }
+  
+  #root {
+    background-color: #ffffff;
+    min-height: 100vh;
   }
   
   /* Language-specific font classes */
@@ -154,6 +173,15 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
   }
 }
 

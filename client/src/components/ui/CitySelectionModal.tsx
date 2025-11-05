@@ -60,7 +60,7 @@ export const CitySelectionModal = ({ isOpen, onCitySelect }: CitySelectionModalP
             transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div className="relative bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 rounded-3xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 max-w-lg w-full overflow-hidden">
+            <div className="relative bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 rounded-3xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 max-w-lg w-[calc(100%-2rem)] max-h-[calc(85vh-2rem)] overflow-hidden overflow-y-auto">
               
               {/* Decorative Elements */}
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-orange-500 via-red-500 to-orange-600"></div>

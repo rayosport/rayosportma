@@ -983,8 +983,8 @@ const LeaderboardSection = ({ onPlayerClick }: LeaderboardSectionProps = {}) => 
 
   if (error && error !== 'static-fallback') {
     return (
-      <section id="leaderboard" className="py-24 bg-gradient-to-br from-slate-50 to-blue-50">
-        <div className="container mx-auto px-4">
+      <section id="leaderboard" className="py-24 bg-gradient-to-br from-slate-50 to-blue-50 w-full">
+        <div className="max-w-7xl mx-auto px-4 w-full">
           <div className="text-center">
             <p className="text-red-600 mb-4">{content.error}</p>
             <button 
@@ -1000,8 +1000,8 @@ const LeaderboardSection = ({ onPlayerClick }: LeaderboardSectionProps = {}) => 
   }
 
   return (
-    <section id="leaderboard" className="py-16 bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className="container mx-auto px-4">
+    <section id="leaderboard" className="py-16 bg-gradient-to-br from-slate-50 to-blue-50 w-full">
+      <div className="max-w-7xl mx-auto px-4 w-full">
 
         
         <RevealAnimation>

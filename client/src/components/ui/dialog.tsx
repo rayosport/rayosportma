@@ -21,7 +21,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 touch-none",
       className
     )}
     {...props}
@@ -38,16 +38,37 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+        // Mobile: Centered with margins, Desktop: Centered modal
+        "fixed z-50 w-[calc(100%-2rem)] max-w-lg border bg-background shadow-lg duration-200 flex flex-col",
+        // Mobile positioning - centered with margins (1rem on all sides)
+        "left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] max-h-[calc(85vh-2rem)] rounded-lg",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out",
+        "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+        "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+        "data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%]",
+        "data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
+        // Desktop positioning  
+        "sm:max-h-[85vh]",
         className
       )}
       {...props}
     >
-      {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
+      {/* Fixed header with close button */}
+      <div className="relative flex-shrink-0 p-4 sm:p-6 pb-2 sm:pb-4 border-b sm:border-0">
+        {/* Fixed close button - always visible */}
+        <DialogPrimitive.Close 
+          className="absolute right-3 top-3 sm:right-4 sm:top-4 rounded-full bg-background/60 backdrop-blur-sm p-1.5 opacity-60 ring-offset-background transition-all hover:opacity-100 hover:bg-background/80 focus:outline-none focus:ring-1 focus:ring-ring focus:ring-offset-1 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground touch-manipulation shadow-sm hover:shadow-md z-10"
+          aria-label="Close dialog"
+        >
+          <X className="h-3.5 w-3.5 sm:h-3 sm:w-3" strokeWidth={2.5} />
+          <span className="sr-only">Close</span>
+        </DialogPrimitive.Close>
+      </div>
+      
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 pb-4 sm:pb-6 min-h-0">
+        {children}
+      </div>
     </DialogPrimitive.Content>
   </DialogPortal>
 ))

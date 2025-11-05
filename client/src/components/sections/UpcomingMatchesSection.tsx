@@ -327,6 +327,7 @@ interface Match {
   captain?: string;
   mode?: string;
   price?: number;
+  level?: string;
 }
 
 // Configuration Google Sheets par défaut
@@ -573,6 +574,17 @@ const UpcomingMatchesSection = ({ onPlayerClick }: { onPlayerClick?: (username: 
         }
       }
       
+      // Extract Level column
+      let matchLevel = '';
+      const hasLevel = headers.includes('Level') || headers.includes('level');
+      if (hasLevel) {
+        const levelIndex = headers.findIndex(h => h.toLowerCase() === 'level');
+        const levelValue = row[levelIndex]?.trim();
+        if (levelValue && levelValue !== '#REF!' && levelValue !== '#N/A' && levelValue !== '#ERROR!' && levelValue !== '') {
+          matchLevel = levelValue;
+        }
+      }
+      
       // Extraire le capitaine, l'équipe, le numéro et le statut de paiement si ils existent
       let captainName = '';
       let teamLetter = '';
@@ -716,7 +728,8 @@ const UpcomingMatchesSection = ({ onPlayerClick }: { onPlayerClick?: (username: 
           maxPlayers: maxPlayers,
           captain: captainName,
           mode: gameMode.trim(),
-          price: matchPrice
+          price: matchPrice,
+          level: matchLevel
         };
         matchesMap.set(gameId, match);
       }
@@ -1138,7 +1151,7 @@ const UpcomingMatchesSection = ({ onPlayerClick }: { onPlayerClick?: (username: 
 
     return (
       <Dialog open={!!selectedMatch} onOpenChange={() => setSelectedMatch(null)}>
-        <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-2xl max-h-[95vh] overflow-y-auto bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border-none shadow-2xl rounded-xl sm:rounded-2xl scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500 scrollbar-thumb-rounded-full scrollbar-track-rounded-full [&>button]:text-white [&>button]:hover:text-gray-300 [&>button]:hover:bg-gray-700/50">
+        <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-5xl max-h-[95vh] overflow-y-auto bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border-none shadow-2xl rounded-xl sm:rounded-2xl scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500 scrollbar-thumb-rounded-full scrollbar-track-rounded-full [&>button]:text-white [&>button]:hover:text-gray-300 [&>button]:hover:bg-gray-700/50">
           <DialogHeader className="pb-2">
             {/* Match Title */}
             <div className="text-center mb-3">
@@ -1154,30 +1167,30 @@ const UpcomingMatchesSection = ({ onPlayerClick }: { onPlayerClick?: (username: 
               {/* Single Row Compact Layout */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                  {/* Left: Match Info */}
-                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <FiClock className="w-4 h-4 text-green-400" />
-                    <span className="text-white text-xs font-medium">{selectedMatch.time}</span>
+                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <FiClock className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span className="text-white text-xs font-medium whitespace-nowrap">{selectedMatch.time}</span>
                   </div>
                   
-                  <div className="flex items-center gap-1.5">
-                    <FiMapPin className="w-4 h-4 text-blue-400" />
-                    <span className="text-white text-xs font-medium truncate">{getCityDisplayName(selectedMatch.city)}</span>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <FiMapPin className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                    <span className="text-white text-xs font-medium whitespace-nowrap">{getCityDisplayName(selectedMatch.city)}</span>
                   </div>
                   
-                  <div className="flex items-center gap-1.5">
-                    <TbBuildingStadium className="w-4 h-4 text-orange-400" />
-                    <span className="text-white text-xs font-medium truncate">{selectedMatch.field}</span>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <TbBuildingStadium className="w-4 h-4 text-orange-400 flex-shrink-0" />
+                    <span className="text-white text-xs font-medium whitespace-nowrap">{selectedMatch.field}</span>
                   </div>
                   
-                  <div className="flex items-center gap-1.5">
-                    <FiTarget className="w-4 h-4 text-purple-400" />
-                    <span className="text-white text-xs font-medium">{selectedMatch.format}</span>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <FiTarget className="w-4 h-4 text-purple-400 flex-shrink-0" />
+                    <span className="text-white text-xs font-medium whitespace-nowrap">{selectedMatch.format}</span>
                   </div>
                   
-                  <div className="flex items-center gap-1.5">
-                    <FiZap className="w-4 h-4 text-yellow-400" />
-                    <span className="text-white text-xs font-medium">{selectedMatch.price || 'N/A'} DH</span>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <FiZap className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+                    <span className="text-white text-xs font-medium whitespace-nowrap">{selectedMatch.price || 'N/A'} DH</span>
                   </div>
                 </div>
                 
@@ -1266,71 +1279,77 @@ const UpcomingMatchesSection = ({ onPlayerClick }: { onPlayerClick?: (username: 
                 }`}>
                   {teams.map((team, teamIndex) => (
                     <div key={teamIndex} className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-                      <div className="flex items-center justify-between p-1.5 bg-gray-600">
-                        <div className="flex items-center gap-1 min-w-0 flex-1">
+                      <div className="flex items-center justify-between p-1.5 bg-gray-600 gap-2">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
                           <div 
-                            className="w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0"
+                            className="w-5 h-5 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
                             style={{ backgroundColor: team.color }}
                           >
                             {team.name.charAt(0)}
                           </div>
-                          <div className="text-white font-bold text-xs truncate">{team.name}</div>
+                          <div className="text-white font-bold text-xs whitespace-nowrap">{team.name}</div>
                         </div>
-                        <div className="flex items-center gap-1 text-white font-bold text-xs flex-shrink-0 ml-2">
-                          <span className="text-gray-400 text-xs">Score moyen:</span>
-                          <span>{(team.players.reduce((sum, p) => sum + p.globalScore, 0) / team.players.length).toFixed(1)}</span>
+                        <div className="flex items-center gap-1.5 text-white font-bold text-xs flex-shrink-0">
+                          <span className="text-gray-400 text-xs whitespace-nowrap">Score moyen:</span>
+                          <span className="whitespace-nowrap">{(team.players.reduce((sum, p) => sum + p.globalScore, 0) / team.players.length).toFixed(1)}</span>
                         </div>
                       </div>
                       
                       <div className="space-y-0.5 p-1">
-                        {team.players.map((player, playerIndex) => (
+                        {team.players
+                          .sort((a, b) => {
+                            const jerseyA = a.jerseyNumber ?? 999;
+                            const jerseyB = b.jerseyNumber ?? 999;
+                            return jerseyA - jerseyB;
+                          })
+                          .map((player, playerIndex) => (
                           <div 
                             key={playerIndex}
-                            className="flex items-center justify-between p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors cursor-pointer"
+                            className="flex items-center justify-between p-1.5 bg-gray-700 rounded hover:bg-gray-600 transition-colors cursor-pointer"
                             onClick={() => {
                               // Convert TeamPlayer to Player for the click handler
                               const fullPlayer = selectedMatch.players.find(p => p.id === player.id);
                               if (fullPlayer) handlePlayerClick(fullPlayer);
                             }}
                           >
-                        <div className="flex items-center gap-1 flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
                           <div 
-                            className="w-5 h-5 sm:w-6 sm:h-6 rounded flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0"
+                            className="w-6 h-6 rounded flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
                             style={{ backgroundColor: team.color }}
                           >
                             {player.jerseyNumber || playerIndex + 1}
                           </div>
                           <div className="text-white font-medium text-xs min-w-0 flex-1">
-                            <div className="flex items-center gap-1">
-                              <span className="truncate block">{player.username}</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="whitespace-nowrap">{player.username}</span>
                               <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                                 player.paymentStatus === "Payé" ? "bg-green-400" : "bg-red-400"
                               }`}></div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-gray-400 text-xs truncate">#{player.ranking} ({player.gamesPlayed}M)</span>
-                              <div className="flex items-center gap-1">
+                              <span className="text-gray-400 text-xs whitespace-nowrap">#{player.ranking} ({player.gamesPlayed}M)</span>
+                              <div className="flex items-center gap-1.5">
                                 <div className="flex items-center gap-0.5">
-                                  <FiThumbsUp className="w-2 h-2 text-green-400" />
-                                  <span className="text-green-400 text-xs">{getPlayerStats(player.username).likes}</span>
+                                  <FiThumbsUp className="w-2 h-2 text-green-400 flex-shrink-0" />
+                                  <span className="text-green-400 text-xs whitespace-nowrap">{getPlayerStats(player.username).likes}</span>
                                 </div>
                                 <div className="flex items-center gap-0.5">
-                                  <FiThumbsDown className="w-2 h-2 text-red-400" />
-                                  <span className="text-red-400 text-xs">{getPlayerStats(player.username).dislikes}</span>
+                                  <FiThumbsDown className="w-2 h-2 text-red-400 flex-shrink-0" />
+                                  <span className="text-red-400 text-xs whitespace-nowrap">{getPlayerStats(player.username).dislikes}</span>
                                 </div>
                               </div>
                             </div>
                           </div>
-                          <div className="flex flex-col items-end flex-shrink-0 min-w-0">
+                          <div className="flex flex-col items-end flex-shrink-0 gap-0.5">
                             <div className="flex items-center gap-1">
-                              <span className="text-gray-400 text-xs">Score:</span>
-                              <div className="text-white font-bold text-xs truncate">{player.globalScore.toFixed(1)}</div>
+                              <span className="text-gray-400 text-xs whitespace-nowrap">Score:</span>
+                              <div className="text-white font-bold text-xs whitespace-nowrap">{player.globalScore.toFixed(1)}</div>
                             </div>
-                            <div className="flex gap-0.5 sm:gap-1">
-                              <div className="text-yellow-500 text-xs truncate">
+                            <div className="flex gap-1.5">
+                              <div className="text-yellow-500 text-xs whitespace-nowrap">
                                 ATT:{Math.round((player.attackRatio || 0) > 100 ? (player.attackRatio || 0) / 100 : (player.attackRatio || 0))}%
                               </div>
-                              <div className="text-green-400 text-xs truncate">
+                              <div className="text-green-400 text-xs whitespace-nowrap">
                                 DEF:{Math.round((player.defenseRatio || 0) > 100 ? (player.defenseRatio || 0) / 100 : (player.defenseRatio || 0))}%
                               </div>
                             </div>
@@ -1350,12 +1369,12 @@ const UpcomingMatchesSection = ({ onPlayerClick }: { onPlayerClick?: (username: 
                     .map((player) => (
                     <div 
                       key={player.id}
-                      className="flex items-center justify-between p-1 bg-gray-800/50 rounded-md border border-gray-700/30 hover:border-blue-400/50 hover:bg-gray-700/50 transition-all cursor-pointer group"
+                      className="flex items-center justify-between p-1.5 bg-gray-800/50 rounded-md border border-gray-700/30 hover:border-blue-400/50 hover:bg-gray-700/50 transition-all cursor-pointer group"
                       onClick={() => handlePlayerClick(player)}
                     >
-                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
                         <div 
-                          className="w-4 h-4 sm:w-5 sm:h-5 rounded flex items-center justify-center text-white text-xs font-bold relative shadow-sm flex-shrink-0"
+                          className="w-5 h-5 rounded flex items-center justify-center text-white text-xs font-bold relative shadow-sm flex-shrink-0"
                           style={{
                             background: `linear-gradient(135deg, 
                               ${player.isNewPlayer ? '#10b981, #059669' : '#3b82f6, #1d4ed8'})`
@@ -1369,8 +1388,8 @@ const UpcomingMatchesSection = ({ onPlayerClick }: { onPlayerClick?: (username: 
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1">
-                            <div className="font-medium text-white group-hover:text-blue-300 transition-colors text-xs truncate">{player.username}</div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="font-medium text-white group-hover:text-blue-300 transition-colors text-xs whitespace-nowrap">{player.username}</div>
                             <div className="flex items-center flex-shrink-0">
                               {player.paymentStatus === "Subscription" ? (
                                 <FiStar className={`w-2 h-2 sm:w-3 sm:h-3 ${
@@ -1386,36 +1405,34 @@ const UpcomingMatchesSection = ({ onPlayerClick }: { onPlayerClick?: (username: 
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-400 truncate">#{player.ranking} • {player.gamesPlayed}M</span>
-                            <div className="flex items-center gap-1">
+                            <span className="text-xs text-gray-400 whitespace-nowrap">#{player.ranking} • {player.gamesPlayed}M</span>
+                            <div className="flex items-center gap-1.5">
                               <div className="flex items-center gap-0.5">
-                                <FiThumbsUp className="w-2 h-2 text-green-400" />
-                                <span className="text-green-400 text-xs">{getPlayerStats(player.username).likes}</span>
+                                <FiThumbsUp className="w-2 h-2 text-green-400 flex-shrink-0" />
+                                <span className="text-green-400 text-xs whitespace-nowrap">{getPlayerStats(player.username).likes}</span>
                               </div>
                               <div className="flex items-center gap-0.5">
-                                <FiThumbsDown className="w-2 h-2 text-red-400" />
-                                <span className="text-red-400 text-xs">{getPlayerStats(player.username).dislikes}</span>
+                                <FiThumbsDown className="w-2 h-2 text-red-400 flex-shrink-0" />
+                                <span className="text-red-400 text-xs whitespace-nowrap">{getPlayerStats(player.username).dislikes}</span>
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0 min-w-0">
-                        <div className="flex items-center gap-0.5 sm:gap-1 min-w-0">
-                          <span className="text-gray-400 text-xs hidden sm:inline">ATT:</span>
-                          <span className="text-gray-400 text-xs sm:hidden">A:</span>
-                          <span className="text-white text-xs font-medium truncate">{player.attackRatio ? Math.round(player.attackRatio > 100 ? player.attackRatio / 100 : player.attackRatio) + '%' : 'N/A'}</span>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-1">
+                          <span className="text-gray-400 text-xs whitespace-nowrap">ATT:</span>
+                          <span className="text-white text-xs font-medium whitespace-nowrap">{player.attackRatio ? Math.round(player.attackRatio > 100 ? player.attackRatio / 100 : player.attackRatio) + '%' : 'N/A'}</span>
                         </div>
-                        <div className="flex items-center gap-0.5 sm:gap-1 min-w-0">
-                          <span className="text-gray-400 text-xs hidden sm:inline">DEF:</span>
-                          <span className="text-gray-400 text-xs sm:hidden">D:</span>
-                          <span className="text-white text-xs font-medium truncate">{player.defenseRatio ? Math.round(player.defenseRatio > 100 ? player.defenseRatio / 100 : player.defenseRatio) + '%' : 'N/A'}</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-gray-400 text-xs whitespace-nowrap">DEF:</span>
+                          <span className="text-white text-xs font-medium whitespace-nowrap">{player.defenseRatio ? Math.round(player.defenseRatio > 100 ? player.defenseRatio / 100 : player.defenseRatio) + '%' : 'N/A'}</span>
                         </div>
                         <div className="text-right flex-shrink-0">
                           <div className="flex items-center gap-1 justify-end">
-                            <span className="text-gray-400 text-xs">Score:</span>
-                            <div className="text-xs font-bold text-yellow-400">{player.globalScore.toFixed(1)}</div>
+                            <span className="text-gray-400 text-xs whitespace-nowrap">Score:</span>
+                            <div className="text-xs font-bold text-yellow-400 whitespace-nowrap">{player.globalScore.toFixed(1)}</div>
                           </div>
                         </div>
                       </div>
@@ -1431,8 +1448,8 @@ const UpcomingMatchesSection = ({ onPlayerClick }: { onPlayerClick?: (username: 
   }, [selectedMatch]);
 
   return (
-    <section id="upcoming-matches" className="py-12 bg-gray-50">
-      <div className="container mx-auto px-4">
+    <section id="upcoming-matches" className="py-12 bg-gray-50 w-full">
+      <div className="max-w-7xl mx-auto px-4 w-full">
         <RevealAnimation>
           <div className="mb-8">
             {/* Ultra Compact Modern Pro Banner */}
@@ -1541,7 +1558,47 @@ const UpcomingMatchesSection = ({ onPlayerClick }: { onPlayerClick?: (username: 
         {loading ? (
           // État de chargement des cards
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rayoblue mx-auto"></div>
+            <style>{`
+              @keyframes handSweep { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+              @keyframes tick { 0%, 90% { opacity: .25; } 95% { opacity: 1; } 100% { opacity: .25; } }
+              @keyframes buttonPulse { 0% { transform: scale(1); opacity: .4; } 50% { transform: scale(1.15); opacity: .9; } 100% { transform: scale(1); opacity: .4; } }
+              @keyframes dialGlow { 0%, 100% { opacity: .16; } 50% { opacity: .28; } }
+            `}</style>
+            <div className="inline-block mb-4">
+              <svg viewBox="0 0 164 164" className="w-20 h-20 mx-auto">
+                <defs>
+                  <radialGradient id="dialBgMatches" cx="50%" cy="50%">
+                    <stop offset="0%" stopColor="#0f0f0f" />
+                    <stop offset="100%" stopColor="#0b0b0b" />
+                  </radialGradient>
+                </defs>
+                <circle cx="82" cy="88" r="64" fill="url(#dialBgMatches)" stroke="#1f2937" strokeWidth="2" />
+                <rect x="74" y="18" width="16" height="10" rx="2" fill="#1f2937" />
+                <rect x="70" y="10" width="24" height="10" rx="3" fill="#ffffff" opacity=".1" />
+                <circle cx="130" cy="50" r="6" fill="#ffffff" opacity=".5" style={{ animation: 'buttonPulse 1.8s .2s ease-in-out infinite' }} />
+                <circle cx="34" cy="50" r="6" fill="#ffffff" opacity=".35" style={{ animation: 'buttonPulse 1.8s .6s ease-in-out infinite' }} />
+                {Array.from({length:12}).map((_,i)=>{
+                  const angle = (i/12)*2*Math.PI;
+                  const x1 = 82 + Math.cos(angle)*50;
+                  const y1 = 88 + Math.sin(angle)*50;
+                  const x2 = 82 + Math.cos(angle)*58;
+                  const y2 = 88 + Math.sin(angle)*58;
+                  return (
+                    <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeOpacity="0.3" strokeWidth={i%3===0?2:1} />
+                  );
+                })}
+                <circle cx="82" cy="88" r="44" fill="none" stroke="#ffffff" strokeOpacity="0.12" strokeWidth="2" style={{ animation: 'dialGlow 2.2s ease-in-out infinite' }} />
+                <g style={{ transformOrigin: '82px 88px', animation: 'handSweep 1.2s cubic-bezier(.4,.1,.2,1) infinite' }}>
+                  <line x1="82" y1="88" x2="82" y2="34" stroke="#ffffff" strokeWidth="2" />
+                  <circle cx="82" cy="88" r="3" fill="#ffffff" />
+                  <circle cx="82" cy="34" r="4" fill="#ffffff" />
+                </g>
+                <circle cx="82" cy="30" r="3" fill="#ffffff" style={{ animation: 'tick 1.2s .0s linear infinite' }} />
+                <circle cx="136" cy="88" r="3" fill="#ffffff" style={{ animation: 'tick 1.2s .3s linear infinite' }} />
+                <circle cx="82" cy="146" r="3" fill="#ffffff" style={{ animation: 'tick 1.2s .6s linear infinite' }} />
+                <circle cx="28" cy="88" r="3" fill="#ffffff" style={{ animation: 'tick 1.2s .9s linear infinite' }} />
+              </svg>
+            </div>
             <p className="mt-4 text-gray-600">Chargement des matchs...</p>
           </div>
         ) : matches.length === 0 ? (
@@ -1664,6 +1721,67 @@ const UpcomingMatchesSection = ({ onPlayerClick }: { onPlayerClick?: (username: 
                                 return null;
                               })()}
                             </h3>
+                            {match.level && (() => {
+                              const levelLower = match.level.toLowerCase();
+                              const isPro = levelLower.includes('pro') || levelLower.includes('professionnel');
+                              const isStreet = levelLower.includes('street');
+                              
+                              if (isPro) {
+                                // PRO - Elite tier with premium effects
+                                return (
+                                  <span className="relative inline-flex items-center gap-1 px-1.5 py-0.5 text-[8px] font-black rounded-md uppercase tracking-widest overflow-hidden" style={{ 
+                                    background: 'linear-gradient(135deg, #A4193D 0%, #8B1538 50%, #A4193D 100%)',
+                                    color: '#FFDFB9',
+                                    border: '1.5px solid #FFDFB9',
+                                    boxShadow: '0 0 12px rgba(164, 25, 61, 0.7), 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.25), inset 0 -1px 1px rgba(0, 0, 0, 0.15)'
+                                  }}>
+                                    {/* Animated shine effect */}
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer"></div>
+                                    {/* Corner accent */}
+                                    <div className="absolute top-0 left-0 w-1 h-1 border-t border-l border-white/40"></div>
+                                    <div className="absolute bottom-0 right-0 w-1 h-1 border-b border-r border-white/40"></div>
+                                    
+                                    <FiStar className="w-2.5 h-2.5 relative z-10" style={{ fill: '#FFDFB9', color: '#FFDFB9', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))' }} />
+                                    <span className="relative z-10 drop-shadow-[0_1px_3px_rgba(0,0,0,1)] leading-none text-[8px]" style={{ textShadow: '0 0 4px rgba(255, 223, 185, 0.4)' }}>{match.level}</span>
+                                    
+                                    {/* Inner glow */}
+                                    <div className="absolute inset-[1px] rounded bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
+                                  </span>
+                                );
+                              } else if (isStreet) {
+                                // STREET - Professional urban tier
+                                return (
+                                  <span className="relative inline-flex items-center gap-1 px-1.5 py-0.5 text-[8px] font-extrabold rounded-md uppercase tracking-wide overflow-hidden" style={{ 
+                                    background: 'linear-gradient(135deg, #2D2926 0%, #1F1C1A 50%, #2D2926 100%)',
+                                    color: '#FCF6F5',
+                                    border: '1.5px solid #FCF6F5',
+                                    boxShadow: '0 0 10px rgba(45, 41, 38, 0.6), 0 2px 6px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15), inset 0 -1px 1px rgba(0, 0, 0, 0.25)'
+                                  }}>
+                                    {/* Subtle shine */}
+                                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent"></div>
+                                    
+                                    {/* Indicator dot with glow */}
+                                    <div className="relative z-10">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-current shadow-[0_0_4px_currentColor]"></div>
+                                    </div>
+                                    <span className="relative z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] leading-tight text-[8px]">{match.level}</span>
+                                  </span>
+                                );
+                              } else {
+                                // AMATEUR - Clean entry level
+                                return (
+                                  <span className="relative inline-flex items-center px-1.5 py-0.5 text-[8px] font-bold rounded-full uppercase tracking-wide overflow-hidden" style={{ 
+                                    background: 'linear-gradient(135deg, #0A174E 0%, #070F38 50%, #0A174E 100%)',
+                                    color: '#F5D042',
+                                    border: '1px solid #F5D042',
+                                    boxShadow: '0 0 8px rgba(245, 208, 66, 0.4), 0 1px 4px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1)'
+                                  }}>
+                                    <span className="relative z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] leading-tight text-[8px]">{match.level}</span>
+                                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent rounded-full"></div>
+                                  </span>
+                                );
+                              }
+                            })()}
                           </div>
                         </div>
                         
@@ -1964,37 +2082,41 @@ const UpcomingMatchesSection = ({ onPlayerClick }: { onPlayerClick?: (username: 
                           <>
                             {/* Desktop: Ultra compact stacked day boxes */}
                             <div className="hidden lg:flex justify-center">
-                          <div className="flex gap-1">
-                            {['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'].map((day) => {
+                          <div className="flex gap-0 items-center">
+                            {['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'].map((day, index) => {
                               const schedule = citySchedule?.[day];
                               const hasGame = schedule && schedule !== '';
                               
                               return (
-                                <div 
-                                  key={day} 
-                                  className={`w-11 h-12 rounded-md p-1 text-center transition-all duration-200 flex flex-col justify-center ${
-                                    hasGame 
-                                      ? 'bg-gradient-to-br from-pink-600/60 to-pink-700/60 border border-pink-500/80 shadow-md shadow-pink-500/20' 
-                                      : 'bg-gray-600/40 border border-gray-500/40'
-                                  }`}
-                                >
-                                  <div className="text-gray-400 text-xs font-medium mb-0.5 leading-none" style={{fontSize: '10px'}}>
-                                    {day.substring(0, 3)}
-                                  </div>
-                                  {hasGame && schedule ? (
-                                    <>
-                                      <div className="text-white font-semibold leading-none mb-0.5" style={{fontSize: '10px'}}>
-                                        {schedule.split(' ')[0] || '-'}
-                                      </div>
-                                      <div className="text-white font-semibold leading-none" style={{fontSize: '10px'}}>
-                                        {schedule.split(' ')[1] || ''}
-                                      </div>
-                                    </>
-                                  ) : (
-                                    <div className="text-gray-500 font-semibold leading-none" style={{fontSize: '10px'}}>
-                                      -
-                                    </div>
+                                <div key={day} className="flex items-center">
+                                  {index > 0 && (
+                                    <div className="w-px h-8 bg-gradient-to-b from-transparent via-gray-500/50 to-transparent mx-1.5"></div>
                                   )}
+                                  <div 
+                                    className={`w-11 h-12 rounded-md p-1 text-center transition-all duration-200 flex flex-col justify-center ${
+                                      hasGame 
+                                        ? 'bg-gradient-to-br from-pink-600/60 to-pink-700/60 border border-pink-500/80 shadow-md shadow-pink-500/20' 
+                                        : 'bg-gray-600/40 border border-gray-500/40'
+                                    }`}
+                                  >
+                                    <div className="text-gray-400 text-xs font-medium mb-0.5 leading-none" style={{fontSize: '10px'}}>
+                                      {day.substring(0, 3)}
+                                    </div>
+                                    {hasGame && schedule ? (
+                                      <>
+                                        <div className="text-white font-semibold leading-none mb-0.5" style={{fontSize: '10px'}}>
+                                          {schedule.split(' ')[0] || '-'}
+                                        </div>
+                                        <div className="text-white font-semibold leading-none" style={{fontSize: '10px'}}>
+                                          {schedule.split(' ')[1] || ''}
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <div className="text-gray-500 font-semibold leading-none" style={{fontSize: '10px'}}>
+                                        -
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               );
                             })}

@@ -3,9 +3,12 @@ import { useLanguage } from "@/hooks/use-language";
 import { useCompanyContext } from "@/hooks/use-company-context";
 import RevealAnimation from "@/components/ui/RevealAnimation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { FiCalendar, FiMapPin, FiClock, FiUsers, FiStar, FiRefreshCw, FiBarChart2, FiTarget, FiAward, FiSearch, FiChevronDown, FiAlertTriangle, FiThumbsUp, FiThumbsDown } from "react-icons/fi";
+import { FiCalendar, FiMapPin, FiClock, FiUsers, FiStar, FiRefreshCw, FiBarChart2, FiTarget, FiAward, FiSearch, FiChevronDown, FiAlertTriangle, FiThumbsUp, FiThumbsDown, FiInfo } from "react-icons/fi";
 import { TbBuildingStadium } from "react-icons/tb";
 import { trackEvent } from "@/lib/analytics";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar } from "recharts";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 // Configuration for Past Games Google Sheets
 const DEFAULT_PAST_GAMES_SHEET_CONFIG = {
   csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSDgQfkyS5KdTwQABcUDgu673_fSDrwX0HNgGeZiZ5DbSK6UEmYIcUrWPGsAGN5yuL50M6I3rYIJInL/pub?gid=876296498&single=true&output=csv"
@@ -522,6 +525,147 @@ interface PastGamesSectionProps {
   initialPlayerUsername?: string;
   onPlayerModalClose?: () => void;
 }
+
+// Player Avatar Component with Dynamic Border Based on Score
+interface PlayerAvatarWithDynamicBorderProps {
+  username: string;
+  score: number;
+  size?: "sm" | "md" | "lg";
+}
+
+const PlayerAvatarWithDynamicBorder = ({ username, score, size = "md" }: PlayerAvatarWithDynamicBorderProps) => {
+  // Generate profile picture URL using DiceBear API (avatars style)
+  const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(username)}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
+  
+  // Determine border style based on score
+  const getBorderStyle = (score: number) => {
+    if (score >= 9) {
+      // Diamond/Platinum - Purple/Pink gradient with shimmer
+      return {
+        borderColor: 'from-purple-500 via-pink-500 to-purple-500',
+        borderWidth: 'border-[3px]',
+        shadow: 'shadow-purple-500/50',
+        glow: 'shadow-[0_0_20px_rgba(168,85,247,0.6)]',
+        animation: 'animate-pulse'
+      };
+    } else if (score >= 7) {
+      // Platinum - Cyan/Blue gradient
+      return {
+        borderColor: 'from-cyan-400 via-blue-500 to-cyan-400',
+        borderWidth: 'border-[3px]',
+        shadow: 'shadow-cyan-500/50',
+        glow: 'shadow-[0_0_15px_rgba(6,182,212,0.5)]',
+        animation: ''
+      };
+    } else if (score >= 5) {
+      // Gold - Gold/Yellow gradient
+      return {
+        borderColor: 'from-yellow-400 via-amber-500 to-yellow-400',
+        borderWidth: 'border-[2.5px]',
+        shadow: 'shadow-yellow-500/50',
+        glow: 'shadow-[0_0_12px_rgba(234,179,8,0.4)]',
+        animation: ''
+      };
+    } else if (score >= 3) {
+      // Silver - Gray/Silver gradient
+      return {
+        borderColor: 'from-gray-300 via-gray-400 to-gray-300',
+        borderWidth: 'border-[2px]',
+        shadow: 'shadow-gray-400/40',
+        glow: 'shadow-[0_0_8px_rgba(156,163,175,0.3)]',
+        animation: ''
+      };
+    } else {
+      // Bronze - Brown/Copper gradient
+      return {
+        borderColor: 'from-amber-700 via-orange-600 to-amber-700',
+        borderWidth: 'border-[2px]',
+        shadow: 'shadow-amber-600/30',
+        glow: 'shadow-[0_0_6px_rgba(217,119,6,0.2)]',
+        animation: ''
+      };
+    }
+  };
+
+  const borderStyle = getBorderStyle(score);
+  
+  // Size classes
+  const sizeClasses = {
+    sm: 'w-8 h-8',
+    md: 'w-10 h-10 sm:w-12 sm:h-12',
+    lg: 'w-16 h-16 sm:w-20 sm:h-20'
+  };
+
+  const textSizeClasses = {
+    sm: 'text-xs',
+    md: 'text-sm sm:text-base',
+    lg: 'text-lg sm:text-xl'
+  };
+
+  // Get border colors for conic gradient
+  const getBorderColors = (score: number) => {
+    if (score >= 9) {
+      return 'rgb(168,85,247), rgb(236,72,153), rgb(168,85,247)';
+    } else if (score >= 7) {
+      return 'rgb(6,182,212), rgb(59,130,246), rgb(6,182,212)';
+    } else if (score >= 5) {
+      return 'rgb(234,179,8), rgb(245,158,11), rgb(234,179,8)';
+    } else if (score >= 3) {
+      return 'rgb(156,163,175), rgb(209,213,219), rgb(156,163,175)';
+    } else {
+      return 'rgb(217,119,6), rgb(251,146,60), rgb(217,119,6)';
+    }
+  };
+
+  const borderWidth = score >= 9 ? 3 : score >= 7 ? 3 : score >= 5 ? 2.5 : 2;
+
+  return (
+    <div className="relative inline-block" style={{ padding: `${borderWidth}px` }}>
+      {/* Outer animated rotating border ring */}
+      <div 
+        className={`absolute inset-0 rounded-full ${borderStyle.shadow} ${borderStyle.glow}`}
+        style={{
+          background: `conic-gradient(from 0deg, ${getBorderColors(score)})`,
+          padding: `${borderWidth}px`,
+          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          WebkitMaskComposite: 'xor',
+          mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          maskComposite: 'exclude',
+          animation: 'spin-slow 3s linear infinite',
+        }}
+      ></div>
+      
+      {/* Static inner border for depth and glow effect */}
+      <div 
+        className="absolute rounded-full"
+        style={{
+          inset: `${borderWidth + 1}px`,
+          border: `${Math.max(borderWidth * 0.5, 1)}px solid`,
+          borderImage: `linear-gradient(135deg, ${getBorderColors(score).split(',')[0]}, ${getBorderColors(score).split(',')[1]}) 1`,
+          opacity: 0.4,
+          pointerEvents: 'none'
+        }}
+      ></div>
+      
+      {/* Avatar Container */}
+      <div className={`relative ${sizeClasses[size]} rounded-full overflow-hidden z-10`}>
+        <Avatar className={`w-full h-full ${sizeClasses[size]}`}>
+          <AvatarImage 
+            src={avatarUrl} 
+            alt={username}
+            className="w-full h-full object-cover"
+          />
+          <AvatarFallback className={`bg-gradient-to-br from-blue-500 via-purple-600 to-blue-600 ${textSizeClasses[size]} font-bold text-white`}>
+            {username.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+      </div>
+      
+      {/* Status indicator dot */}
+      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 bg-green-500 rounded-full border-2 border-gray-900 shadow-lg z-20"></div>
+    </div>
+  );
+};
 
 export default function PastGamesSection({ initialPlayerUsername, onPlayerModalClose }: PastGamesSectionProps = {}) {
   const { language, t } = useLanguage();
@@ -1132,8 +1276,8 @@ export default function PastGamesSection({ initialPlayerUsername, onPlayerModalC
   }
 
   return (
-    <section id="past-games" className="py-12 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url(/images/gallery/optimized/t2.jpg)' }}>
-      <div className="container mx-auto px-4">
+    <section id="past-games" className="py-12 bg-cover bg-center bg-no-repeat w-full" style={{ backgroundImage: 'url(/images/gallery/optimized/t2.jpg)' }}>
+      <div className="max-w-7xl mx-auto px-4 w-full">
         <RevealAnimation>
           <div className="mb-8">
             {/* Ultra Compact Modern Pro Banner */}
@@ -1259,6 +1403,9 @@ export default function PastGamesSection({ initialPlayerUsername, onPlayerModalC
                   <div className="hidden lg:flex gap-1.5 z-50">
                     {suggestions.slice(0, 3).map((player, index) => {
                       const playerData = pastGames.flatMap(game => game.players).find(p => p.playerUsername === player);
+                      const matchCount = pastGames.filter(game => 
+                        game.players.some(p => p.playerUsername === player)
+                      ).length;
                       return (
                   <button
                     key={index}
@@ -1277,10 +1424,15 @@ export default function PastGamesSection({ initialPlayerUsername, onPlayerModalC
                             {player}
                           </div>
                           
-                          {/* Rank Badge */}
+                          {/* Rank & Match Count Badges */}
                           {playerData && (
-                            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold flex-shrink-0">
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
                               #{currentRankings.get(player) || 'N/A'}
+                              </div>
+                              <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
+                                {matchCount}M
+                              </div>
               </div>
             )}
                         </button>
@@ -1292,6 +1444,9 @@ export default function PastGamesSection({ initialPlayerUsername, onPlayerModalC
                   <div className="lg:hidden flex flex-col gap-1.5 z-50">
                     {suggestions.slice(0, 3).map((player, index) => {
                       const playerData = pastGames.flatMap(game => game.players).find(p => p.playerUsername === player);
+                      const matchCount = pastGames.filter(game => 
+                        game.players.some(p => p.playerUsername === player)
+                      ).length;
                       return (
               <button
                           key={index}
@@ -1308,7 +1463,11 @@ export default function PastGamesSection({ initialPlayerUsername, onPlayerModalC
                           {/* Player Info */}
                           <div className="flex-1 text-left">
                             <div className="text-xs font-medium text-white">{player}</div>
-                            <div className="text-xs text-gray-300">{currentRankings.get(player) ? `#${currentRankings.get(player)}` : 'N/A'}</div>
+                            <div className="flex items-center gap-2 text-xs text-gray-300">
+                              <span>{currentRankings.get(player) ? `#${currentRankings.get(player)}` : 'N/A'}</span>
+                              <span>•</span>
+                              <span>{matchCount} matches</span>
+                            </div>
                           </div>
                           
                           {/* Rank Badge */}
@@ -1329,10 +1488,50 @@ export default function PastGamesSection({ initialPlayerUsername, onPlayerModalC
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                <h2 className="text-2xl font-bold text-white mb-2">Rayo Sport</h2>
-                <p className="text-gray-400">Chargement...</p>
-                  </div>
+                <style>{`
+                  @keyframes handSweep { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                  @keyframes tick { 0%, 90% { opacity: .25; } 95% { opacity: 1; } 100% { opacity: .25; } }
+                  @keyframes buttonPulse { 0% { transform: scale(1); opacity: .4; } 50% { transform: scale(1.15); opacity: .9; } 100% { transform: scale(1); opacity: .4; } }
+                  @keyframes dialGlow { 0%, 100% { opacity: .16; } 50% { opacity: .28; } }
+                `}</style>
+                <div className="inline-block mb-4">
+                  <svg viewBox="0 0 164 164" className="w-20 h-20 mx-auto">
+                    <defs>
+                      <radialGradient id="dialBgPastGames" cx="50%" cy="50%">
+                        <stop offset="0%" stopColor="#0f0f0f" />
+                        <stop offset="100%" stopColor="#0b0b0b" />
+                      </radialGradient>
+                    </defs>
+                    <circle cx="82" cy="88" r="64" fill="url(#dialBgPastGames)" stroke="#1f2937" strokeWidth="2" />
+                    <rect x="74" y="18" width="16" height="10" rx="2" fill="#1f2937" />
+                    <rect x="70" y="10" width="24" height="10" rx="3" fill="#ffffff" opacity=".1" />
+                    <circle cx="130" cy="50" r="6" fill="#ffffff" opacity=".5" style={{ animation: 'buttonPulse 1.8s .2s ease-in-out infinite' }} />
+                    <circle cx="34" cy="50" r="6" fill="#ffffff" opacity=".35" style={{ animation: 'buttonPulse 1.8s .6s ease-in-out infinite' }} />
+                    {Array.from({length:12}).map((_,i)=>{
+                      const angle = (i/12)*2*Math.PI;
+                      const x1 = 82 + Math.cos(angle)*50;
+                      const y1 = 88 + Math.sin(angle)*50;
+                      const x2 = 82 + Math.cos(angle)*58;
+                      const y2 = 88 + Math.sin(angle)*58;
+                      return (
+                        <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeOpacity="0.3" strokeWidth={i%3===0?2:1} />
+                      );
+                    })}
+                    <circle cx="82" cy="88" r="44" fill="none" stroke="#ffffff" strokeOpacity="0.12" strokeWidth="2" style={{ animation: 'dialGlow 2.2s ease-in-out infinite' }} />
+                    <g style={{ transformOrigin: '82px 88px', animation: 'handSweep 1.2s cubic-bezier(.4,.1,.2,1) infinite' }}>
+                      <line x1="82" y1="88" x2="82" y2="34" stroke="#ffffff" strokeWidth="2" />
+                      <circle cx="82" cy="88" r="3" fill="#ffffff" />
+                      <circle cx="82" cy="34" r="4" fill="#ffffff" />
+                    </g>
+                    <circle cx="82" cy="30" r="3" fill="#ffffff" style={{ animation: 'tick 1.2s .0s linear infinite' }} />
+                    <circle cx="136" cy="88" r="3" fill="#ffffff" style={{ animation: 'tick 1.2s .3s linear infinite' }} />
+                    <circle cx="82" cy="146" r="3" fill="#ffffff" style={{ animation: 'tick 1.2s .6s linear infinite' }} />
+                    <circle cx="28" cy="88" r="3" fill="#ffffff" style={{ animation: 'tick 1.2s .9s linear infinite' }} />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-white mb-2">RAYO SPORT</h2>
+                <p className="text-white">Chargement...</p>
+              </div>
             </div>
           ) : displayedGames.length === 0 ? (
             <div className="text-center py-12">
@@ -2102,12 +2301,11 @@ export default function PastGamesSection({ initialPlayerUsername, onPlayerModalC
                     {/* Header Section - Mobile Optimized */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
                       <div className="flex items-center gap-2">
-                        <div className="relative">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 via-purple-600 to-blue-600 rounded-xl flex items-center justify-center text-white text-sm sm:text-base font-bold shadow-lg">
-                            {selectedPlayer?.playerUsername?.charAt(0).toUpperCase() || 'P'}
-                          </div>
-                          <div className="absolute -top-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 bg-green-500 rounded-full border border-gray-900"></div>
-                        </div>
+                        <PlayerAvatarWithDynamicBorder 
+                          username={selectedPlayer?.playerUsername || 'Player'}
+                          score={avgScore}
+                          size="md"
+                        />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between">
                             <div>
@@ -2464,330 +2662,279 @@ export default function PastGamesSection({ initialPlayerUsername, onPlayerModalC
                   </div>
 
                   {/* Performance Progression Charts - Mobile Optimized */}
-                  <div className="bg-gray-800 rounded-lg p-3 sm:p-4">
-                    <h3 className="font-bold text-base sm:text-lg text-white mb-3 sm:mb-4">📈 Performance Progression</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+                  <div className="bg-gray-800 rounded-lg px-1 py-2 sm:p-4">
+                    <h3 className="font-bold text-base sm:text-lg text-white mb-2 sm:mb-4 pl-1 sm:pl-0">📈 Performance Progression</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-6">
                       {/* Score Trend Line Chart */}
-                      <div className="bg-gray-700 rounded-lg p-2 sm:p-4">
-                        <div className="flex justify-between items-center mb-2 sm:mb-3">
-                          <span className="text-sm sm:text-base text-gray-300 font-medium">Score Trend</span>
+                      <div className="rounded-lg pl-0 pr-1 py-1 sm:p-4">
+                        <div className="flex justify-between items-center mb-1.5 sm:mb-3">
+                          <div className="flex items-center gap-1.5 sm:gap-2">
+                            <span className="text-xs sm:text-base text-gray-300 font-medium">Score Trend</span>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button className="text-gray-400 hover:text-gray-300 transition-colors">
+                                    <FiInfo className="w-3 h-3 sm:w-4 sm:h-4" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-gray-800 border-gray-700 text-gray-200 max-w-xs">
+                                  <p className="text-sm">This chart shows your performance score over the last 10 matches. The score (out of 10) reflects your overall performance including goals, assists, attack, and defense contributions.</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
                           <span className="text-xs sm:text-sm text-gray-400">
                             {improvement > 0 ? `+${improvement.toFixed(1)}` : improvement.toFixed(1)} ↑
                               </span>
                         </div>
-                        <div className="relative h-32 sm:h-48 bg-gray-600 rounded p-2 sm:p-3">
-                          <svg className="w-full h-full" viewBox="0 0 1000 200" preserveAspectRatio="none">
-                            {/* Y-axis labels */}
-                            {[0, 2, 4, 6, 8, 10].map((value, i) => (
-                              <text
-                                key={`y-label-${i}`}
-                                x="5"
-                                y={195 - (value / 10) * 180 + 5}
-                                fontSize="10"
-                                fill="#9ca3af"
-                                textAnchor="start"
-                              >
-                                {value}
-                              </text>
-                            ))}
-                            
-                            {/* Grid lines */}
-                            {[0, 2, 4, 6, 8, 10].map((value, i) => (
-                              <line
-                                key={`grid-${i}`}
-                                x1="50"
-                                y1={190 - (value / 10) * 180}
-                                x2="950"
-                                y2={190 - (value / 10) * 180}
-                                stroke="#374151"
-                                strokeWidth="1"
+                        <div className="relative h-32 sm:h-48 rounded pl-0 pr-0.5 py-0.5 sm:p-3">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart
+                              data={playerStats.slice(-10).map((stat, index) => {
+                                const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+                                return {
+                                  game: isMobile ? `${index + 1}` : `#${stat.gameId}`,
+                                  score: stat.score,
+                                  date: stat.date
+                                };
+                              })}
+                              margin={{ top: 0, right: 0, left: -5, bottom: 0 }}
+                            >
+                              <defs>
+                                <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#4b5563" opacity={0.3} />
+                              <XAxis 
+                                dataKey="game" 
+                                stroke="#9ca3af" 
+                                fontSize={10}
+                                tick={{ fill: '#9ca3af' }}
+                                height={20}
                               />
-                            ))}
-                            
-                            {/* Data lines */}
-                            {playerStats.slice(-10).map((stat, index) => {
-                              const x = 50 + (index / 9) * 900;
-                              const y = 190 - (stat.score / 10) * 180;
-                              const nextStat = playerStats.slice(-10)[index + 1];
-                              if (nextStat) {
-                                const nextX = 50 + ((index + 1) / 9) * 900;
-                                const nextY = 190 - (nextStat.score / 10) * 180;
-                                return (
-                                  <line
-                                    key={`line-${index}`}
-                                    x1={x}
-                                    y1={y}
-                                    x2={nextX}
-                                    y2={nextY}
-                                    stroke="#3b82f6"
-                                    strokeWidth="4"
-                                  />
-                                );
-                              }
-                              return null;
-                            })}
-                            
-                            {/* Data points */}
-                            {playerStats.slice(-10).map((stat, index) => {
-                              const x = 50 + (index / 9) * 900;
-                              const y = 190 - (stat.score / 10) * 180;
-                              const color = stat.score >= 8 ? '#10b981' : 
-                                          stat.score >= 6 ? '#f59e0b' : 
-                                          stat.score >= 4 ? '#f97316' : '#ef4444';
-                              return (
-                                <circle
-                                  key={`point-${index}`}
-                                  cx={x}
-                                  cy={y}
-                                  r="6"
-                                  fill={color}
-                                  stroke="white"
-                                  strokeWidth="2"
-                                />
-                              );
-                            })}
-                          </svg>
-                          
-                          {/* X-axis labels */}
-                          <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-400 px-1 sm:px-8">
-                            {playerStats.slice(-10).map((stat, index) => (
-                              <span key={index} className="text-center truncate max-w-[40px] sm:max-w-none">
-                                <span className="sm:hidden">{index + 1}</span>
-                                <span className="hidden sm:inline">#{stat.gameId}</span>
-                              </span>
-                            ))}
-                          </div>
+                              <YAxis 
+                                domain={[0, 10]}
+                                stroke="#9ca3af" 
+                                fontSize={10}
+                                tick={{ fill: '#9ca3af' }}
+                                width={30}
+                                padding={{ top: 5, bottom: 5 }}
+                              />
+                              <RechartsTooltip
+                                contentStyle={{
+                                  backgroundColor: 'rgba(31, 41, 55, 0.95)',
+                                  border: '1px solid #4b5563',
+                                  borderRadius: '8px',
+                                  padding: '8px 12px',
+                                  color: '#fff'
+                                }}
+                                labelStyle={{ color: '#d1d5db', marginBottom: '4px' }}
+                                formatter={(value: number) => [value.toFixed(2), 'Score']}
+                              />
+                              <Area
+                                type="monotone"
+                                dataKey="score"
+                                stroke="#3b82f6"
+                                strokeWidth={3}
+                                fill="url(#scoreGradient)"
+                                dot={{ fill: '#3b82f6', r: 4, strokeWidth: 2, stroke: '#fff' }}
+                                activeDot={{ r: 6, fill: '#60a5fa' }}
+                                animationDuration={800}
+                              />
+                            </AreaChart>
+                          </ResponsiveContainer>
                         </div>
                       </div>
 
                       {/* Goals Trend Line Chart */}
-                      <div className="bg-gray-700 rounded-lg p-4">
-                        <div className="flex justify-between items-center mb-2 sm:mb-3">
-                          <span className="text-sm sm:text-base text-gray-300 font-medium">Goals Trend</span>
+                      <div className="rounded-lg pl-0 pr-1 py-1 sm:p-4">
+                        <div className="flex justify-between items-center mb-1.5 sm:mb-3">
+                          <div className="flex items-center gap-1.5 sm:gap-2">
+                            <span className="text-xs sm:text-base text-gray-300 font-medium">Goals Trend</span>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button className="text-gray-400 hover:text-gray-300 transition-colors">
+                                    <FiInfo className="w-3 h-3 sm:w-4 sm:h-4" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-gray-800 border-gray-700 text-gray-200 max-w-xs">
+                                  <p className="text-sm">This chart displays the number of goals you scored in each of your last 10 matches. The average shows your recent goal-scoring performance.</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
                           <span className="text-xs sm:text-sm text-gray-400">
                             Avg: {recentGames.length > 0 ? (recentGames.reduce((sum, stat) => sum + stat.goals, 0) / recentGames.length).toFixed(1) : '0.0'}
                           </span>
                         </div>
-                        <div className="relative h-32 sm:h-48 bg-gray-600 rounded p-2 sm:p-3">
-                          <svg className="w-full h-full" viewBox="0 0 1000 200" preserveAspectRatio="none">
-                            {/* Y-axis labels */}
-                            {(() => {
-                              const maxGoals = Math.max(...playerStats.slice(-10).map(s => s.goals), 1);
-                              const yLabels = [];
-                              for (let i = 0; i <= maxGoals; i++) {
-                                yLabels.push(i);
-                              }
-                              return yLabels.map((value, i) => (
-                                <text
-                                  key={`y-label-${i}`}
-                                  x="5"
-                                  y={195 - (value / maxGoals) * 180 + 5}
-                                  fontSize="12"
-                                  fill="#9ca3af"
-                                  textAnchor="start"
-                                >
-                                  {value}
-                                </text>
-                              ));
-                            })()}
-                            
-                            {/* Grid lines */}
-                            {(() => {
-                              const maxGoals = Math.max(...playerStats.slice(-10).map(s => s.goals), 1);
-                              const gridLines = [];
-                              for (let i = 0; i <= maxGoals; i++) {
-                                gridLines.push(i);
-                              }
-                              return gridLines.map((value, i) => (
-                                <line
-                                  key={`grid-${i}`}
-                                  x1="50"
-                                  y1={190 - (value / maxGoals) * 180}
-                                  x2="950"
-                                  y2={190 - (value / maxGoals) * 180}
-                                  stroke="#374151"
-                                  strokeWidth="1"
-                                />
-                              ));
-                            })()}
-                            
-                            {/* Data lines */}
-                            {playerStats.slice(-10).map((stat, index) => {
-                              const x = 50 + (index / 9) * 900;
-                              const maxGoals = Math.max(...playerStats.slice(-10).map(s => s.goals), 1);
-                              const y = 190 - (stat.goals / maxGoals) * 180;
-                              const nextStat = playerStats.slice(-10)[index + 1];
-                              if (nextStat) {
-                                const nextX = 50 + ((index + 1) / 9) * 900;
-                                const nextY = 190 - (nextStat.goals / maxGoals) * 180;
-                                return (
-                                  <line
-                                    key={`line-${index}`}
-                                    x1={x}
-                                    y1={y}
-                                    x2={nextX}
-                                    y2={nextY}
-                                    stroke="#10b981"
-                                    strokeWidth="4"
-                                  />
-                                );
-                              }
-                              return null;
-                            })}
-                            
-                            {/* Data points */}
-                            {playerStats.slice(-10).map((stat, index) => {
-                              const x = 50 + (index / 9) * 900;
-                              const maxGoals = Math.max(...playerStats.slice(-10).map(s => s.goals), 1);
-                              const y = 190 - (stat.goals / maxGoals) * 180;
-                              return (
-                                <circle
-                                  key={`point-${index}`}
-                                  cx={x}
-                                  cy={y}
-                                  r="6"
-                                  fill="#10b981"
-                                  stroke="white"
-                                  strokeWidth="2"
-                                />
-                              );
-                            })}
-                          </svg>
-                          
-                          {/* X-axis labels */}
-                          <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-400 px-1 sm:px-8">
-                            {playerStats.slice(-10).map((stat, index) => (
-                              <span key={index} className="text-center truncate max-w-[40px] sm:max-w-none">
-                                {index + 1}
-                              </span>
-                    ))}
-                  </div>
+                        <div className="relative h-32 sm:h-48 rounded pl-0 pr-0.5 py-0.5 sm:p-3">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                              data={playerStats.slice(-10).map((stat, index) => ({
+                                game: `${index + 1}`,
+                                goals: stat.goals,
+                                date: stat.date
+                              }))}
+                              margin={{ top: 0, right: 0, left: -5, bottom: 0 }}
+                            >
+                              <defs>
+                                <linearGradient id="goalsGradient" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.3}/>
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#4b5563" opacity={0.3} />
+                              <XAxis 
+                                dataKey="game" 
+                                stroke="#9ca3af" 
+                                fontSize={10}
+                                tick={{ fill: '#9ca3af' }}
+                                height={20}
+                              />
+                              <YAxis 
+                                domain={['auto', 'auto']}
+                                stroke="#9ca3af" 
+                                fontSize={10}
+                                tick={{ fill: '#9ca3af' }}
+                                allowDecimals={false}
+                                width={30}
+                                padding={{ top: 5, bottom: 5 }}
+                              />
+                              <RechartsTooltip
+                                contentStyle={{
+                                  backgroundColor: 'rgba(31, 41, 55, 0.95)',
+                                  border: '1px solid #4b5563',
+                                  borderRadius: '8px',
+                                  padding: '8px 12px',
+                                  color: '#fff'
+                                }}
+                                labelStyle={{ color: '#d1d5db', marginBottom: '4px' }}
+                                formatter={(value: number) => [value, 'Goals']}
+                              />
+                              <Bar
+                                dataKey="goals"
+                                fill="url(#goalsGradient)"
+                                radius={[4, 4, 0, 0]}
+                                animationDuration={800}
+                              />
+                            </BarChart>
+                          </ResponsiveContainer>
                 </div>
               </div>
 
                       {/* Assists Trend Line Chart */}
-                      <div className="bg-gray-700 rounded-lg p-4">
-                        <div className="flex justify-between items-center mb-2 sm:mb-3">
-                          <span className="text-sm sm:text-base text-gray-300 font-medium">Assists Trend</span>
+                      <div className="rounded-lg pl-0 pr-1 py-1 sm:p-4">
+                        <div className="flex justify-between items-center mb-1.5 sm:mb-3">
+                          <div className="flex items-center gap-1.5 sm:gap-2">
+                            <span className="text-xs sm:text-base text-gray-300 font-medium">Assists Trend</span>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button className="text-gray-400 hover:text-gray-300 transition-colors">
+                                    <FiInfo className="w-3 h-3 sm:w-4 sm:h-4" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-gray-800 border-gray-700 text-gray-200 max-w-xs">
+                                  <p className="text-sm">This chart shows the number of assists you provided in each of your last 10 matches. Assists represent key passes or plays that directly led to goals scored by teammates.</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
                           <span className="text-xs sm:text-sm text-gray-400">
                             Avg: {recentGames.length > 0 ? (recentGames.reduce((sum, stat) => sum + stat.assists, 0) / recentGames.length).toFixed(1) : '0.0'}
                           </span>
                         </div>
-                        <div className="relative h-32 sm:h-48 bg-gray-600 rounded p-2 sm:p-3">
-                          <svg className="w-full h-full" viewBox="0 0 1000 200" preserveAspectRatio="none">
-                            {/* Y-axis labels */}
-                            {(() => {
-                              const maxAssists = Math.max(...playerStats.slice(-10).map(s => s.assists), 1);
-                              const yLabels = [];
-                              for (let i = 0; i <= maxAssists; i++) {
-                                yLabels.push(i);
-                              }
-                              return yLabels.map((value, i) => (
-                                <text
-                                  key={`y-label-${i}`}
-                                  x="5"
-                                  y={195 - (value / maxAssists) * 180 + 5}
-                                  fontSize="12"
-                                  fill="#9ca3af"
-                                  textAnchor="start"
-                                >
-                                  {value}
-                                </text>
-                              ));
-                            })()}
-                            
-                            {/* Grid lines */}
-                            {(() => {
-                              const maxAssists = Math.max(...playerStats.slice(-10).map(s => s.assists), 1);
-                              const gridLines = [];
-                              for (let i = 0; i <= maxAssists; i++) {
-                                gridLines.push(i);
-                              }
-                              return gridLines.map((value, i) => (
-                                <line
-                                  key={`grid-${i}`}
-                                  x1="50"
-                                  y1={190 - (value / maxAssists) * 180}
-                                  x2="950"
-                                  y2={190 - (value / maxAssists) * 180}
-                                  stroke="#374151"
-                                  strokeWidth="1"
-                                />
-                              ));
-                            })()}
-                            
-                            {/* Data lines */}
-                            {playerStats.slice(-10).map((stat, index) => {
-                              const x = 50 + (index / 9) * 900;
-                              const maxAssists = Math.max(...playerStats.slice(-10).map(s => s.assists), 1);
-                              const y = 190 - (stat.assists / maxAssists) * 180;
-                              const nextStat = playerStats.slice(-10)[index + 1];
-                              if (nextStat) {
-                                const nextX = 50 + ((index + 1) / 9) * 900;
-                                const nextY = 190 - (nextStat.assists / maxAssists) * 180;
-                                return (
-                                  <line
-                                    key={`line-${index}`}
-                                    x1={x}
-                                    y1={y}
-                                    x2={nextX}
-                                    y2={nextY}
-                                    stroke="#8b5cf6"
-                                    strokeWidth="4"
-                                  />
-                                );
-                              }
-                              return null;
-                            })}
-                            
-                            {/* Data points */}
-                            {playerStats.slice(-10).map((stat, index) => {
-                              const x = 50 + (index / 9) * 900;
-                              const maxAssists = Math.max(...playerStats.slice(-10).map(s => s.assists), 1);
-                              const y = 190 - (stat.assists / maxAssists) * 180;
-                              return (
-                                <circle
-                                  key={`point-${index}`}
-                                  cx={x}
-                                  cy={y}
-                                  r="6"
-                                  fill="#8b5cf6"
-                                  stroke="white"
-                                  strokeWidth="2"
-                                />
-                              );
-                            })}
-                          </svg>
-                          
-                          {/* X-axis labels */}
-                          <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-400 px-1 sm:px-8">
-                            {playerStats.slice(-10).map((stat, index) => (
-                              <span key={index} className="text-center truncate max-w-[40px] sm:max-w-none">
-                                <span className="sm:hidden">{index + 1}</span>
-                                <span className="hidden sm:inline">#{stat.gameId}</span>
-                              </span>
-                            ))}
-                          </div>
+                        <div className="relative h-32 sm:h-48 rounded pl-0 pr-0.5 py-0.5 sm:p-3">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart
+                              data={playerStats.slice(-10).map((stat, index) => {
+                                const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+                                return {
+                                  game: isMobile ? `${index + 1}` : `#${stat.gameId}`,
+                                  assists: stat.assists,
+                                  date: stat.date
+                                };
+                              })}
+                              margin={{ top: 0, right: 0, left: -5, bottom: 0 }}
+                            >
+                              <defs>
+                                <linearGradient id="assistsGradient" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#4b5563" opacity={0.3} />
+                              <XAxis 
+                                dataKey="game" 
+                                stroke="#9ca3af" 
+                                fontSize={10}
+                                tick={{ fill: '#9ca3af' }}
+                                height={20}
+                              />
+                              <YAxis 
+                                domain={['auto', 'auto']}
+                                stroke="#9ca3af" 
+                                fontSize={10}
+                                tick={{ fill: '#9ca3af' }}
+                                allowDecimals={false}
+                                width={30}
+                                padding={{ top: 5, bottom: 5 }}
+                              />
+                              <RechartsTooltip
+                                contentStyle={{
+                                  backgroundColor: 'rgba(31, 41, 55, 0.95)',
+                                  border: '1px solid #4b5563',
+                                  borderRadius: '8px',
+                                  padding: '8px 12px',
+                                  color: '#fff'
+                                }}
+                                labelStyle={{ color: '#d1d5db', marginBottom: '4px' }}
+                                formatter={(value: number) => [value, 'Assists']}
+                              />
+                              <Area
+                                type="monotone"
+                                dataKey="assists"
+                                stroke="#8b5cf6"
+                                strokeWidth={3}
+                                fill="url(#assistsGradient)"
+                                dot={{ fill: '#8b5cf6', r: 4, strokeWidth: 2, stroke: '#fff' }}
+                                activeDot={{ r: 6, fill: '#a78bfa' }}
+                                animationDuration={800}
+                              />
+                            </AreaChart>
+                          </ResponsiveContainer>
                         </div>
                       </div>
 
                       {/* Matches Per Month Trend */}
-                      <div className="bg-gray-700 rounded-lg p-4">
-                        <div className="flex justify-between items-center mb-2 sm:mb-3">
-                          <span className="text-sm sm:text-base text-gray-300 font-medium">Match Par Mois</span>
+                      <div className="rounded-lg pl-0 pr-1 py-1 sm:p-4">
+                        <div className="flex justify-between items-center mb-1.5 sm:mb-3">
+                          <div className="flex items-center gap-1.5 sm:gap-2">
+                            <span className="text-xs sm:text-base text-gray-300 font-medium">Match Par Mois</span>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button className="text-gray-400 hover:text-gray-300 transition-colors">
+                                    <FiInfo className="w-3 h-3 sm:w-4 sm:h-4" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-gray-800 border-gray-700 text-gray-200 max-w-xs">
+                                  <p className="text-sm">This chart displays the number of matches you played each month over the last 6 months. It helps track your activity and participation frequency.</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
                           <span className="text-xs sm:text-sm text-gray-400">Total: {totalMatches} matches</span>
                         </div>
-                        <div className="relative h-32 sm:h-48 bg-gray-600 rounded p-2 sm:p-3">
-                          <svg className="w-full h-full" viewBox="0 0 1000 200" preserveAspectRatio="none">
-                            {/* Calculate matches per month for the last 6 months */}
-                            {(() => {
+                        <div className="relative h-32 sm:h-48 rounded pl-0 pr-0.5 py-0.5 sm:p-3">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                              data={(() => {
                               const now = new Date();
-                              interface MonthData {
-                                month: string;
-                                matches: number;
-                                monthKey: string;
-                              }
-                              const monthsData: MonthData[] = [];
+                                const monthsData = [];
                               
                               // Get last 6 months
                               for (let i = 5; i >= 0; i--) {
@@ -2803,105 +2950,56 @@ export default function PastGamesSection({ initialPlayerUsername, onPlayerModalC
                                 
                                 monthsData.push({
                                   month: monthDate.toLocaleDateString('en-US', { month: 'short' }),
-                                  matches: matchesInMonth,
-                                  monthKey
-                                });
-                              }
-                              
-                              const maxMatches = Math.max(...monthsData.map(m => m.matches), 1);
-                              
-                              return (
-                                <>
-                                  {/* Y-axis labels */}
-                                  {Array.from({ length: maxMatches + 1 }, (_, i) => (
-                                    <text
-                                      key={`y-label-${i}`}
-                                      x="5"
-                                      y={195 - (i / maxMatches) * 180 + 5}
-                                      fontSize="12"
-                                      fill="#9ca3af"
-                                      textAnchor="start"
-                                    >
-                                      {i}
-                                    </text>
-                                  ))}
-                                  
-                                  {/* Grid lines */}
-                                  {Array.from({ length: maxMatches + 1 }, (_, i) => (
-                                    <line
-                                      key={`grid-${i}`}
-                                      x1="50"
-                                      y1={190 - (i / maxMatches) * 180}
-                                      x2="950"
-                                      y2={190 - (i / maxMatches) * 180}
-                                      stroke="#374151"
-                                      strokeWidth="1"
-                                    />
-                                  ))}
-                                  
-                                  {/* Data lines */}
-                                  {monthsData.map((monthData, index) => {
-                                    const x = 50 + (index / 5) * 900;
-                                    const y = 190 - (monthData.matches / maxMatches) * 180;
-                                    const nextMonthData = monthsData[index + 1];
-                                    
-                                    if (nextMonthData) {
-                                      const nextX = 50 + ((index + 1) / 5) * 900;
-                                      const nextY = 190 - (nextMonthData.matches / maxMatches) * 180;
-                                      return (
-                                        <line
-                                          key={`line-${index}`}
-                                          x1={x}
-                                          y1={y}
-                                          x2={nextX}
-                                          y2={nextY}
-                                          stroke="#3b82f6"
-                                          strokeWidth="4"
-                                        />
-                                      );
-                                    }
-                                    return null;
-                                  })}
-                                  
-                                  {/* Data points */}
-                                  {monthsData.map((monthData, index) => {
-                                    const x = 50 + (index / 5) * 900;
-                                    const y = 190 - (monthData.matches / maxMatches) * 180;
-                                    return (
-                                      <circle
-                                        key={`point-${index}`}
-                                        cx={x}
-                                        cy={y}
-                                        r="6"
-                                        fill="#3b82f6"
-                                        stroke="white"
-                                        strokeWidth="2"
-                                      />
-                                    );
-                                  })}
-                                </>
-                              );
-                            })()}
-                          </svg>
-                          
-                          {/* X-axis labels */}
-                          <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-400 px-1 sm:px-8">
-                            {(() => {
-                              const now = new Date();
-                              const monthsLabels = [];
-                              
-                              for (let i = 5; i >= 0; i--) {
-                                const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-                                monthsLabels.push(monthDate.toLocaleDateString('en-US', { month: 'short' }));
-                              }
-                              
-                              return monthsLabels.map((month, index) => (
-                                <span key={index} className="text-center truncate max-w-[40px] sm:max-w-none">
-                                  {month}
-                                </span>
-                              ));
-                            })()}
-                          </div>
+                                    matches: matchesInMonth
+                                  });
+                                }
+                                
+                                return monthsData;
+                              })()}
+                              margin={{ top: 0, right: 0, left: -5, bottom: 0 }}
+                            >
+                              <defs>
+                                <linearGradient id="matchesGradient" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8}/>
+                                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.3}/>
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#4b5563" opacity={0.3} />
+                              <XAxis 
+                                dataKey="month" 
+                                stroke="#9ca3af" 
+                                fontSize={10}
+                                tick={{ fill: '#9ca3af' }}
+                                height={20}
+                              />
+                              <YAxis 
+                                domain={['auto', 'auto']}
+                                stroke="#9ca3af" 
+                                fontSize={10}
+                                tick={{ fill: '#9ca3af' }}
+                                allowDecimals={false}
+                                width={30}
+                                padding={{ top: 5, bottom: 5 }}
+                              />
+                              <RechartsTooltip
+                                contentStyle={{
+                                  backgroundColor: 'rgba(31, 41, 55, 0.95)',
+                                  border: '1px solid #4b5563',
+                                  borderRadius: '8px',
+                                  padding: '8px 12px',
+                                  color: '#fff'
+                                }}
+                                labelStyle={{ color: '#d1d5db', marginBottom: '4px' }}
+                                formatter={(value: number) => [value, 'Matches']}
+                              />
+                              <Bar
+                                dataKey="matches"
+                                fill="url(#matchesGradient)"
+                                radius={[4, 4, 0, 0]}
+                                animationDuration={800}
+                              />
+                            </BarChart>
+                          </ResponsiveContainer>
                         </div>
                       </div>
 
@@ -2993,7 +3091,7 @@ export default function PastGamesSection({ initialPlayerUsername, onPlayerModalC
                               
                               return (
                                 <tr key={`${stat.gameId}_${stat.date}`} className="border-b border-gray-600 hover:bg-gray-700 transition-colors">
-                                  <td className="px-3 py-2 text-sm text-white">
+                                  <td className="px-3 py-2 text-sm text-white whitespace-nowrap">
                                     {new Date(stat.date).toLocaleDateString('fr-FR', { 
                                       weekday: 'long',
                                       day: 'numeric', 
@@ -3001,8 +3099,8 @@ export default function PastGamesSection({ initialPlayerUsername, onPlayerModalC
                                       year: 'numeric'
                                     })}
                                   </td>
-                                  <td className="px-3 py-2 text-center text-sm text-white">#{stat.gameId}</td>
-                                  <td className="px-3 py-2 text-center">
+                                  <td className="px-3 py-2 text-center text-sm text-white whitespace-nowrap">#{stat.gameId}</td>
+                                  <td className="px-3 py-2 text-center whitespace-nowrap">
                                     <span className="px-2 py-1 rounded text-xs font-medium bg-gray-600 text-gray-200">
                                       {gameMode}
                                     </span>
