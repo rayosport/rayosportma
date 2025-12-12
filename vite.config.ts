@@ -23,7 +23,11 @@ export default defineConfig({
       "@": path.resolve(import.meta.dirname, "client", "src"),
       "@shared": path.resolve(import.meta.dirname, "shared"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+      // Ensure single React instance
+      "react": path.resolve(import.meta.dirname, "node_modules/react"),
+      "react-dom": path.resolve(import.meta.dirname, "node_modules/react-dom"),
     },
+    dedupe: ['react', 'react-dom'],
   },
   root: path.resolve(import.meta.dirname, "client"),
   build: {
@@ -32,13 +36,19 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Vendor chunks
+          // Vendor chunks - React MUST stay in main bundle
           if (id.includes('node_modules')) {
-            // Don't split React - keep it in main bundle to ensure it's always available
-            // React and React-DOM will be included in the main bundle
-            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
-              return undefined; // Keep in main bundle
+            // Critical: React must NOT be split - explicitly exclude from chunking
+            // By not returning anything for React, it stays in the main entry bundle
+            const isReact = id.includes('/react/') || 
+                           id.includes('/react-dom/') || 
+                           id.includes('/scheduler/') ||
+                           (id.includes('react') && !id.includes('react-icons') && !id.includes('react-hook-form') && !id.includes('react-day-picker') && !id.includes('react-resizable'));
+            
+            if (isReact) {
+              return; // Explicitly return undefined - keeps in main bundle
             }
+            
             if (id.includes('wouter')) {
               return 'router-vendor';
             }
