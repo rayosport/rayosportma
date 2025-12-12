@@ -71,6 +71,16 @@ const UniversitiesHubPage = () => {
                   Nous développons des partenariats exclusifs avec les universités marocaines. 
                   Revenez bientôt pour découvrir nos programmes universitaires !
                 </p>
+                <button 
+                  className="group px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-700 text-white font-medium rounded-md hover:from-green-700 hover:to-emerald-800 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.02] flex items-center justify-center gap-2 mx-auto"
+                  onClick={() => {
+                    trackEvent('voir_football_click', 'navigation', 'universities_page');
+                    window.location.href = '/football';
+                  }}
+                >
+                  <span className="font-semibold">Voir Football</span>
+                  <span className="group-hover:translate-x-0.5 transition-transform duration-300">→</span>
+                </button>
               </div>
             </RevealAnimation>
           </div>

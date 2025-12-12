@@ -3,383 +3,6 @@ import { Language } from "./i18n";
 export type TranslationRecord = Record<string, string>;
 
 export const translations: Record<Language, TranslationRecord> = {
-  en: {
-    // Navigation
-    "nav_home": "Home",
-    "nav_football": "Football",
-    "nav_padel": "Padel",
-    "nav_kids": "Kids",
-    "nav_about": "About",
-    "nav_how": "How it works",
-    "nav_rules": "Formats & Rules",
-    "nav_leaderboard": "Leaderboard",
-    "nav_faq": "FAQ",
-    "nav_join": "Join",
-    
-    // Hero Section
-    "hero_title": "Play football",
-    "hero_title_highlight": "when it suits you!",
-    "hero_subtitle": "Want to play football without commitment? Book a match whenever you want!",
-    "hero_cta_primary": "Join WhatsApp groups",
-    "hero_cta_secondary": "Upcoming matches",
-    "hero_players_text": "players already registered",
-    
-    // About Section
-    "about_title": "What is Rayo Sport?",
-    "about_subtitle": "A new way to experience community football in Morocco",
-    "about_concept_title": "Our Concept",
-    "about_concept_text": "Rayo Sport is a community platform that organizes 5vs5 football matches and innovative 3-team rotations in Moroccan cities. We offer a premium experience with uniforms, referees and professional photos.",
-    "about_mission_title": "Our Mission",
-    "about_mission_text": "Become the #1 platform for community football in Morocco by creating unforgettable experiences that allow players of all levels to shine on the field.",
-    "about_vision_title": "Our Vision",
-    "about_vision_text": "Create an ecosystem where football becomes more than just a game: an active community, a progression platform and a place where local legends are born every week.",
-    
-    // How It Works Section
-    "how_title": "How It Works",
-    "how_subtitle": "Joining the Rayo Sport community is simple and fun",
-    "how_step1_title": "Join a WhatsApp group",
-    "how_step1_description": "Join our local WhatsApp group to be informed of upcoming matches in your city.",
-    "how_step2_title": "Book a match",
-    "how_step2_description": "Choose your slot, pay your place and get ready to play.",
-    "how_step3_title": "Play. Score. Shine.",
-    "how_step3_description": "Enjoy a premium experience with uniforms, referees and quality field.",
-    "how_step4_title": "Receive stats and highlights",
-    "how_step4_description": "After the match, receive your statistics, highlights and updated ranking.",
-    "how_cta_button": "Join now",
-    
-    // Rules Section
-    "rules_title": "Formats & Rules",
-    "rules_subtitle": "Discover our different game formats and rules",
-    "rules_classic_title": "Rayo Classic",
-    "rules_classic_description": "Traditional 5vs5 or 7vs7 matches with balanced teams",
-    "rules_rush_title": "Rayo Rush",
-    "rules_rush_description": "3 teams, 5-minute matches, loser leaves",
-    "rules_battle_title": "Rayo Battle",
-    "rules_battle_description": "4 teams, intense competition format",
-    "rules_rankings_title": "Ranking System",
-    "rules_rankings_1": "All players receive a performance rating after each match",
-    "rules_rankings_2": "Statistics include: goals, assists, wins, MVP",
-    "rules_rankings_3": "Weekly and monthly ranking of the best players",
-    "rules_rankings_4": "Badge system to reward exceptional performances",
-    "rules_rankings_5": "Elite players are invited to special events",
-    
-    // FAQ Section
-    "faq_title": "Frequently Asked Questions",
-    "faq_subtitle": "Everything you need to know before joining a Rayo match",
-    "faq_q1": "How to book?",
-    "faq_a1": "Join our WhatsApp group, check available matches and confirm your place by paying through the proposed options (usually by mobile money).",
-    "faq_q2": "How much does it cost?",
-    "faq_a2": "The standard price is 50-70 MAD per player per match, which includes the field, referee, uniforms and professional photos.",
-    "faq_q3": "Do I need to bring my equipment?",
-    "faq_a3": "Just bring your football shoes and a water bottle. We provide jerseys, bibs and all necessary equipment.",
-    "faq_q4": "Can I come if I'm not good?",
-    "faq_a4": "Absolutely! We welcome all levels. Teams are balanced and the atmosphere is always friendly and respectful.",
-    "faq_q5": "Is there a Rayo Sport app?",
-    "faq_a5": "Our app is in development. Meanwhile, all bookings and communications are done via WhatsApp and Instagram.",
-    "faq_q6": "Where are the matches held?",
-    "faq_a6": "We organize matches in several Moroccan cities: Casablanca, Rabat, Marrakech, Tangier, and soon others. Fields are carefully selected for their quality.",
-    "faq_more_questions": "Have other questions?",
-    "faq_contact_link": "Contact us on WhatsApp",
-    
-    // Testimonials Section
-    "testimonials_title": "What our players say",
-    "testimonials_subtitle": "Discover testimonials from our community of passionate players",
-    
-    // CTA Section
-    "cta_title": "Ready to join?",
-    "cta_subtitle": "Join the Rayo Sport community and participate in our sports activities!",
-    "cta_button": "Join WhatsApp",
-    "cta_button_secondary": "See our activities",
-    
-    // Football Page
-    "football_hero_loading": "Loading...",
-    "football_hero_active_players": "Active Players",
-    "football_hero_where_every_player": "Where every player finds their place",
-    "football_hero_beginner_or_pro": "Beginner or Pro • Junior or Senior • Men & Women",
-    "football_hero_cities": "Cities",
-    "football_hero_matches_per_month": "Matches/Month",
-    "football_hero_available": "Available",
-    "football_hero_play_now": "Play Now",
-    "football_hero_leaderboard": "Leaderboard",
-    "football_hero_previous_games": "Previous Games",
-    "football_city_players": "Players",
-    "football_city_matches_per_week": "Matches/Week",
-    "football_city_next_match": "Next match",
-    "football_city_loading": "Loading...",
-    "football_city_available": "Available",
-    "football_city_full": "Full",
-    "football_city_need_players": "Need more players",
-    "football_city_no_match": "No match",
-    "football_city_waitlist": "Waitlist",
-    "football_city_join": "Join",
-    "football_city_more_info": "More Info",
-    "football_city_top_players": "🏆 Top 3 Players",
-    "football_city_loading_players": "Loading...",
-    "football_city_no_players_found": "No players found",
-    "football_city_men": "Men",
-    "football_city_women": "Women",
-    
-    // Placeholder
-    "This section is under development. Check back soon!": "This section is under development. Check back soon!",
-  },
-  ar: {
-    // Navigation
-    "nav_home": "الرئيسية",
-    "nav_football": "كرة القدم",
-    "nav_padel": "البادل",
-    "nav_kids": "الأطفال",
-    "nav_about": "حول",
-    "nav_how": "كيف يعمل",
-    "nav_rules": "التنسيقات والقواعد",
-    "nav_leaderboard": "الترتيب",
-    "nav_faq": "الأسئلة الشائعة",
-    "nav_join": "انضم",
-    
-    // Hero Section
-    "hero_title": "العب كرة القدم",
-    "hero_title_highlight": "عندما يناسبك!",
-    "hero_subtitle": "تريد لعب كرة القدم دون التزام؟ احجز مباراة متى شئت!",
-    "hero_cta_primary": "انضم لمجموعات واتساب",
-    "hero_cta_secondary": "المباريات القادمة",
-    "hero_players_text": "لاعب مسجل بالفعل",
-    
-    // About Section
-    "about_title": "ما هو رايو سبورت؟",
-    "about_subtitle": "طريقة جديدة لتجربة كرة القدم المجتمعية في المغرب",
-    "about_concept_title": "مفهومنا",
-    "about_concept_text": "رايو سبورت منصة مجتمعية تنظم مباريات كرة قدم 5 ضد 5 ودورات مبتكرة من 3 فرق في المدن المغربية. نقدم تجربة مميزة مع الزي الرسمي والحكام والصور المهنية.",
-    "about_mission_title": "مهمتنا",
-    "about_mission_text": "أن نصبح المنصة رقم 1 لكرة القدم المجتمعية في المغرب من خلال خلق تجارب لا تُنسى تسمح للاعبين من جميع المستويات بالتألق في الميدان.",
-    "about_vision_title": "رؤيتنا",
-    "about_vision_text": "خلق نظام بيئي تصبح فيه كرة القدم أكثر من مجرد لعبة: مجتمع نشط ومنصة تقدم ومكان تولد فيه الأساطير المحلية كل أسبوع.",
-    
-    // How It Works Section
-    "how_title": "كيف يعمل",
-    "how_subtitle": "الانضمام إلى مجتمع رايو سبورت بسيط وممتع",
-    "how_step1_title": "انضم لمجموعة واتساب",
-    "how_step1_description": "انضم إلى مجموعة واتساب المحلية الخاصة بنا لتكون على علم بالمباريات القادمة في مدينتك.",
-    "how_step2_title": "احجز مباراة",
-    "how_step2_description": "اختر وقتك، ادفع مكانك واستعد للعب.",
-    "how_step3_title": "العب. سجل. تألق.",
-    "how_step3_description": "استمتع بتجربة مميزة مع الزي الرسمي والحكام وملعب عالي الجودة.",
-    "how_step4_title": "احصل على الإحصائيات واللحظات المميزة",
-    "how_step4_description": "بعد المباراة، احصل على إحصائياتك ولحظاتك المميزة وترتيبك المحدث.",
-    "how_cta_button": "انضم الآن",
-    
-    // Rules Section
-    "rules_title": "التنسيقات والقواعد",
-    "rules_subtitle": "اكتشف تنسيقات اللعب المختلفة وقواعدنا",
-    "rules_classic_title": "رايو كلاسيك",
-    "rules_classic_description": "مباريات تقليدية 5 ضد 5 أو 7 ضد 7 مع فرق متوازنة",
-    "rules_rush_title": "رايو راش",
-    "rules_rush_description": "3 فرق، مباريات 5 دقائق، الخاسر يخرج",
-    "rules_battle_title": "رايو باتل",
-    "rules_battle_description": "4 فرق، تنسيق منافسة مكثفة",
-    "rules_rankings_title": "نظام الترتيب",
-    "rules_rankings_1": "جميع اللاعبين يحصلون على تقييم أداء بعد كل مباراة",
-    "rules_rankings_2": "الإحصائيات تشمل: الأهداف، المساعدات، الانتصارات، أفضل لاعب",
-    "rules_rankings_3": "ترتيب أسبوعي وشهري لأفضل اللاعبين",
-    "rules_rankings_4": "نظام شارات لمكافأة الأداء الاستثنائي",
-    "rules_rankings_5": "اللاعبون النخبة مدعوون لأحداث خاصة",
-    
-    // FAQ Section
-    "faq_title": "الأسئلة الشائعة",
-    "faq_subtitle": "كل ما تحتاج لمعرفته قبل الانضمام لمباراة رايو",
-    "faq_q1": "كيف أحجز؟",
-    "faq_a1": "انضم لمجموعة واتساب الخاصة بنا، تحقق من المباريات المتاحة وأكد مكانك بالدفع عبر الخيارات المقترحة (عادة عبر المال المحمول).",
-    "faq_q2": "كم التكلفة؟",
-    "faq_a2": "السعر القياسي هو 50-70 درهم للاعب لكل مباراة، يشمل الملعب والحكم والزي الرسمي والصور المهنية.",
-    "faq_q3": "هل أحتاج لجلب معداتي؟",
-    "faq_a3": "فقط أحضر حذاء كرة القدم وزجاجة ماء. نحن نوفر القمصان والصدريات وكل المعدات اللازمة.",
-    "faq_q4": "هل يمكنني المجيء إذا لم أكن جيداً؟",
-    "faq_a4": "بالطبع! نرحب بجميع المستويات. الفرق متوازنة والجو ودود ومحترم دائماً.",
-    "faq_q5": "هل هناك تطبيق رايو سبورت؟",
-    "faq_a5": "تطبيقنا قيد التطوير. في الوقت الحالي، جميع الحجوزات والاتصالات تتم عبر واتساب وإنستغرام.",
-    "faq_q6": "أين تقام المباريات؟",
-    "faq_a6": "ننظم مباريات في عدة مدن مغربية: الدار البيضاء، الرباط، مراكش، طنجة، وقريباً مدن أخرى. الملاعب مختارة بعناية لجودتها.",
-    "faq_more_questions": "لديك أسئلة أخرى؟",
-    "faq_contact_link": "اتصل بنا على واتساب",
-    
-    // Testimonials Section
-    "testimonials_title": "ماذا يقول لاعبونا",
-    "testimonials_subtitle": "اكتشف شهادات من مجتمع لاعبينا المتحمسين",
-    
-    // CTA Section
-    "cta_title": "مستعد للانضمام؟",
-    "cta_subtitle": "انضم إلى مجتمع رايو سبورت وشارك في أنشطتنا الرياضية!",
-    "cta_button": "انضم لواتساب",
-    "cta_button_secondary": "شاهد أنشطتنا",
-    
-    // Football Page
-    "football_hero_loading": "جاري التحميل...",
-    "football_hero_active_players": "لاعبون نشطون",
-    "football_hero_where_every_player": "حيث يجد كل لاعب مكانه",
-    "football_hero_beginner_or_pro": "مبتدئ أو محترف • صغير أو كبير • رجال ونساء",
-    "football_hero_cities": "المدن",
-    "football_hero_matches_per_month": "مباريات/الشهر",
-    "football_hero_available": "متاح",
-    "football_hero_play_now": "العب الآن",
-    "football_hero_leaderboard": "الترتيب",
-    "football_hero_previous_games": "المباريات السابقة",
-    "football_city_players": "لاعبون",
-    "football_city_matches_per_week": "مباريات/الأسبوع",
-    "football_city_next_match": "المباراة القادمة",
-    "football_city_loading": "جاري التحميل...",
-    "football_city_available": "متاح",
-    "football_city_full": "مكتمل",
-    "football_city_need_players": "بحاجة لمزيد من اللاعبين",
-    "football_city_no_match": "لا توجد مباراة",
-    "football_city_waitlist": "قائمة الانتظار",
-    "football_city_join": "انضم",
-    "football_city_more_info": "مزيد من المعلومات",
-    "football_city_top_players": "🏆 أفضل 3 لاعبين",
-    "football_city_loading_players": "جاري التحميل...",
-    "football_city_no_players_found": "لم يتم العثور على لاعبين",
-    "football_city_men": "رجال",
-    "football_city_women": "نساء",
-    
-    // Placeholder
-    "This section is under development. Check back soon!": "هذا القسم قيد التطوير. تحقق قريباً!",
-  },
-  fr: {
-    // Navigation
-    "nav_home": "Accueil",
-    "nav_football": "Football",
-    "nav_padel": "Padel",
-    "nav_kids": "Kids",
-    "nav_about": "À propos",
-    "nav_how": "Comment ça marche",
-    "nav_rules": "Formats & Règles",
-    "nav_leaderboard": "Classement",
-    "nav_faq": "FAQ",
-    "nav_join": "Rejoindre",
-    
-    // Hero Section
-    "hero_title": "Jouez au foot",
-    "hero_title_highlight": "quand ça vous arrange !",
-    "hero_subtitle": "Envie de foot sans engagement ? Réservez un match quand vous voulez !",
-    "hero_cta_primary": "Rejoindre WhatsApp groups",
-    "hero_cta_secondary": "Matchs à venir",
-    "hero_players_text": "joueurs déjà inscrits",
-    
-    // About Section
-    "about_title": "Qu'est-ce que Rayo Sport ?",
-    "about_subtitle": "Une nouvelle façon de vivre le football communautaire au Maroc",
-    "about_concept_title": "Notre Concept",
-    "about_concept_text": "Rayo Sport est une plateforme communautaire qui organise des matchs de football 5vs5 et des rotations innovantes à 3 équipes dans les villes marocaines. Nous offrons une expérience premium avec des uniformes, des arbitres et des photos professionnelles.",
-    "about_mission_title": "Notre Mission",
-    "about_mission_text": "Devenir la plateforme n°1 pour le football communautaire au Maroc en créant des expériences inoubliables qui permettent aux joueurs de tous niveaux de briller sur le terrain.",
-    "about_vision_title": "Notre Vision",
-    "about_vision_text": "Créer un écosystème où le football devient plus qu'un simple jeu : une communauté active, une plateforme de progression et un lieu où des légendes locales naissent chaque semaine.",
-    
-    // How It Works Section
-    "how_title": "Comment Ça Marche",
-    "how_subtitle": "Rejoindre la communauté Rayo Sport est simple et amusant",
-    "how_step1_title": "Rejoindre un groupe WhatsApp",
-    "how_step1_description": "Intègre notre groupe WhatsApp local pour être informé des prochains matchs dans ta ville.",
-    "how_step2_title": "Réserver un match",
-    "how_step2_description": "Choisis ton créneau, paie ta place et prépare-toi à jouer.",
-    "how_step3_title": "Jouer. Marquer. Briller.",
-    "how_step3_description": "Profite d'une expérience premium avec des uniformes, des arbitres et un terrain de qualité.",
-    "how_step4_title": "Recevoir ses stats et highlights",
-    "how_step4_description": "Après le match, reçois tes statistiques, tes moments forts et ton classement mis à jour.",
-    "how_cta_button": "Rejoindre maintenant",
-    
-    // Rules Section
-    "rules_title": "Formats & Règles",
-    "rules_subtitle": "Découvre les différents formats de jeu proposés par Rayo Sport",
-    "rules_tab_standard": "Match Standard",
-    "rules_tab_clash": "Rayo Clash",
-    "rules_tab_rankings": "Classements",
-    "rules_standard_title": "Match Standard (5vs5)",
-    "rules_standard_1": "Deux équipes de 5 joueurs s'affrontent sur un terrain réduit",
-    "rules_standard_2": "Durée totale : 60 minutes (2 x 30 minutes)",
-    "rules_standard_3": "Remplacements illimités",
-    "rules_standard_4": "Arbitre officiel et uniformes fournis",
-    "rules_standard_5": "Statistiques individuelles et collectives enregistrées",
-    "rules_clash_title": "Rayo Clash (3 équipes)",
-    "rules_clash_1": "Format unique à 3 équipes qui s'affrontent en rotation",
-    "rules_clash_2": "Matchs de 5 minutes, l'équipe perdante sort et laisse place à la 3ème équipe",
-    "rules_clash_3": "Durée totale : 60 minutes",
-    "rules_clash_4": "Système de points cumulatifs : 3 pts pour victoire, 1 pt pour égalité",
-    "rules_clash_5": "Intensité maximale et tactique essentielle",
-
-    "rules_rankings_title": "Système de Classement",
-    "rules_rankings_1": "Tous les joueurs reçoivent une note de performance après chaque match",
-    "rules_rankings_2": "Les statistiques incluent : buts, passes décisives, victoires, MVP",
-    "rules_rankings_3": "Classement hebdomadaire et mensuel des meilleurs joueurs",
-    "rules_rankings_4": "Système de badges pour récompenser les performances exceptionnelles",
-    "rules_rankings_5": "Les joueurs élites sont invités à des événements spéciaux",
-    
-    // FAQ Section
-    "faq_title": "Questions Fréquentes",
-    "faq_subtitle": "Tout ce que tu dois savoir avant de rejoindre un match Rayo",
-    "faq_q1": "Comment réserver ?",
-    "faq_a1": "Rejoins notre groupe WhatsApp, consulte les matchs disponibles et confirme ta place en payant via les options proposées (généralement par mobile money).",
-    "faq_q2": "Combien ça coûte ?",
-    "faq_a2": "Le prix standard est de 50-70 MAD par joueur par match, ce qui inclut le terrain, l'arbitre, les uniformes et les photos professionnelles.",
-    "faq_q3": "Dois-je ramener mes équipements ?",
-    "faq_a3": "Apporte seulement tes chaussures de foot et une bouteille d'eau. Nous fournissons les maillots, les chasubles et tout le matériel nécessaire.",
-    "faq_q4": "Puis-je venir si je ne suis pas bon ?",
-    "faq_a4": "Absolument ! Nous accueillons tous les niveaux. Les équipes sont équilibrées et l'ambiance est toujours conviviale et respectueuse.",
-    "faq_q5": "Y a-t-il une application Rayo Sport ?",
-    "faq_a5": "Notre application est en développement. En attendant, toutes les réservations et communications se font via WhatsApp et Instagram.",
-    "faq_q6": "Où se déroulent les matchs ?",
-    "faq_a6": "Nous organisons des matchs dans plusieurs villes du Maroc : Casablanca, Rabat, Marrakech, Tanger, et bientôt d'autres. Les terrains sont soigneusement sélectionnés pour leur qualité.",
-    "faq_more_questions": "Tu as d'autres questions ?",
-    "faq_contact_link": "Contacte-nous sur WhatsApp",
-    
-    // Testimonials Section
-    "testimonials_title": "Ce que disent nos joueurs",
-    "testimonials_subtitle": "Découvrez les témoignages de notre communauté de joueurs passionnés",
-    "testimonial_1_quote": "Rayo Sport a révolutionné ma façon de jouer au foot ! Les formats innovants comme Rayo Rush rendent chaque match imprévisible et excitant. L'organisation est top niveau !",
-    "testimonial_1_name": "Abdelhak Samrani",
-    "testimonial_1_role": "Joueur régulier depuis 3 mois",
-    "testimonial_2_quote": "Le format 7vs7 de Rayo Classic permet un vrai jeu de possession. Les équipes équilibrées et l'ambiance conviviale font que je reviens chaque semaine. Merci l'équipe !",
-    "testimonial_2_name": "Hamza Khyar",
-    "testimonial_2_role": "Capitaine d'équipe",
-    "testimonial_3_quote": "Rayo Battle avec 4 équipes, c'est du jamais vu ! L'intensité est folle et on progresse énormément. Les stats détaillées nous aident à analyser notre jeu.",
-    "testimonial_3_name": "Youssef Zguioir",
-    "testimonial_3_role": "Joueur compétitif",
-    "testimonial_4_quote": "Les rotations à 3 équipes du Rayo Clash créent une dynamique unique. Plus de temps de banc, plus d'action ! L'expérience est vraiment premium.",
-    "testimonial_4_name": "Abdelkbir A",
-    "testimonial_4_role": "Joueur depuis le début",
-    "testimonial_5_quote": "L'organisation parfaite, les uniformes de qualité, les arbitres professionnels... Rayo Sport a élevé le niveau du foot amateur au Maroc. Chapeau !",
-    "testimonial_5_name": "Omar Erriche",
-    "testimonial_5_role": "Joueur passionné",
-    
-    // Gallery Section
-    "gallery_title": "Galerie Photos",
-    "gallery_subtitle": "Découvrez l'expérience Rayo Sport en images : matchs, équipes, terrains et moments forts de notre communauté",
-    "gallery_view_more": "Voir toutes les photos",
-    
-    // CTA Section
-    "cta_title": "Prêt à rejoindre le mouvement ?",
-    "cta_subtitle": "Rejoins une communauté passionnée et vis une expérience de football unique",
-    "cta_whatsapp": "Rejoindre sur WhatsApp",
-    "cta_instagram": "Suivre sur Instagram",
-    "cta_button_app": "Télécharger l'application (bientôt)",
-    
-    // WhatsApp Bubble
-    "whatsapp_bubble_title": "🏆 Rayo Sport",
-    "whatsapp_bubble_text": "Prêt à rejoindre la communauté ? Contactez-nous sur WhatsApp !",
-    "whatsapp_bubble_button": "Contacter",
-    "whatsapp_bubble_tooltip": "Contactez-nous",
-    "whatsapp_bubble_message": "Salut ! Je suis intéressé par Rayo Sport. Pouvez-vous me donner plus d'informations ?",
-
-    // Footer
-    "footer_about": "Rayo Sport est la plateforme communautaire de football qui révolutionne l'expérience des matchs 5vs5 au Maroc avec des formats innovants, un suivi des performances et une expérience premium pour tous les joueurs.",
-    "footer_quick_links": "Liens rapides",
-    "footer_contact": "Contact",
-    "footer_address": "Casablanca, Maroc",
-    "footer_language": "Langue",
-    "footer_rights": "Tous droits réservés.",
-    "footer_privacy": "Politique de confidentialité",
-    "footer_terms": "Conditions d'utilisation",
-    
-    // Placeholder
-    "This section is under development. Check back soon!": "Cette section est en cours de développement. Revenez bientôt !",
-  },
   ar: {
     // Navigation
     "nav_home": "الرئيسية",
@@ -518,6 +141,9 @@ export const translations: Record<Language, TranslationRecord> = {
     
     // Placeholder
     "This section is under development. Check back soon!": "هذا القسم قيد التطوير. ترقبوا المزيد قريبًا!",
+    
+    // Player Stats
+    "no_game_played_this_month": "لم يتم لعب أي مباراة هذا الشهر",
   },
   
   en: {
@@ -610,6 +236,9 @@ export const translations: Record<Language, TranslationRecord> = {
     
     // Placeholder
     "This section is under development. Check back soon!": "This section is under development. Check back soon!",
+    
+    // Player Stats
+    "no_game_played_this_month": "No game played this month",
   },
   
   es: {
@@ -730,6 +359,9 @@ export const translations: Record<Language, TranslationRecord> = {
     
     // Placeholder
     "This section is under development. Check back soon!": "Esta sección está en desarrollo. ¡Vuelve pronto!",
+    
+    // Player Stats
+    "no_game_played_this_month": "No se jugó ningún partido este mes",
   },
   fr: {
     // Navigation
@@ -841,7 +473,7 @@ export const translations: Record<Language, TranslationRecord> = {
     "football_city_waitlist": "Waitlist",
     "football_city_join": "Rejoindre",
     "football_city_more_info": "Plus d'infos",
-    "football_city_top_players": "🏆 Top 3 Joueurs",
+    "football_city_top_players": "🏆 Top 5 Joueurs",
     "football_city_loading_players": "Chargement...",
     "football_city_no_players_found": "Aucun joueur trouvé",
     "football_city_men": "Hommes",
@@ -849,5 +481,8 @@ export const translations: Record<Language, TranslationRecord> = {
     
     // Placeholder
     "This section is under development. Check back soon!": "Cette section est en développement. Revenez bientôt !",
+    
+    // Player Stats
+    "no_game_played_this_month": "Aucun match joué ce mois-ci",
   }
 };

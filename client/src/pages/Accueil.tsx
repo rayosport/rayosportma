@@ -3,10 +3,18 @@ import { useLanguage } from "@/hooks/use-language";
 import RevealAnimation from "@/components/ui/RevealAnimation";
 import Footer from "@/components/layout/Footer";
 import { trackEvent } from "@/lib/analytics";
+import { FiCheckCircle } from "react-icons/fi";
+import LeaderboardSectionComponent from "@/components/sections/LeaderboardSection";
 
 const Accueil = () => {
   const { t } = useLanguage();
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [sheetData, setSheetData] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+  const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Scroll to top when component mounts
   useEffect(() => {
@@ -18,8 +26,180 @@ const Accueil = () => {
   useEffect(() => {
     const img = new Image();
     img.onload = () => setImageLoaded(true);
-    img.src = '/images/gallery/optimized/ff.jpg';
+    img.src = '/images/gallery/optimized/ss.jpg';
   }, []);
+
+  // Fetch cities data (same as Football page) - optimized with caching
+  useEffect(() => {
+    const fetchSheetData = async () => {
+      try {
+        // Try direct fetch first (faster, no proxy latency)
+        const sheetUrl = 'https://rayobackend.onrender.com/api/sheets/Total';
+        let response: Response;
+        
+        try {
+          // Try direct fetch first (faster)
+          response = await fetch(sheetUrl, { 
+            cache: 'default' // Allow browser caching
+          });
+          
+          if (!response.ok) throw new Error('Direct fetch failed');
+        } catch (directError) {
+          // Fallback to CORS proxy if direct fetch fails
+          const proxyUrl = 'https://api.allorigins.win/raw?url=';
+          const encodedUrl = encodeURIComponent(sheetUrl);
+          response = await fetch(proxyUrl + encodedUrl, { 
+            cache: 'default' // Allow browser caching even with proxy
+          });
+        }
+        
+        const csvText = await response.text();
+        
+        // Parse CSV data - Updated to dynamically fetch all cities
+        const parseCSV = (csvText: string) => {
+          const lines = csvText.split('\n').filter(line => line.trim());
+          const citiesData: Array<{name: string, players: number, gamesPerWeek: number}> = [];
+          
+          // Skip header row (index 0), process all data rows
+          for (let i = 1; i < lines.length; i++) {
+            const line = lines[i];
+            const values = [];
+            let current = '';
+            let inQuotes = false;
+            
+            // Parse CSV properly handling quoted values
+            for (let j = 0; j < line.length; j++) {
+              const char = line[j];
+              if (char === '"') {
+                inQuotes = !inQuotes;
+              } else if (char === ',' && !inQuotes) {
+                values.push(current.trim());
+                current = '';
+              } else {
+                current += char;
+              }
+            }
+            values.push(current.trim());
+            
+            if (values.length >= 10) {
+              const city = values[0]; // Column A - City name
+              const players = parseInt(values[8]) || 0; // Column I - Players
+              const gamesPerWeek = parseInt(values[9]) || 0; // Column J - Games per week
+              
+              // Only add cities with valid data
+              if (city && city.trim() !== '' && (players > 0 || gamesPerWeek > 0)) {
+                citiesData.push({
+                  name: city.trim(),
+                  players: players,
+                  gamesPerWeek: gamesPerWeek
+                });
+              }
+            }
+          }
+          
+          return { cities: citiesData };
+        };
+        
+        const parsedData = parseCSV(csvText);
+        setSheetData(parsedData);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching Sheet Total data:', error);
+        // Set fallback values
+        setSheetData({
+          cities: [
+            { name: "Casablanca", players: 800, gamesPerWeek: 4 },
+            { name: "Marrakech", players: 200, gamesPerWeek: 2 },
+            { name: "Tanger", players: 50, gamesPerWeek: 0 }
+          ]
+        });
+        setLoading(false);
+      }
+    };
+
+    fetchSheetData();
+  }, []);
+
+  // Fetch leaderboard data for search
+  useEffect(() => {
+    const fetchLeaderboardData = async () => {
+      try {
+        const sheetUrl = 'https://rayobackend.onrender.com/api/sheets/Foot_Players';
+        let response: Response;
+        
+        try {
+          response = await fetch(sheetUrl, { cache: 'default' });
+          if (!response.ok) throw new Error('Direct fetch failed');
+        } catch (directError) {
+          const proxyUrl = 'https://api.allorigins.win/raw?url=';
+          const encodedUrl = encodeURIComponent(sheetUrl);
+          response = await fetch(proxyUrl + encodedUrl, { cache: 'default' });
+        }
+        
+        const csvText = await response.text();
+        const lines = csvText.split('\n').filter(line => line.trim());
+        if (lines.length < 2) return;
+        
+        const headers = lines[0].split(',').map(h => h.trim().replace(/\r/g, ''));
+        const players: any[] = [];
+        
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i];
+          if (!line.trim()) continue;
+          
+          const values = line.split(',').map(v => v.trim().replace(/\r/g, ''));
+          if (values.length >= 3) {
+            const username = values[headers.indexOf('Username')] || values[2];
+            const firstName = values[headers.indexOf('FirstName')] || values[1];
+            const rank = parseInt(values[headers.indexOf('Rank')] || values[0]) || 0;
+            const gamesPlayed = parseInt(values[headers.indexOf('GamesPlayed')] || '0') || 0;
+            
+            if (username) {
+              players.push({ username, firstName, rank, gamesPlayed });
+            }
+          }
+        }
+        
+        setLeaderboardData(players);
+      } catch (error) {
+        console.error('Error fetching leaderboard data:', error);
+      }
+    };
+    
+    fetchLeaderboardData();
+  }, []);
+
+  // Search functionality
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    if (value.trim().length >= 2) {
+      const filtered = leaderboardData.filter(player => 
+        player.username.toLowerCase().includes(value.toLowerCase()) ||
+        player.firstName.toLowerCase().includes(value.toLowerCase())
+      ).slice(0, 5);
+      setSearchSuggestions(filtered);
+      setShowSuggestions(true);
+    } else {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSuggestionClick = (player: any) => {
+    setSearchQuery(player.username);
+    setShowSuggestions(false);
+    trackEvent('hero_search_player_select', 'user_engagement', player.username);
+    window.location.href = `/football#player-${player.username}`;
+  };
+
+  const handleSearchSubmit = () => {
+    if (searchQuery.trim()) {
+      trackEvent('hero_search_player_submit', 'user_engagement', searchQuery);
+      window.location.href = `/football#player-${searchQuery.trim()}`;
+      setSearchQuery("");
+      setShowSuggestions(false);
+    }
+  };
 
   // Show loading screen while image loads
   if (!imageLoaded) {
@@ -72,57 +252,90 @@ const Accueil = () => {
     );
   }
 
+  const handleVoteClick = () => {
+    trackEvent('vote_click', 'user_engagement', 'accueil_hero');
+    window.location.href = '/football';
+  };
+
   return (
     <main className="overflow-hidden">
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center text-white overflow-hidden">
+      {/* Hero Section - Same top section as Football page without city cards */}
+      <section id="cities-overview" className="relative py-16 md:py-20 bg-gradient-to-br from-gray-50 to-white overflow-hidden w-full">
         {/* Background image */}
         <div 
           className="absolute inset-0 z-0"
           style={{
-            backgroundImage: `url('/images/gallery/optimized/ff.jpg')`,
+            backgroundImage: `url('/images/gallery/optimized/ss.jpg')`,
             backgroundSize: 'cover',
-            backgroundPosition: 'center top',
+            backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
           }}
         >
-          <div className="absolute inset-0 bg-black/40"></div>
+          <div className="absolute inset-0 bg-black/30"></div>
           <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-black/10 to-black/20"></div>
+          
+          {/* Subtle gradient overlays */}
+          <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/3 right-1/4 w-32 h-32 bg-gradient-to-r from-yellow-500/5 to-orange-500/5 rounded-full blur-2xl"></div>
         </div>
         
         <div className="max-w-7xl mx-auto px-4 relative z-10 w-full">
+          <div className="mb-8">
             <RevealAnimation>
-            <div className="text-center max-w-4xl mx-auto">
-              <h1 className="text-4xl md:text-6xl font-black mb-6 text-white drop-shadow-2xl">
-                <span className="block bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-                  ACCUEIL
-                </span>
-                <span className="block bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                  RAYO SPORT
-                </span>
-                </h1>
-              
-              <p className="text-xl md:text-2xl text-gray-100 max-w-3xl mx-auto mb-8 drop-shadow-md">
-                En construction
-              </p>
-              
-              <p className="text-lg text-gray-200 max-w-2xl mx-auto mb-8">
-                Cette section sera bientôt disponible avec toutes les informations sur Rayo Sport.
-              </p>
-              
-              <div className="flex justify-center">
-                <button 
-                  className="px-6 py-3 bg-white/15 backdrop-blur-sm border border-white/30 text-white font-medium rounded-lg hover:bg-white/25 hover:border-white/50 transition-all duration-300 shadow-md hover:shadow-lg"
-                  onClick={() => {
-                    trackEvent('view_football_click', 'navigation', 'accueil_construction');
-                    window.location.href = '/football';
-                  }}
-                >
-                  Voir Football
-                </button>
+              <div className="relative w-full">
+                {/* Left side: Logo + Buttons + Search */}
+                <div className="flex flex-col items-center relative z-10 w-full">
+                  {/* Logo */}
+                  <div className="relative w-full flex justify-center mb-2">
+                    {/* Subtle lighting effect behind logo */}
+                    <div className="absolute inset-0 -z-10 blur-2xl opacity-40 bg-gradient-to-r from-yellow-400/30 via-orange-400/30 to-yellow-400/30 rounded-full scale-125"></div>
+                    <img 
+                      src="/images/gallery/optimized/Rayofootball.png" 
+                      alt="Rayo Football" 
+                      className="w-auto h-[300px] md:h-[400px] lg:h-[450px] object-contain relative z-10 drop-shadow-[0_0_20px_rgba(255,215,0,0.4)]"
+                    />
+                  </div>
+                
+                  {/* Compact Action Buttons Row */}
+                  <div className="w-full max-w-md lg:max-w-sm relative mb-0 z-10">
+                    <div className="flex items-center gap-1.5 w-full">
+                      <button 
+                        className="group flex-1 px-3 py-1.5 bg-gradient-to-r from-green-600 to-emerald-700 text-white font-medium rounded-lg hover:from-green-700 hover:to-emerald-800 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.02] flex items-center justify-center gap-1"
+                        onClick={() => {
+                          trackEvent('join_match_click', 'user_engagement', 'cities_overview');
+                          window.location.href = '/football';
+                        }}
+                      >
+                        <span className="text-xs font-semibold">Jouer</span>
+                        <span className="group-hover:translate-x-0.5 transition-transform duration-300 text-xs">→</span>
+                      </button>
+                      
+                      <button 
+                        className="group flex-1 px-3 py-1.5 bg-white/15 backdrop-blur-sm border border-white/25 text-white font-medium rounded-lg hover:bg-white/25 hover:border-white/40 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.02] flex items-center justify-center"
+                        onClick={() => {
+                          trackEvent('previous_matches_click', 'navigation', 'cities_overview');
+                          window.location.href = '/football';
+                        }}
+                      >
+                        <span className="text-xs font-semibold">Historique</span>
+                      </button>
+                      
+                      <button 
+                        className="group flex-1 px-3 py-1.5 bg-white/15 backdrop-blur-sm border border-white/25 text-white font-medium rounded-lg hover:bg-white/25 hover:border-white/40 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.02] flex items-center justify-center"
+                        onClick={() => {
+                          trackEvent('leaderboard_click', 'navigation', 'cities_overview');
+                          window.location.href = '/football';
+                        }}
+                      >
+                        <span className="text-xs font-semibold">Classement</span>
+                      </button>
+                    </div>
+                  </div>
+                  
+                </div>
               </div>
-            </div>
-          </RevealAnimation>
+            </RevealAnimation>
+          </div>
         </div>
       </section>
 

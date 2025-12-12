@@ -29,5 +29,68 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          // Vendor chunks
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react-vendor';
+            }
+            if (id.includes('wouter')) {
+              return 'router-vendor';
+            }
+            if (id.includes('@radix-ui')) {
+              return 'ui-vendor';
+            }
+            if (id.includes('recharts')) {
+              return 'charts-vendor';
+            }
+            if (id.includes('framer-motion')) {
+              return 'animation-vendor';
+            }
+            if (id.includes('react-icons') || id.includes('lucide-react')) {
+              return 'icons-vendor';
+            }
+            // Other node_modules go into a common vendor chunk
+            return 'vendor';
+          }
+        },
+        // Optimize chunk names
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
+        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: process.env.NODE_ENV === 'production', // Remove console in production
+        drop_debugger: true,
+        pure_funcs: process.env.NODE_ENV === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
+        passes: 2, // Multiple passes for better optimization
+      },
+      mangle: {
+        safari10: true,
+      },
+    },
+    // Enable source maps only in development
+    sourcemap: process.env.NODE_ENV !== 'production',
+    // Optimize chunk size
+    target: 'esnext',
+    cssCodeSplit: true,
+  },
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'wouter',
+      'recharts',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-tooltip',
+    ],
+    // Exclude large dependencies that should be lazy loaded
+    exclude: [],
   },
 });

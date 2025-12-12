@@ -4,21 +4,21 @@ import RevealAnimation from "@/components/ui/RevealAnimation";
 import Footer from "@/components/layout/Footer";
 import { trackEvent } from "@/lib/analytics";
 
-const FAQ = () => {
+const Store = () => {
   const { t } = useLanguage();
   const [imageLoaded, setImageLoaded] = useState(false);
 
   // Scroll to top when component mounts
   useEffect(() => {
     window.scrollTo(0, 0);
-    trackEvent('page_view', 'navigation', 'faq_page');
+    trackEvent('page_view', 'navigation', 'store_page');
   }, []);
 
   // Preload background image
   useEffect(() => {
     const img = new Image();
     img.onload = () => setImageLoaded(true);
-    img.src = '/images/gallery/optimized/faq.jpg';
+    img.src = '/images/gallery/optimized/ss.jpg';
   }, []);
 
   // Show loading screen while image loads
@@ -34,12 +34,12 @@ const FAQ = () => {
         <div className="relative w-[164px] h-[164px] mb-4">
           <svg viewBox="0 0 164 164" className="w-full h-full">
             <defs>
-              <radialGradient id="dialBgFAQ" cx="50%" cy="50%">
+              <radialGradient id="dialBgStore" cx="50%" cy="50%">
                 <stop offset="0%" stopColor="#0f0f0f" />
                 <stop offset="100%" stopColor="#0b0b0b" />
               </radialGradient>
             </defs>
-            <circle cx="82" cy="88" r="64" fill="url(#dialBgFAQ)" stroke="#1f2937" strokeWidth="2" />
+            <circle cx="82" cy="88" r="64" fill="url(#dialBgStore)" stroke="#1f2937" strokeWidth="2" />
             <rect x="74" y="18" width="16" height="10" rx="2" fill="#1f2937" />
             <rect x="70" y="10" width="24" height="10" rx="3" fill="#ffffff" opacity=".1" />
             <circle cx="130" cy="50" r="6" fill="#ffffff" opacity=".5" style={{ animation: 'buttonPulse 1.8s .2s ease-in-out infinite' }} />
@@ -80,7 +80,7 @@ const FAQ = () => {
         <div 
           className="absolute inset-0 z-0"
           style={{
-            backgroundImage: `url('/images/gallery/optimized/faq.jpg')`,
+            backgroundImage: `url('/images/gallery/optimized/ss.jpg')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center top',
             backgroundRepeat: 'no-repeat'
@@ -95,7 +95,7 @@ const FAQ = () => {
             <div className="text-center max-w-4xl mx-auto">
               <h1 className="text-4xl md:text-6xl font-black mb-6 text-white drop-shadow-2xl">
                 <span className="block bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-                  FAQ
+                  STORE
                 </span>
                 <span className="block bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
                   RAYO SPORT
@@ -107,13 +107,13 @@ const FAQ = () => {
               </p>
               
               <p className="text-lg text-gray-200 max-w-2xl mx-auto mb-8">
-                Cette section sera bientôt disponible avec toutes les réponses à vos questions.
+                Notre boutique en ligne sera bientôt disponible avec tous nos produits et équipements Rayo Sport.
               </p>
               
               <button 
                 className="group px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-700 text-white font-medium rounded-md hover:from-green-700 hover:to-emerald-800 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.02] flex items-center justify-center gap-2 mx-auto"
                 onClick={() => {
-                  trackEvent('voir_football_click', 'navigation', 'faq_page');
+                  trackEvent('voir_football_click', 'navigation', 'store_page');
                   window.location.href = '/football';
                 }}
               >
@@ -130,7 +130,5 @@ const FAQ = () => {
   );
 };
 
-export default FAQ;
-
-
+export default Store;
 

@@ -1,23 +1,26 @@
 // Import the sections for our new Rayo Sport website
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense, memo } from "react";
 import { useLanguage } from "@/hooks/use-language";
 import RevealAnimation from "@/components/ui/RevealAnimation";
 import Footer from "@/components/layout/Footer";
-import FaqSectionComponent from "@/components/sections/FaqSection";
-import RulesSectionComponent from "@/components/sections/RulesSection";
-import LeaderboardSectionComponent from "@/components/sections/LeaderboardSection";
-import UpcomingMatchesSectionComponent from "@/components/sections/UpcomingMatchesSection";
-import PastGamesSectionComponent from "@/components/sections/PastGamesSection";
-import TestimonialsSectionComponent from "@/components/sections/TestimonialsSection";
-import GallerySectionComponent from "@/components/sections/GallerySection";
+import { LazySection } from "@/components/ui/LazySection";
 import NextMatchCountdown from "@/components/ui/NextMatchCountdown";
 import { useNav } from "@/hooks/use-intersection";
 import { FiUsers, FiCalendar, FiActivity, FiAward, FiX } from "react-icons/fi";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { trackEvent } from "@/lib/analytics";
 
-// Hero section
-const HeroSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
+// Lazy load all heavy sections for better performance
+const UpcomingMatchesSectionComponent = lazy(() => import("@/components/sections/UpcomingMatchesSection").then(m => ({ default: m.default })));
+const PastGamesSectionComponent = lazy(() => import("@/components/sections/PastGamesSection").then(m => ({ default: m.default })));
+const LeaderboardSectionComponent = lazy(() => import("@/components/sections/LeaderboardSection").then(m => ({ default: m.default })));
+const TestimonialsSectionComponent = lazy(() => import("@/components/sections/TestimonialsSection").then(m => ({ default: m.default })));
+const GallerySectionComponent = lazy(() => import("@/components/sections/GallerySection").then(m => ({ default: m.default })));
+const FaqSectionComponent = lazy(() => import("@/components/sections/FaqSection").then(m => ({ default: m.default })));
+const RulesSectionComponent = lazy(() => import("@/components/sections/RulesSection").then(m => ({ default: m.default })));
+
+// Hero section - memoized to prevent unnecessary re-renders
+const HeroSection = memo(({ onJoinClick }: { onJoinClick: () => void }) => {
   const { t } = useLanguage();
   
   return (
@@ -193,10 +196,11 @@ const HeroSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
       <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#121212] to-transparent z-10"></div>
     </section>
   );
-};
+});
+HeroSection.displayName = 'HeroSection';
 
-// About Section
-const AboutSection = () => {
+// About Section - memoized
+const AboutSection = memo(() => {
   const { t } = useLanguage();
   
   return (
@@ -251,10 +255,11 @@ const AboutSection = () => {
       </div>
     </section>
   );
-};
+});
+AboutSection.displayName = 'AboutSection';
 
-// How It Works Section
-const HowItWorksSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
+// How It Works Section - memoized
+const HowItWorksSection = memo(({ onJoinClick }: { onJoinClick: () => void }) => {
   const { t } = useLanguage();
   
   const steps = [
@@ -335,35 +340,61 @@ const HowItWorksSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
       </div>
     </section>
   );
-};
+});
+HowItWorksSection.displayName = 'HowItWorksSection';
 
-// Upcoming Matches Section
-const UpcomingMatchesSection = () => {
-  return <UpcomingMatchesSectionComponent />;
-};
+// Upcoming Matches Section - lazy loaded
+const UpcomingMatchesSection = memo(() => {
+  return (
+    <LazySection fallback={<div className="min-h-[400px] flex items-center justify-center"><div className="animate-pulse text-gray-400">Chargement des matchs...</div></div>}>
+      <UpcomingMatchesSectionComponent />
+    </LazySection>
+  );
+});
+UpcomingMatchesSection.displayName = 'UpcomingMatchesSection';
 
-// Past Games Section
-const PastGamesSection = () => {
-  return <PastGamesSectionComponent />;
-};
+// Past Games Section - lazy loaded
+const PastGamesSection = memo(() => {
+  return (
+    <LazySection fallback={<div className="min-h-[400px] flex items-center justify-center"><div className="animate-pulse text-gray-400">Chargement des matchs passés...</div></div>}>
+      <PastGamesSectionComponent />
+    </LazySection>
+  );
+});
+PastGamesSection.displayName = 'PastGamesSection';
 
-// Leaderboard Section
-const LeaderboardSection = () => {
-  return <LeaderboardSectionComponent />;
-};
+// Leaderboard Section - lazy loaded
+const LeaderboardSection = memo(() => {
+  return (
+    <LazySection fallback={<div className="min-h-[400px] flex items-center justify-center"><div className="animate-pulse text-gray-400">Chargement du classement...</div></div>}>
+      <LeaderboardSectionComponent />
+    </LazySection>
+  );
+});
+LeaderboardSection.displayName = 'LeaderboardSection';
 
-// Formats & Rules Section
-const RulesSection = () => {
-  return <RulesSectionComponent />;
-};
+// Formats & Rules Section - lazy loaded
+const RulesSection = memo(() => {
+  return (
+    <LazySection fallback={<div className="min-h-[300px]" />}>
+      <RulesSectionComponent />
+    </LazySection>
+  );
+});
+RulesSection.displayName = 'RulesSection';
 
-// FAQ Section (importé depuis notre composant spécifique)
-const FaqSection = () => {
-  return <FaqSectionComponent />;
-};
+// FAQ Section - lazy loaded
+const FaqSection = memo(() => {
+  return (
+    <LazySection fallback={<div className="min-h-[300px]" />}>
+      <FaqSectionComponent />
+    </LazySection>
+  );
+});
+FaqSection.displayName = 'FaqSection';
 
-// CTA Section
-const CtaSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
+// CTA Section - memoized
+const CtaSection = memo(({ onJoinClick }: { onJoinClick: () => void }) => {
   const { t } = useLanguage();
   
   return (
@@ -417,10 +448,11 @@ const CtaSection = ({ onJoinClick }: { onJoinClick: () => void }) => {
       </div>
     </section>
   );
-};
+});
+CtaSection.displayName = 'CtaSection';
 
-// WhatsApp Groups Modal Component
-const WhatsAppGroupsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+// WhatsApp Groups Modal Component - memoized
+const WhatsAppGroupsModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const { t } = useLanguage();
   
   const whatsappGroups = [
@@ -498,7 +530,27 @@ const WhatsAppGroupsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: ()
       </DialogContent>
     </Dialog>
   );
-};
+});
+WhatsAppGroupsModal.displayName = 'WhatsAppGroupsModal';
+
+// Testimonials and Gallery - lazy loaded
+const TestimonialsSection = memo(() => {
+  return (
+    <LazySection fallback={<div className="min-h-[300px]" />}>
+      <TestimonialsSectionComponent />
+    </LazySection>
+  );
+});
+TestimonialsSection.displayName = 'TestimonialsSection';
+
+const GallerySection = memo(() => {
+  return (
+    <LazySection fallback={<div className="min-h-[300px]" />}>
+      <GallerySectionComponent />
+    </LazySection>
+  );
+});
+GallerySection.displayName = 'GallerySection';
 
 const Home = () => {
   // Initialize navigation tracking
@@ -536,8 +588,8 @@ const Home = () => {
       <NextMatchCountdown />
       <PastGamesSection />
       <LeaderboardSection />
-      <TestimonialsSectionComponent />
-      <GallerySectionComponent />
+      <TestimonialsSection />
+      <GallerySection />
       <AboutSection />
       <HowItWorksSection onJoinClick={handleJoinClick} />
       <RulesSection />
