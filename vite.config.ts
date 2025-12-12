@@ -34,8 +34,10 @@ export default defineConfig({
         manualChunks: (id) => {
           // Vendor chunks
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-vendor';
+            // Don't split React - keep it in main bundle to ensure it's always available
+            // React and React-DOM will be included in the main bundle
+            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+              return undefined; // Keep in main bundle
             }
             if (id.includes('wouter')) {
               return 'router-vendor';
@@ -61,6 +63,10 @@ export default defineConfig({
         entryFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
       },
+    },
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true,
     },
     chunkSizeWarningLimit: 1000,
     minify: 'terser',
