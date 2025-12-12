@@ -41,19 +41,29 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Vendor chunks - React MUST stay in main bundle
+          // CRITICAL: React MUST stay in main bundle
+          // Use more specific path matching to catch all React-related modules
+          const isReactCore = 
+            /node_modules[\/\\]react[\/\\]/.test(id) ||
+            /node_modules[\/\\]react-dom[\/\\]/.test(id) ||
+            /node_modules[\/\\]scheduler[\/\\]/.test(id) ||
+            id === 'react' ||
+            id === 'react-dom' ||
+            id === 'react/jsx-runtime' ||
+            id === 'react-dom/client';
+          
+          if (isReactCore) {
+            // Explicitly return undefined to prevent chunking
+            return undefined;
+          }
+          
+          // Only process other node_modules
           if (id.includes('node_modules')) {
-            // Critical: React must NOT be split - explicitly exclude from chunking
-            // By not returning anything for React, it stays in the main entry bundle
-            const isReact = id.includes('/react/') || 
-                           id.includes('/react-dom/') || 
-                           id.includes('/scheduler/') ||
-                           (id.includes('react') && !id.includes('react-icons') && !id.includes('react-hook-form') && !id.includes('react-day-picker') && !id.includes('react-resizable'));
-            
-            if (isReact) {
-              return; // Explicitly return undefined - keeps in main bundle
+            // Skip any other react-related packages that aren't core
+            if (id.includes('react-icons') || id.includes('lucide-react')) {
+              return 'icons-vendor';
             }
-            
+            // Skip react-hook-form, react-day-picker, etc - they can be chunked
             if (id.includes('wouter')) {
               return 'router-vendor';
             }
@@ -66,10 +76,6 @@ export default defineConfig({
             if (id.includes('framer-motion')) {
               return 'animation-vendor';
             }
-            if (id.includes('react-icons') || id.includes('lucide-react')) {
-              return 'icons-vendor';
-            }
-            // Other node_modules go into a common vendor chunk
             return 'vendor';
           }
         },
