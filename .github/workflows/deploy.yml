@@ -32,6 +32,11 @@ jobs:
 
     - name: Build project
       run: npx vite build
+      env:
+        # Set base path for GitHub Pages
+        # For project pages (username.github.io/repo-name): use '/repo-name/'
+        # For custom domain or user pages: use '/'
+        GITHUB_PAGES_BASE: '/'
 
     - name: Setup Pages
       uses: actions/configure-pages@v4

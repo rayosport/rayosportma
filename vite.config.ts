@@ -5,6 +5,11 @@ import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 export default defineConfig({
+  // Base path for GitHub Pages
+  // For project pages (username.github.io/repo-name): '/repo-name/'
+  // For custom domain or user pages: '/'
+  // This can be overridden with GITHUB_PAGES_BASE environment variable
+  base: process.env.GITHUB_PAGES_BASE || '/',
   plugins: [
     react(),
     runtimeErrorOverlay(),
