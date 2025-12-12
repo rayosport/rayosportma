@@ -28,9 +28,6 @@ export default defineConfig({
       "@": path.resolve(import.meta.dirname, "client", "src"),
       "@shared": path.resolve(import.meta.dirname, "shared"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
-      // Ensure single React instance
-      "react": path.resolve(import.meta.dirname, "node_modules/react"),
-      "react-dom": path.resolve(import.meta.dirname, "node_modules/react-dom"),
     },
     dedupe: ['react', 'react-dom'],
   },
@@ -39,31 +36,28 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
     rollupOptions: {
+      // CRITICAL: Do NOT externalize React - it must be bundled
+      external: [],
       output: {
+        // Ensure proper chunk dependencies and loading order
         manualChunks: (id) => {
-          // CRITICAL: React MUST stay in main bundle
-          // Use more specific path matching to catch all React-related modules
-          const isReactCore = 
-            /node_modules[\/\\]react[\/\\]/.test(id) ||
-            /node_modules[\/\\]react-dom[\/\\]/.test(id) ||
-            /node_modules[\/\\]scheduler[\/\\]/.test(id) ||
-            id === 'react' ||
-            id === 'react-dom' ||
-            id === 'react/jsx-runtime' ||
-            id === 'react-dom/client';
-          
-          if (isReactCore) {
-            // Explicitly return undefined to prevent chunking
-            return undefined;
-          }
-          
-          // Only process other node_modules
           if (id.includes('node_modules')) {
-            // Skip any other react-related packages that aren't core
+            // CRITICAL: React MUST stay in main bundle - don't chunk it
+            // This ensures React is always available to all chunks
+            const isReactCore = 
+              /node_modules[\/\\]react[\/\\]/.test(id) ||
+              /node_modules[\/\\]react-dom[\/\\]/.test(id) ||
+              /node_modules[\/\\]scheduler[\/\\]/.test(id);
+            
+            if (isReactCore) {
+              // Return undefined to keep React in main entry bundle
+              return undefined;
+            }
+            
+            // Other vendor chunks - these can be chunked
             if (id.includes('react-icons') || id.includes('lucide-react')) {
               return 'icons-vendor';
             }
-            // Skip react-hook-form, react-day-picker, etc - they can be chunked
             if (id.includes('wouter')) {
               return 'router-vendor';
             }
