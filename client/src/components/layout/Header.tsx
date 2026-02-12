@@ -31,6 +31,7 @@ const Header = () => {
     { id: "football", label: t("nav_football") },
     { id: "padel", label: t("nav_padel") },
     { id: "kids", label: t("nav_kids") },
+    { id: "tournoi", label: t("nav_tournoi"), isExternal: true, href: "/tournoi" },
     { id: "universities", label: "Universités", isExternal: true, href: "/universite" },
     { id: "companies", label: "Entreprises", isExternal: true, href: "/entreprise" },
     { id: "store", label: "Store" },

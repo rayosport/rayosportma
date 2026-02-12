@@ -37,6 +37,13 @@ jobs:
         # For project pages (username.github.io/repo-name): use '/repo-name/'
         # For custom domain or user pages: use '/'
         GITHUB_PAGES_BASE: '/'
+        # Supabase configuration - MUST be set as GitHub Secrets
+        # Go to: Settings > Secrets and variables > Actions > New repository secret
+        # Add: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+        VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+        VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        # Optional: Google Analytics (if using env var instead of hardcoded)
+        # VITE_GA_MEASUREMENT_ID: ${{ secrets.VITE_GA_MEASUREMENT_ID }}
 
     - name: Setup Pages
       uses: actions/configure-pages@v4
