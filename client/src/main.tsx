@@ -6,6 +6,7 @@ import App from "./App";
 import "./index.css";
 import { LanguageProvider } from "./context/LanguageContext";
 import { NavProvider } from "./context/NavContext";
+import { AuthProvider } from "@/context/AuthContext";
 
 // Create a root div element if it doesn't exist (for hydration)
 const rootElement = document.getElementById("root") || document.createElement("div");
@@ -19,7 +20,9 @@ createRoot(rootElement).render(
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
       <NavProvider>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </NavProvider>
     </LanguageProvider>
   </QueryClientProvider>

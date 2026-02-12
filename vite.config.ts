@@ -39,6 +39,7 @@ export default defineConfig(async () => {
     },
 
     root: path.resolve(import.meta.dirname, "client"),
+    envDir: path.resolve(import.meta.dirname),
 
     build: {
       outDir: path.resolve(import.meta.dirname, "dist/public"),
@@ -63,6 +64,7 @@ export default defineConfig(async () => {
               if (id.includes("@radix-ui")) return "ui-vendor";
               if (id.includes("recharts")) return "charts-vendor";
               if (id.includes("framer-motion")) return "animation-vendor";
+              if (id.includes("@supabase")) return "supabase-vendor";
 
               return "vendor";
             }
@@ -105,6 +107,7 @@ export default defineConfig(async () => {
         "recharts",
         "@radix-ui/react-dialog",
         "@radix-ui/react-tooltip",
+        "@supabase/supabase-js",
       ],
       exclude: [],
     },
