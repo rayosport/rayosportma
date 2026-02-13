@@ -65,19 +65,19 @@ const TournoiMatchDetail = () => {
           </motion.span>
 
           {/* Teams + Score */}
-          <div className="flex items-center justify-center gap-4 sm:gap-8">
+          <div className="flex items-center justify-center gap-2 sm:gap-4 md:gap-8 px-2">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.15, duration: 0.5 }}
-              className="flex-1 text-right"
+              className="flex-1 text-right min-w-0 overflow-hidden"
             >
-              <div className="flex items-center justify-end gap-2 sm:gap-3">
-                <span className="text-white font-bold text-sm sm:text-lg truncate">
+              <div className="flex items-center justify-end gap-1.5 sm:gap-2 md:gap-3">
+                <span className="text-white font-bold text-xs sm:text-sm md:text-lg truncate max-w-full">
                   {match.home_team.name}
                 </span>
                 <span
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex-shrink-0 ring-2 ring-white/20 shadow-lg"
+                  className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex-shrink-0 ring-2 ring-white/20 shadow-lg"
                   style={{
                     backgroundColor: match.home_team.color,
                     boxShadow: `0 0 20px ${match.home_team.color}40`
@@ -93,16 +93,16 @@ const TournoiMatchDetail = () => {
               className="flex-shrink-0"
             >
               {match.status === 'scheduled' ? (
-                <span className="text-gray-500 font-bold text-xl bg-white/5 backdrop-blur-sm rounded-xl px-5 py-2 border border-white/10">VS</span>
+                <span className="text-gray-500 font-bold text-base sm:text-xl bg-white/5 backdrop-blur-sm rounded-xl px-3 sm:px-5 py-2 border border-white/10">VS</span>
               ) : (
-                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-2xl px-5 py-3 border border-white/10">
-                  <span className={`text-3xl sm:text-4xl font-black transition-colors ${
+                <div className="flex items-center gap-2 sm:gap-3 bg-white/10 backdrop-blur-sm rounded-2xl px-3 sm:px-5 py-2 sm:py-3 border border-white/10">
+                  <span className={`text-2xl sm:text-3xl md:text-4xl font-black transition-colors ${
                     match.home_score >= match.away_score ? 'text-white' : 'text-gray-500'
                   }`}>
                     {match.home_score}
                   </span>
-                  <span className="text-gray-500 text-sm font-bold">:</span>
-                  <span className={`text-3xl sm:text-4xl font-black transition-colors ${
+                  <span className="text-gray-500 text-xs sm:text-sm font-bold">:</span>
+                  <span className={`text-2xl sm:text-3xl md:text-4xl font-black transition-colors ${
                     match.away_score >= match.home_score ? 'text-white' : 'text-gray-500'
                   }`}>
                     {match.away_score}
@@ -115,17 +115,17 @@ const TournoiMatchDetail = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.15, duration: 0.5 }}
-              className="flex-1 text-left"
+              className="flex-1 text-left min-w-0 overflow-hidden"
             >
-              <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
                 <span
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex-shrink-0 ring-2 ring-white/20 shadow-lg"
+                  className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex-shrink-0 ring-2 ring-white/20 shadow-lg"
                   style={{
                     backgroundColor: match.away_team.color,
                     boxShadow: `0 0 20px ${match.away_team.color}40`
                   }}
                 />
-                <span className="text-white font-bold text-sm sm:text-lg truncate">
+                <span className="text-white font-bold text-xs sm:text-sm md:text-lg truncate max-w-full">
                   {match.away_team.name}
                 </span>
               </div>

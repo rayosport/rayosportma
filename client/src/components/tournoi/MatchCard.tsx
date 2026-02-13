@@ -98,16 +98,16 @@ const MatchCard = ({ match, index = 0 }: MatchCardProps) => {
       </div>
 
       {/* Horizontal scorecard */}
-      <div className="flex items-center px-4 pb-3 pt-1 gap-2">
+      <div className="flex items-center px-4 pb-3 pt-1 gap-1.5 sm:gap-2">
         {/* Home team */}
-        <div className="flex-1 flex items-center gap-2.5 min-w-0 justify-end">
-          <span className={`text-sm sm:text-[15px] truncate text-right ${
+        <div className="flex-1 flex items-center gap-1.5 sm:gap-2.5 min-w-0 justify-end overflow-hidden">
+          <span className={`text-xs sm:text-sm md:text-[15px] truncate text-right max-w-full ${
             homeWin ? 'font-extrabold text-white' : isCompleted && awayWin ? 'font-medium text-gray-500' : 'font-semibold text-gray-300'
           }`}>
             {match.home_team.name}
           </span>
           <span
-            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex-shrink-0 ring-2 shadow-md ${
+            className={`w-6 h-6 sm:w-7 sm:h-8 rounded-full flex-shrink-0 ring-2 shadow-md ${
               homeWin ? 'ring-neongreen/50' : 'ring-white/10'
             }`}
             style={{ backgroundColor: match.home_team.color }}
@@ -115,20 +115,20 @@ const MatchCard = ({ match, index = 0 }: MatchCardProps) => {
         </div>
 
         {/* Score center */}
-        <div className={`flex-shrink-0 flex items-center justify-center gap-1 px-3 py-1 rounded-lg min-w-[72px] ${
+        <div className={`flex-shrink-0 flex items-center justify-center gap-1 px-2 sm:px-3 py-1 rounded-lg min-w-[60px] sm:min-w-[72px] ${
           isLive
             ? 'bg-neongreen/10 border border-neongreen/20'
             : isCompleted
               ? 'bg-white/[0.05]'
               : 'bg-white/[0.03]'
         }`}>
-          <span className={`text-lg sm:text-xl font-black tabular-nums ${
+          <span className={`text-base sm:text-lg md:text-xl font-black tabular-nums ${
             isLive ? 'text-neongreen' : homeWin ? 'text-white' : isCompleted ? 'text-gray-500' : 'text-gray-600'
           }`}>
             {isCompleted || isLive ? match.home_score : '-'}
           </span>
           <span className={`text-xs font-bold mx-0.5 ${isLive ? 'text-neongreen/50' : 'text-gray-600'}`}>:</span>
-          <span className={`text-lg sm:text-xl font-black tabular-nums ${
+          <span className={`text-base sm:text-lg md:text-xl font-black tabular-nums ${
             isLive ? 'text-neongreen' : awayWin ? 'text-white' : isCompleted ? 'text-gray-500' : 'text-gray-600'
           }`}>
             {isCompleted || isLive ? match.away_score : '-'}
@@ -136,14 +136,14 @@ const MatchCard = ({ match, index = 0 }: MatchCardProps) => {
         </div>
 
         {/* Away team */}
-        <div className="flex-1 flex items-center gap-2.5 min-w-0">
+        <div className="flex-1 flex items-center gap-1.5 sm:gap-2.5 min-w-0 overflow-hidden">
           <span
-            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex-shrink-0 ring-2 shadow-md ${
+            className={`w-6 h-6 sm:w-7 sm:h-8 rounded-full flex-shrink-0 ring-2 shadow-md ${
               awayWin ? 'ring-neongreen/50' : 'ring-white/10'
             }`}
             style={{ backgroundColor: match.away_team.color }}
           />
-          <span className={`text-sm sm:text-[15px] truncate ${
+          <span className={`text-xs sm:text-sm md:text-[15px] truncate max-w-full ${
             awayWin ? 'font-extrabold text-white' : isCompleted && homeWin ? 'font-medium text-gray-500' : 'font-semibold text-gray-300'
           }`}>
             {match.away_team.name}
@@ -151,7 +151,7 @@ const MatchCard = ({ match, index = 0 }: MatchCardProps) => {
         </div>
 
         {/* Chevron */}
-        <ChevronRight className="w-4 h-4 flex-shrink-0 text-gray-600 group-hover:text-rayoblue group-hover:translate-x-0.5 transition-all" />
+        <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 text-gray-600 group-hover:text-rayoblue group-hover:translate-x-0.5 transition-all ml-0.5" />
       </div>
     </motion.div>
   );
