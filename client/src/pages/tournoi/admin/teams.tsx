@@ -248,7 +248,11 @@ const AdminTeams = () => {
                 {/* Team header */}
                 <div className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-3">
-                    <span className="w-5 h-5 rounded-full ring-2 ring-gray-800 shadow-sm" style={{ backgroundColor: team.color }} />
+                    {team.logo_url ? (
+                      <img src={team.logo_url} alt={team.name} className="w-7 h-7 object-contain" />
+                    ) : (
+                      <span className="w-5 h-5 rounded-full ring-2 ring-gray-800 shadow-sm" style={{ backgroundColor: team.color }} />
+                    )}
                     <span className="text-sm font-bold text-white">{team.name}</span>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-800 text-gray-400 border border-gray-700">
                       {team.team_players.length} joueurs

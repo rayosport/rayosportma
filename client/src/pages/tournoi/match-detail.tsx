@@ -76,13 +76,17 @@ const TournoiMatchDetail = () => {
                 <span className="text-white font-bold text-xs sm:text-sm md:text-lg truncate max-w-full">
                   {match.home_team.name}
                 </span>
-                <span
-                  className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex-shrink-0 ring-2 ring-white/20 shadow-lg"
-                  style={{
-                    backgroundColor: match.home_team.color,
-                    boxShadow: `0 0 20px ${match.home_team.color}40`
-                  }}
-                />
+                {match.home_team.logo_url ? (
+                  <img src={match.home_team.logo_url} alt={match.home_team.name} className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex-shrink-0 object-contain" style={{ filter: `drop-shadow(0 0 10px ${match.home_team.color}40)` }} />
+                ) : (
+                  <span
+                    className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex-shrink-0 ring-2 ring-white/20 shadow-lg"
+                    style={{
+                      backgroundColor: match.home_team.color,
+                      boxShadow: `0 0 20px ${match.home_team.color}40`
+                    }}
+                  />
+                )}
               </div>
             </motion.div>
 
@@ -118,13 +122,17 @@ const TournoiMatchDetail = () => {
               className="flex-1 text-left min-w-0 overflow-hidden"
             >
               <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
-                <span
-                  className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex-shrink-0 ring-2 ring-white/20 shadow-lg"
-                  style={{
-                    backgroundColor: match.away_team.color,
-                    boxShadow: `0 0 20px ${match.away_team.color}40`
-                  }}
-                />
+                {match.away_team.logo_url ? (
+                  <img src={match.away_team.logo_url} alt={match.away_team.name} className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex-shrink-0 object-contain" style={{ filter: `drop-shadow(0 0 10px ${match.away_team.color}40)` }} />
+                ) : (
+                  <span
+                    className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex-shrink-0 ring-2 ring-white/20 shadow-lg"
+                    style={{
+                      backgroundColor: match.away_team.color,
+                      boxShadow: `0 0 20px ${match.away_team.color}40`
+                    }}
+                  />
+                )}
                 <span className="text-white font-bold text-xs sm:text-sm md:text-lg truncate max-w-full">
                   {match.away_team.name}
                 </span>
@@ -220,10 +228,14 @@ const TournoiMatchDetail = () => {
               />
               <div className="p-4">
                 <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-700/50">
-                  <span
-                    className="w-4 h-4 rounded-full ring-1 ring-white/10 shadow-sm"
-                    style={{ backgroundColor: match.home_team.color }}
-                  />
+                  {match.home_team.logo_url ? (
+                    <img src={match.home_team.logo_url} alt={match.home_team.name} className="w-5 h-5 object-contain" />
+                  ) : (
+                    <span
+                      className="w-4 h-4 rounded-full ring-1 ring-white/10 shadow-sm"
+                      style={{ backgroundColor: match.home_team.color }}
+                    />
+                  )}
                   <span className="text-xs font-bold text-white">{match.home_team.name}</span>
                 </div>
                 {homeTeamData?.team_players && homeTeamData.team_players.length > 0 ? (
@@ -264,10 +276,14 @@ const TournoiMatchDetail = () => {
               />
               <div className="p-4">
                 <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-700/50">
-                  <span
-                    className="w-4 h-4 rounded-full ring-1 ring-white/10 shadow-sm"
-                    style={{ backgroundColor: match.away_team.color }}
-                  />
+                  {match.away_team.logo_url ? (
+                    <img src={match.away_team.logo_url} alt={match.away_team.name} className="w-5 h-5 object-contain" />
+                  ) : (
+                    <span
+                      className="w-4 h-4 rounded-full ring-1 ring-white/10 shadow-sm"
+                      style={{ backgroundColor: match.away_team.color }}
+                    />
+                  )}
                   <span className="text-xs font-bold text-white">{match.away_team.name}</span>
                 </div>
                 {awayTeamData?.team_players && awayTeamData.team_players.length > 0 ? (

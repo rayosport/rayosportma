@@ -55,10 +55,14 @@ const TournoiClassement = () => {
                 <div>
                   <p className="text-[10px] text-yellow-400/80 font-semibold uppercase tracking-wider">Leader</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span
-                      className="w-4 h-4 rounded-full ring-2 ring-white/20 shadow-sm"
-                      style={{ backgroundColor: leader.team_color }}
-                    />
+                    {leader.team_logo_url ? (
+                      <img src={leader.team_logo_url} alt={leader.team_name} className="w-6 h-6 object-contain" />
+                    ) : (
+                      <span
+                        className="w-4 h-4 rounded-full ring-2 ring-white/20 shadow-sm"
+                        style={{ backgroundColor: leader.team_color }}
+                      />
+                    )}
                     <h3 className="text-xl font-black text-white">{leader.team_name}</h3>
                   </div>
                 </div>

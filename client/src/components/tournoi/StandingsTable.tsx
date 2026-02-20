@@ -73,10 +73,14 @@ const StandingsTable = ({ standings, compact = false, limit }: StandingsTablePro
                 </td>
                 <td className="py-3">
                   <div className="flex items-center gap-2.5">
-                    <span
-                      className="w-3.5 h-3.5 rounded-full flex-shrink-0 ring-1 ring-white/10 shadow-sm"
-                      style={{ backgroundColor: row.team_color }}
-                    />
+                    {row.team_logo_url ? (
+                      <img src={row.team_logo_url} alt={row.team_name} className="w-6 h-6 flex-shrink-0 object-contain" />
+                    ) : (
+                      <span
+                        className="w-3.5 h-3.5 rounded-full flex-shrink-0 ring-1 ring-white/10 shadow-sm"
+                        style={{ backgroundColor: row.team_color }}
+                      />
+                    )}
                     <span className={`font-semibold text-gray-200 ${compact ? 'text-xs' : 'text-sm'}`}>
                       {row.team_name}
                     </span>

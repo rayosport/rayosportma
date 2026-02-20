@@ -182,10 +182,19 @@ const TournoiTeamDetail = () => {
             transition={{ delay: 0.1, type: 'spring' }}
             className="mb-4"
           >
-            <div
-              className="w-16 h-16 rounded-full mx-auto ring-2 ring-white/20 shadow-lg"
-              style={{ backgroundColor: team.color, boxShadow: `0 0 40px ${team.color}50` }}
-            />
+            {team.logo_url ? (
+              <img
+                src={team.logo_url}
+                alt={team.name}
+                className="w-16 h-16 mx-auto object-contain drop-shadow-lg"
+                style={{ filter: `drop-shadow(0 0 20px ${team.color}50)` }}
+              />
+            ) : (
+              <div
+                className="w-16 h-16 rounded-full mx-auto ring-2 ring-white/20 shadow-lg"
+                style={{ backgroundColor: team.color, boxShadow: `0 0 40px ${team.color}50` }}
+              />
+            )}
           </motion.div>
 
           <motion.h1

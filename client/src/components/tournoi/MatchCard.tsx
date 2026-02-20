@@ -106,12 +106,16 @@ const MatchCard = ({ match, index = 0 }: MatchCardProps) => {
           }`}>
             {match.home_team.name}
           </span>
-          <span
-            className={`w-6 h-6 sm:w-7 sm:h-8 rounded-full flex-shrink-0 ring-2 shadow-md ${
-              homeWin ? 'ring-neongreen/50' : 'ring-white/10'
-            }`}
-            style={{ backgroundColor: match.home_team.color }}
-          />
+          {match.home_team.logo_url ? (
+            <img src={match.home_team.logo_url} alt={match.home_team.name} className="w-6 h-6 sm:w-7 sm:h-8 flex-shrink-0 object-contain" />
+          ) : (
+            <span
+              className={`w-6 h-6 sm:w-7 sm:h-8 rounded-full flex-shrink-0 ring-2 shadow-md ${
+                homeWin ? 'ring-neongreen/50' : 'ring-white/10'
+              }`}
+              style={{ backgroundColor: match.home_team.color }}
+            />
+          )}
         </div>
 
         {/* Score center */}
@@ -137,12 +141,16 @@ const MatchCard = ({ match, index = 0 }: MatchCardProps) => {
 
         {/* Away team */}
         <div className="flex-1 flex items-center gap-1.5 sm:gap-2.5 min-w-0 overflow-hidden">
-          <span
-            className={`w-6 h-6 sm:w-7 sm:h-8 rounded-full flex-shrink-0 ring-2 shadow-md ${
-              awayWin ? 'ring-neongreen/50' : 'ring-white/10'
-            }`}
-            style={{ backgroundColor: match.away_team.color }}
-          />
+          {match.away_team.logo_url ? (
+            <img src={match.away_team.logo_url} alt={match.away_team.name} className="w-6 h-6 sm:w-7 sm:h-8 flex-shrink-0 object-contain" />
+          ) : (
+            <span
+              className={`w-6 h-6 sm:w-7 sm:h-8 rounded-full flex-shrink-0 ring-2 shadow-md ${
+                awayWin ? 'ring-neongreen/50' : 'ring-white/10'
+              }`}
+              style={{ backgroundColor: match.away_team.color }}
+            />
+          )}
           <span className={`text-xs sm:text-sm md:text-[15px] truncate max-w-full ${
             awayWin ? 'font-extrabold text-white' : isCompleted && homeWin ? 'font-medium text-gray-500' : 'font-semibold text-gray-300'
           }`}>
