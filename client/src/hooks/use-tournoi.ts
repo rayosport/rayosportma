@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import type {
   League, Team, Match, MatchEvent, Player, PlayerConflict,
   StandingRow, PlayerStats, MatchWithTeams,
-  MatchEventWithDetails, TeamWithPlayers,
+  MatchEventWithDetails, TeamWithPlayers, MatchLineupWithPlayer,
 } from '@/lib/tournoi-types';
 
 // ============================================================
@@ -150,6 +150,21 @@ export function useMatch(matchId: string | undefined) {
         .single();
       if (error) throw error;
       return data as unknown as MatchWithTeams;
+    },
+    enabled: !!matchId,
+  });
+}
+
+export function useMatchLineups(matchId: string | undefined) {
+  return useQuery<MatchLineupWithPlayer[]>({
+    queryKey: ['tournoi', 'match-lineups', matchId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('match_lineups')
+        .select('*, player:players(*)')
+        .eq('match_id', matchId!);
+      if (error) throw error;
+      return (data || []) as unknown as MatchLineupWithPlayer[];
     },
     enabled: !!matchId,
   });
@@ -539,6 +554,25 @@ export function useUpdateJerseyNumber() {
   });
 }
 
+export function useUpdateMatchLineupJersey() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, match_id, jersey_number }: { id: string; match_id: string; jersey_number: number | null }) => {
+      const { data, error } = await supabase
+        .from('match_lineups')
+        .update({ jersey_number })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return { data, match_id };
+    },
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ['tournoi', 'match-lineups', variables.match_id] });
+    },
+  });
+}
+
 // ============================================================
 // SCORE CALCULATION
 // ============================================================
@@ -684,6 +718,23 @@ export function useCreateMatch() {
         .select()
         .single();
       if (error) throw error;
+
+      // Auto-populate match_lineups from team_players default jersey numbers
+      const { data: teamPlayers } = await supabase
+        .from('team_players')
+        .select('team_id, player_id, jersey_number')
+        .in('team_id', [match.home_team_id, match.away_team_id]);
+
+      if (teamPlayers && teamPlayers.length > 0) {
+        const lineups = teamPlayers.map((tp: { team_id: string; player_id: string; jersey_number: number | null }) => ({
+          match_id: data.id,
+          team_id: tp.team_id,
+          player_id: tp.player_id,
+          jersey_number: tp.jersey_number,
+        }));
+        await supabase.from('match_lineups').insert(lineups);
+      }
+
       return data;
     },
     onSuccess: () => {

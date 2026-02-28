@@ -2,13 +2,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRoute, useLocation } from 'wouter';
 import {
   useMatch, useMatchEvents, useUpdateMatch,
-  useCreateMatchEvent, useDeleteMatchEvent, useTeamWithPlayers,
+  useCreateMatchEvent, useDeleteMatchEvent,
   useAddGoalWithAssist, useDeleteGoalWithAssist, computeScoreFromEvents,
+  useMatchLineups, useUpdateMatchLineupJersey,
 } from '@/hooks/use-tournoi';
 import { useToast } from '@/hooks/use-toast';
 import AdminLayout from '@/components/tournoi/AdminLayout';
-import type { MatchEvent, TeamPlayer, Player } from '@/lib/tournoi-types';
-import { ArrowLeft, Save, Plus, Trash2, AlertTriangle, X } from 'lucide-react';
+import type { MatchEvent, MatchLineupWithPlayer } from '@/lib/tournoi-types';
+import { ArrowLeft, Save, Plus, Trash2, AlertTriangle, X, Pencil, Check } from 'lucide-react';
 import ConfirmDialog from '@/components/tournoi/ConfirmDialog';
 
 const otherEventOptions: { value: MatchEvent['event_type']; label: string }[] = [
@@ -22,14 +23,10 @@ const allEventLabels: Record<string, string> = {
   red_card: 'Carton rouge', own_goal: 'C.S.C', mvp: 'MVP',
 };
 
-type TeamPlayerWithInfo = TeamPlayer & { player: Player };
-
-/** Sorted list of players with jersey numbers for chip grid */
-function getSortedPlayers(teamPlayers?: TeamPlayerWithInfo[]) {
-  if (!teamPlayers) return [];
-  return [...teamPlayers]
-    .filter(tp => tp.jersey_number != null)
-    .sort((a, b) => (a.jersey_number ?? 0) - (b.jersey_number ?? 0));
+/** All players sorted: with jersey first, nulls last */
+function getSortedPlayers(lineup?: MatchLineupWithPlayer[]) {
+  if (!lineup) return [];
+  return [...lineup].sort((a, b) => (a.jersey_number ?? 999) - (b.jersey_number ?? 999));
 }
 
 const AdminMatchEdit = () => {
@@ -40,8 +37,7 @@ const AdminMatchEdit = () => {
 
   const { data: match, isLoading } = useMatch(matchId);
   const { data: events } = useMatchEvents(matchId);
-  const { data: homeTeam } = useTeamWithPlayers(match?.home_team_id);
-  const { data: awayTeam } = useTeamWithPlayers(match?.away_team_id);
+  const { data: lineups } = useMatchLineups(matchId);
   const updateMatch = useUpdateMatch();
   const createEvent = useCreateMatchEvent();
   const deleteEvent = useDeleteMatchEvent();
@@ -64,6 +60,8 @@ const AdminMatchEdit = () => {
   const [otherEventMinute, setOtherEventMinute] = useState('');
 
   const [deleteEventTarget, setDeleteEventTarget] = useState<{ id: string; label: string; eventType: string; minute: number | null } | null>(null);
+  const [editingLineupJersey, setEditingLineupJersey] = useState<{ id: string; value: string } | null>(null);
+  const updateLineupJersey = useUpdateMatchLineupJersey();
 
   useEffect(() => { document.title = 'Éditer Match - Admin Tournoi'; }, []);
   useEffect(() => { if (match) setStatus(match.status); }, [match]);
@@ -77,33 +75,42 @@ const AdminMatchEdit = () => {
     return computeScoreFromEvents(events, match.home_team_id, match.away_team_id);
   }, [events, match]);
 
+  // Split lineups by team
+  const homeLineup = useMemo(() => lineups?.filter(l => l.team_id === match?.home_team_id) ?? [], [lineups, match]);
+  const awayLineup = useMemo(() => lineups?.filter(l => l.team_id === match?.away_team_id) ?? [], [lineups, match]);
+  const activeTeamId = goalTeamSide === 'home' ? match?.home_team_id : match?.away_team_id;
+  const activeLineup = goalTeamSide === 'home' ? homeLineup : awayLineup;
+
   // Sorted players for chip grid
-  const activeTeam = goalTeamSide === 'home' ? homeTeam : awayTeam;
-  const sortedPlayers = useMemo(() => getSortedPlayers(activeTeam?.team_players), [activeTeam]);
+  const sortedPlayers = useMemo(() => getSortedPlayers(activeLineup), [activeLineup]);
 
   // Jersey map for events list
   const playerJerseyMap = useMemo(() => {
     const map = new Map<string, number>();
-    homeTeam?.team_players.forEach(tp => { if (tp.jersey_number != null) map.set(tp.player_id, tp.jersey_number); });
-    awayTeam?.team_players.forEach(tp => { if (tp.jersey_number != null) map.set(tp.player_id, tp.jersey_number); });
+    lineups?.forEach(l => { if (l.jersey_number != null) map.set(l.player_id, l.jersey_number); });
     return map;
-  }, [homeTeam, awayTeam]);
+  }, [lineups]);
 
   // Player name map for quick lookups
   const playerNameMap = useMemo(() => {
     const map = new Map<string, string>();
-    homeTeam?.team_players.forEach(tp => map.set(tp.player_id, tp.player.full_name || tp.player.username));
-    awayTeam?.team_players.forEach(tp => map.set(tp.player_id, tp.player.full_name || tp.player.username));
+    lineups?.forEach(l => map.set(l.player_id, l.player.full_name || l.player.username));
     return map;
-  }, [homeTeam, awayTeam]);
+  }, [lineups]);
 
   // Players missing jersey
   const playersWithoutJersey = useMemo(() => {
-    const missing: string[] = [];
-    homeTeam?.team_players.forEach(tp => { if (tp.jersey_number == null) missing.push(tp.player.full_name); });
-    awayTeam?.team_players.forEach(tp => { if (tp.jersey_number == null) missing.push(tp.player.full_name); });
-    return missing;
-  }, [homeTeam, awayTeam]);
+    return (lineups ?? []).filter(l => l.jersey_number == null).map(l => l.player.full_name);
+  }, [lineups]);
+
+  const handleSaveLineupJersey = async () => {
+    if (!editingLineupJersey || !matchId) return;
+    const num = editingLineupJersey.value ? parseInt(editingLineupJersey.value) : null;
+    try {
+      await updateLineupJersey.mutateAsync({ id: editingLineupJersey.id, match_id: matchId, jersey_number: num });
+      setEditingLineupJersey(null);
+    } catch (err: any) { toast({ title: 'Erreur', description: err.message, variant: 'destructive' }); }
+  };
 
   const handleSaveStatus = async () => {
     if (!matchId) return;
@@ -114,16 +121,16 @@ const AdminMatchEdit = () => {
   };
 
   const handleAddGoal = async () => {
-    if (!matchId || !match || !scorerPlayerId || !activeTeam) return;
+    if (!matchId || !match || !scorerPlayerId || !activeTeamId) return;
     try {
       await addGoal.mutateAsync({
         match_id: matchId,
         home_team_id: match.home_team_id,
         away_team_id: match.away_team_id,
         scorer_player_id: scorerPlayerId,
-        scorer_team_id: activeTeam.id,
+        scorer_team_id: activeTeamId,
         assist_player_id: (!isOwnGoal && assistPlayerId) ? assistPlayerId : undefined,
-        assist_team_id: (!isOwnGoal && assistPlayerId) ? activeTeam.id : undefined,
+        assist_team_id: (!isOwnGoal && assistPlayerId) ? activeTeamId : undefined,
         is_own_goal: isOwnGoal,
         minute: goalMinute ? parseInt(goalMinute) : undefined,
       });
@@ -154,10 +161,8 @@ const AdminMatchEdit = () => {
 
   const handleOtherPlayerSelect = (playerId: string) => {
     setOtherEventPlayerId(playerId);
-    const inHome = homeTeam?.team_players.find(tp => tp.player_id === playerId);
-    if (inHome) { setOtherEventTeamId(homeTeam!.id); return; }
-    const inAway = awayTeam?.team_players.find(tp => tp.player_id === playerId);
-    if (inAway) setOtherEventTeamId(awayTeam!.id);
+    const entry = lineups?.find(l => l.player_id === playerId);
+    if (entry) setOtherEventTeamId(entry.team_id);
   };
 
   const handleDeleteEvent = async () => {
@@ -270,6 +275,53 @@ const AdminMatchEdit = () => {
           </button>
         </div>
 
+        {/* Lineup jersey numbers editor */}
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Numéros de maillot</h3>
+          <div className="grid grid-cols-2 gap-4">
+            {([{ lineup: homeLineup, team: match.home_team }, { lineup: awayLineup, team: match.away_team }]).map(({ lineup, team }) => (
+              <div key={team.id}>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: team.color }} />
+                  <span className="text-[10px] font-bold text-gray-400">{team.name}</span>
+                </div>
+                <div className="space-y-1">
+                  {[...lineup].sort((a, b) => (a.jersey_number ?? 999) - (b.jersey_number ?? 999)).map(l => (
+                    <div key={l.id} className="flex items-center gap-2">
+                      {editingLineupJersey?.id === l.id ? (
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            value={editingLineupJersey.value}
+                            onChange={e => setEditingLineupJersey({ ...editingLineupJersey, value: e.target.value })}
+                            onKeyDown={e => { if (e.key === 'Enter') handleSaveLineupJersey(); if (e.key === 'Escape') setEditingLineupJersey(null); }}
+                            autoFocus
+                            className="w-10 h-6 px-1 bg-gray-800 border border-rayoblue/50 rounded text-[10px] text-white text-center focus:outline-none"
+                          />
+                          <button onClick={handleSaveLineupJersey} className="p-0.5 text-green-400 hover:bg-green-500/10 rounded">
+                            <Check className="w-3 h-3" />
+                          </button>
+                          <button onClick={() => setEditingLineupJersey(null)} className="p-0.5 text-gray-500 hover:bg-gray-700 rounded">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setEditingLineupJersey({ id: l.id, value: l.jersey_number != null ? String(l.jersey_number) : '' })}
+                          className="w-6 h-6 rounded bg-gray-800 text-gray-400 flex items-center justify-center text-[10px] font-bold border border-gray-700 hover:border-rayoblue/50 hover:text-rayoblue transition-all"
+                        >
+                          {l.jersey_number != null ? l.jersey_number : <Pencil className="w-2.5 h-2.5 text-gray-600" />}
+                        </button>
+                      )}
+                      <span className="text-[10px] text-gray-400 truncate">{l.player.full_name || l.player.username}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Add Goal — Player Chip Grid */}
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Ajouter un but</h3>
@@ -340,12 +392,11 @@ const AdminMatchEdit = () => {
                       style={selected ? {
                         backgroundColor: teamColor + '25',
                         borderColor: teamColor,
-                        ringColor: teamColor,
                         boxShadow: `0 0 12px ${teamColor}30`,
                       } : undefined}
                     >
-                      <div className={`text-lg font-black leading-none mb-0.5 ${selected ? 'text-white' : 'text-gray-300'}`}>
-                        {tp.jersey_number}
+                      <div className={`text-lg font-black leading-none mb-0.5 ${selected ? 'text-white' : tp.jersey_number == null ? 'text-gray-600' : 'text-gray-300'}`}>
+                        {tp.jersey_number ?? '?'}
                       </div>
                       <div className={`text-[8px] leading-tight truncate ${selected ? 'text-gray-200' : 'text-gray-500'}`}>
                         {(tp.player.full_name || tp.player.username).split(' ')[0]}
@@ -394,8 +445,8 @@ const AdminMatchEdit = () => {
                           boxShadow: '0 0 12px #a855f730',
                         } : undefined}
                       >
-                        <div className={`text-lg font-black leading-none mb-0.5 ${selected ? 'text-white' : 'text-gray-300'}`}>
-                          {tp.jersey_number}
+                        <div className={`text-lg font-black leading-none mb-0.5 ${selected ? 'text-white' : tp.jersey_number == null ? 'text-gray-600' : 'text-gray-300'}`}>
+                          {tp.jersey_number ?? '?'}
                         </div>
                         <div className={`text-[8px] leading-tight truncate ${selected ? 'text-purple-200' : 'text-gray-500'}`}>
                           {(tp.player.full_name || tp.player.username).split(' ')[0]}
@@ -477,24 +528,24 @@ const AdminMatchEdit = () => {
             <select value={otherEventPlayerId} onChange={e => handleOtherPlayerSelect(e.target.value)} required
               className="px-2.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-rayoblue/50">
               <option value="">Joueur</option>
-              {homeTeam && (
-                <optgroup label={homeTeam.name}>
-                  {homeTeam.team_players
+              {homeLineup.length > 0 && (
+                <optgroup label={match.home_team.name}>
+                  {[...homeLineup]
                     .sort((a, b) => (a.jersey_number ?? 999) - (b.jersey_number ?? 999))
-                    .map(tp => (
-                      <option key={tp.player_id} value={tp.player_id}>
-                        {tp.jersey_number != null ? `#${tp.jersey_number} — ` : ''}{tp.player.full_name || tp.player.username}
+                    .map(l => (
+                      <option key={l.player_id} value={l.player_id}>
+                        {l.jersey_number != null ? `#${l.jersey_number} — ` : ''}{l.player.full_name || l.player.username}
                       </option>
                     ))}
                 </optgroup>
               )}
-              {awayTeam && (
-                <optgroup label={awayTeam.name}>
-                  {awayTeam.team_players
+              {awayLineup.length > 0 && (
+                <optgroup label={match.away_team.name}>
+                  {[...awayLineup]
                     .sort((a, b) => (a.jersey_number ?? 999) - (b.jersey_number ?? 999))
-                    .map(tp => (
-                      <option key={tp.player_id} value={tp.player_id}>
-                        {tp.jersey_number != null ? `#${tp.jersey_number} — ` : ''}{tp.player.full_name || tp.player.username}
+                    .map(l => (
+                      <option key={l.player_id} value={l.player_id}>
+                        {l.jersey_number != null ? `#${l.jersey_number} — ` : ''}{l.player.full_name || l.player.username}
                       </option>
                     ))}
                 </optgroup>

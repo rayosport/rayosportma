@@ -1,13 +1,13 @@
 import { useMemo } from 'react';
-import type { MatchEventWithDetails, TeamPlayer, Player } from '@/lib/tournoi-types';
+import type { MatchEventWithDetails, MatchLineupWithPlayer } from '@/lib/tournoi-types';
 import { Star, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface MatchEventTimelineProps {
   events: MatchEventWithDetails[];
   homeTeamId: string;
-  homeTeamPlayers?: (TeamPlayer & { player: Player })[];
-  awayTeamPlayers?: (TeamPlayer & { player: Player })[];
+  homeLineup?: MatchLineupWithPlayer[];
+  awayLineup?: MatchLineupWithPlayer[];
 }
 
 const eventIcon = (type: string) => {
@@ -53,13 +53,13 @@ const eventBadgeColor = (type: string) => {
   }
 };
 
-const MatchEventTimeline = ({ events, homeTeamId, homeTeamPlayers, awayTeamPlayers }: MatchEventTimelineProps) => {
+const MatchEventTimeline = ({ events, homeTeamId, homeLineup, awayLineup }: MatchEventTimelineProps) => {
   const jerseyMap = useMemo(() => {
     const map = new Map<string, number>();
-    homeTeamPlayers?.forEach(tp => { if (tp.jersey_number != null) map.set(tp.player_id, tp.jersey_number); });
-    awayTeamPlayers?.forEach(tp => { if (tp.jersey_number != null) map.set(tp.player_id, tp.jersey_number); });
+    homeLineup?.forEach(l => { if (l.jersey_number != null) map.set(l.player_id, l.jersey_number); });
+    awayLineup?.forEach(l => { if (l.jersey_number != null) map.set(l.player_id, l.jersey_number); });
     return map;
-  }, [homeTeamPlayers, awayTeamPlayers]);
+  }, [homeLineup, awayLineup]);
 
   if (events.length === 0) {
     return (

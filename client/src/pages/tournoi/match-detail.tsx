@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useRoute, useLocation } from 'wouter';
 import { useLanguage } from '@/hooks/use-language';
-import { useMatch, useMatchEvents, useTeamWithPlayers } from '@/hooks/use-tournoi';
+import { useMatch, useMatchEvents, useMatchLineups } from '@/hooks/use-tournoi';
 import TournoiNav from '@/components/tournoi/TournoiNav';
 import MatchEventTimeline from '@/components/tournoi/MatchEventTimeline';
 import Loader from '@/components/ui/Loader';
@@ -16,8 +16,9 @@ const TournoiMatchDetail = () => {
 
   const { data: match, isLoading: matchLoading } = useMatch(matchId);
   const { data: events } = useMatchEvents(matchId);
-  const { data: homeTeamData } = useTeamWithPlayers(match?.home_team_id);
-  const { data: awayTeamData } = useTeamWithPlayers(match?.away_team_id);
+  const { data: lineups } = useMatchLineups(matchId);
+  const homeLineup = lineups?.filter(l => l.team_id === match?.home_team_id) ?? [];
+  const awayLineup = lineups?.filter(l => l.team_id === match?.away_team_id) ?? [];
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -202,8 +203,8 @@ const TournoiMatchDetail = () => {
               <MatchEventTimeline
                 events={events}
                 homeTeamId={match.home_team_id}
-                homeTeamPlayers={homeTeamData?.team_players}
-                awayTeamPlayers={awayTeamData?.team_players}
+                homeLineup={homeLineup}
+                awayLineup={awayLineup}
               />
             </div>
           </motion.section>
@@ -238,26 +239,26 @@ const TournoiMatchDetail = () => {
                   )}
                   <span className="text-xs font-bold text-white">{match.home_team.name}</span>
                 </div>
-                {homeTeamData?.team_players && homeTeamData.team_players.length > 0 ? (
+                {homeLineup.length > 0 ? (
                   <div className="space-y-2">
-                    {homeTeamData.team_players.map((tp, i) => (
+                    {[...homeLineup].sort((a, b) => (a.jersey_number ?? 999) - (b.jersey_number ?? 999)).map((l, i) => (
                       <motion.div
-                        key={tp.id}
+                        key={l.id}
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.4 + i * 0.03 }}
                         className="flex items-center gap-2.5 text-xs"
                       >
-                        {tp.jersey_number != null && (
+                        {l.jersey_number != null && (
                           <span
                             className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
                             style={{ backgroundColor: match.home_team.color }}
                           >
-                            {tp.jersey_number}
+                            {l.jersey_number}
                           </span>
                         )}
                         <span className="text-gray-300 truncate">
-                          {tp.player.full_name || tp.player.username}
+                          {l.player.full_name || l.player.username}
                         </span>
                       </motion.div>
                     ))}
@@ -286,26 +287,26 @@ const TournoiMatchDetail = () => {
                   )}
                   <span className="text-xs font-bold text-white">{match.away_team.name}</span>
                 </div>
-                {awayTeamData?.team_players && awayTeamData.team_players.length > 0 ? (
+                {awayLineup.length > 0 ? (
                   <div className="space-y-2">
-                    {awayTeamData.team_players.map((tp, i) => (
+                    {[...awayLineup].sort((a, b) => (a.jersey_number ?? 999) - (b.jersey_number ?? 999)).map((l, i) => (
                       <motion.div
-                        key={tp.id}
+                        key={l.id}
                         initial={{ opacity: 0, x: 8 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.4 + i * 0.03 }}
                         className="flex items-center gap-2.5 text-xs"
                       >
-                        {tp.jersey_number != null && (
+                        {l.jersey_number != null && (
                           <span
                             className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
                             style={{ backgroundColor: match.away_team.color }}
                           >
-                            {tp.jersey_number}
+                            {l.jersey_number}
                           </span>
                         )}
                         <span className="text-gray-300 truncate">
-                          {tp.player.full_name || tp.player.username}
+                          {l.player.full_name || l.player.username}
                         </span>
                       </motion.div>
                     ))}

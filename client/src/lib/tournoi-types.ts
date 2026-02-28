@@ -75,6 +75,18 @@ export interface MatchEvent {
   created_at: string;
 }
 
+export interface MatchLineup {
+  id: string;
+  match_id: string;
+  team_id: string;
+  player_id: string;
+  jersey_number: number | null;
+  is_starter: boolean;
+  created_at: string;
+}
+
+export type MatchLineupWithPlayer = MatchLineup & { player: Player };
+
 export interface StandingRow {
   league_id: string;
   team_id: string;
