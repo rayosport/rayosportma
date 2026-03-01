@@ -61,10 +61,11 @@ const AdminMatchEdit = () => {
 
   const [deleteEventTarget, setDeleteEventTarget] = useState<{ id: string; label: string; eventType: string; minute: number | null } | null>(null);
   const [editingLineupJersey, setEditingLineupJersey] = useState<{ id: string; value: string } | null>(null);
+  const [matchColors, setMatchColors] = useState<{ home: string; away: string } | null>(null);
   const updateLineupJersey = useUpdateMatchLineupJersey();
 
   useEffect(() => { document.title = 'Éditer Match - Admin Tournoi'; }, []);
-  useEffect(() => { if (match) setStatus(match.status); }, [match]);
+  useEffect(() => { if (match) { setStatus(match.status); setMatchColors({ home: match.home_color ?? match.home_team.color, away: match.away_color ?? match.away_team.color }); } }, [match]);
 
   // Reset scorer/assist when switching team side
   useEffect(() => { setScorerPlayerId(null); setAssistPlayerId(null); }, [goalTeamSide]);
@@ -189,7 +190,17 @@ const AdminMatchEdit = () => {
     } catch (err: any) { toast({ title: 'Erreur', description: err.message, variant: 'destructive' }); }
   };
 
-  const teamColor = goalTeamSide === 'home' ? match?.home_team.color : match?.away_team.color;
+  const handleSaveMatchColors = async () => {
+    if (!matchId || !matchColors) return;
+    try {
+      await updateMatch.mutateAsync({ id: matchId, home_color: matchColors.home, away_color: matchColors.away });
+      toast({ title: 'Couleurs mises à jour' });
+    } catch (err: any) { toast({ title: 'Erreur', description: err.message, variant: 'destructive' }); }
+  };
+
+  const homeMatchColor = matchColors?.home ?? match?.home_team.color ?? '#007BFF';
+  const awayMatchColor = matchColors?.away ?? match?.away_team.color ?? '#007BFF';
+  const teamColor = goalTeamSide === 'home' ? homeMatchColor : awayMatchColor;
 
   const backBtn = (
     <button onClick={() => setLocation('/tournoi/admin/matchs')} className="flex items-center gap-1.5 px-3 py-2 bg-gray-800 text-gray-400 text-xs font-semibold rounded-lg hover:bg-gray-700 transition-all border border-gray-700">
@@ -232,7 +243,7 @@ const AdminMatchEdit = () => {
           <div className="flex items-center justify-center gap-6 mb-6">
             <div className="text-center">
               <div className="flex items-center gap-2 mb-2">
-                <span className="w-4 h-4 rounded-full" style={{ backgroundColor: match.home_team.color }} />
+                <span className="w-4 h-4 rounded-full" style={{ backgroundColor: homeMatchColor }} />
                 <span className="text-xs font-bold text-gray-200">{match.home_team.name}</span>
               </div>
               <span className="w-14 h-12 flex items-center justify-center text-3xl font-black text-white">
@@ -243,7 +254,7 @@ const AdminMatchEdit = () => {
             <div className="text-center">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xs font-bold text-gray-200">{match.away_team.name}</span>
-                <span className="w-4 h-4 rounded-full" style={{ backgroundColor: match.away_team.color }} />
+                <span className="w-4 h-4 rounded-full" style={{ backgroundColor: awayMatchColor }} />
               </div>
               <span className="w-14 h-12 flex items-center justify-center text-3xl font-black text-white">
                 {computedScore.awayScore}
@@ -275,14 +286,46 @@ const AdminMatchEdit = () => {
           </button>
         </div>
 
+        {/* Match colors */}
+        {matchColors && (
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Couleurs du match</h3>
+            <div className="space-y-3">
+              {([
+                { side: 'home', team: match.home_team, color: matchColors.home },
+                { side: 'away', team: match.away_team, color: matchColors.away },
+              ] as const).map(({ side, team, color }) => (
+                <div key={side} className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={color}
+                    onChange={e => setMatchColors(prev => prev ? { ...prev, [side]: e.target.value } : prev)}
+                    className="w-8 h-8 rounded-lg cursor-pointer border-0 p-0.5 bg-gray-800"
+                  />
+                  <span className="text-xs font-semibold text-gray-300">{team.name}</span>
+                  <span className="text-[10px] text-gray-600">{color}</span>
+                </div>
+              ))}
+              <button
+                onClick={handleSaveMatchColors}
+                disabled={updateMatch.isPending}
+                className="w-full py-2.5 bg-gray-800 text-gray-300 text-xs font-semibold rounded-xl hover:bg-gray-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2 border border-gray-700"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {updateMatch.isPending ? 'Sauvegarde...' : 'Sauvegarder les couleurs'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Lineup jersey numbers editor */}
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Numéros de maillot</h3>
           <div className="grid grid-cols-2 gap-4">
-            {([{ lineup: homeLineup, team: match.home_team }, { lineup: awayLineup, team: match.away_team }]).map(({ lineup, team }) => (
+            {([{ lineup: homeLineup, team: match.home_team, color: homeMatchColor }, { lineup: awayLineup, team: match.away_team, color: awayMatchColor }]).map(({ lineup, team, color }) => (
               <div key={team.id}>
                 <div className="flex items-center gap-1.5 mb-2">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: team.color }} />
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
                   <span className="text-[10px] font-bold text-gray-400">{team.name}</span>
                 </div>
                 <div className="space-y-1">
@@ -330,6 +373,7 @@ const AdminMatchEdit = () => {
           <div className="flex gap-2 mb-4">
             {(['home', 'away'] as const).map(side => {
               const t = side === 'home' ? match.home_team : match.away_team;
+              const c = side === 'home' ? homeMatchColor : awayMatchColor;
               const active = goalTeamSide === side;
               return (
                 <button
@@ -339,9 +383,9 @@ const AdminMatchEdit = () => {
                   className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-2 ${
                     active ? 'border-transparent' : 'bg-gray-800 text-gray-500 border-gray-700 hover:bg-gray-700'
                   }`}
-                  style={active ? { backgroundColor: t.color + '30', borderColor: t.color + '50', color: t.color } : undefined}
+                  style={active ? { backgroundColor: c + '30', borderColor: c + '50', color: c } : undefined}
                 >
-                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: t.color }} />
+                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: c }} />
                   {t.name}
                 </button>
               );

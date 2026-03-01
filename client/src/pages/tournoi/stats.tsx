@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useLanguage } from '@/hooks/use-language';
-import { useActiveLeague, usePlayerStats, useMatches } from '@/hooks/use-tournoi';
+import { useActiveLeague, usePlayerStats, useMatches, useTeams } from '@/hooks/use-tournoi';
 import TournoiHero from '@/components/tournoi/TournoiHero';
 import TournoiNav from '@/components/tournoi/TournoiNav';
 import PlayerStatsRow from '@/components/tournoi/PlayerStatsRow';
@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 type StatsTab = 'scorers' | 'assists' | 'cards' | 'mvp';
 
-function Podium({ players }: { players: { name: string; team: string; value: number; color: string }[] }) {
+function Podium({ players }: { players: { name: string; team: string; value: number; color: string; logoUrl?: string | null }[] }) {
   if (players.length < 1) return null;
 
   const podiumOrder = players.length >= 3
@@ -43,13 +43,22 @@ function Podium({ players }: { players: { name: string; team: string; value: num
           className="flex flex-col items-center gap-2"
         >
           <div className="text-center">
-            <div
-              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full mx-auto mb-1.5 ring-2 ring-white/20 shadow-lg"
-              style={{
-                backgroundColor: player.color,
-                boxShadow: ranks[i] === 1 ? `0 0 20px ${player.color}60` : undefined
-              }}
-            />
+            {player.logoUrl ? (
+              <img
+                src={player.logoUrl}
+                alt={player.team}
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full mx-auto mb-1.5 object-contain ring-2 ring-white/20 shadow-lg"
+                style={{ boxShadow: ranks[i] === 1 ? `0 0 20px ${player.color}60` : undefined }}
+              />
+            ) : (
+              <div
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full mx-auto mb-1.5 ring-2 ring-white/20 shadow-lg"
+                style={{
+                  backgroundColor: player.color,
+                  boxShadow: ranks[i] === 1 ? `0 0 20px ${player.color}60` : undefined
+                }}
+              />
+            )}
             <p className={`font-bold text-gray-200 truncate max-w-[90px] sm:max-w-[110px] ${ranks[i] === 1 ? 'text-sm' : 'text-xs'}`}>
               {player.name}
             </p>
@@ -72,6 +81,13 @@ const TournoiStats = () => {
   const { data: league, isLoading: leagueLoading } = useActiveLeague();
   const { data: playerStats, isLoading: statsLoading } = usePlayerStats(league?.id);
   const { data: matches } = useMatches(league?.id);
+  const { data: teams } = useTeams(league?.id);
+
+  const teamLogoMap = useMemo(() => {
+    const map = new Map<string, string | null>();
+    teams?.forEach(t => map.set(t.name, t.logo_url));
+    return map;
+  }, [teams]);
 
   const liveCount = useMemo(() => matches?.filter(m => m.status === 'live').length || 0, [matches]);
 
@@ -120,6 +136,7 @@ const TournoiStats = () => {
     team: p.team_name,
     value: getValue(p),
     color: p.team_color,
+    logoUrl: teamLogoMap.get(p.team_name),
   }));
 
   return (
@@ -207,7 +224,11 @@ const TournoiStats = () => {
                           }`}>
                             {i + 1}
                           </span>
-                          <span className="w-3 h-3 rounded-full flex-shrink-0 ring-1 ring-white/10 shadow-sm" style={{ backgroundColor: p.team_color }} />
+                          {teamLogoMap.get(p.team_name) ? (
+                            <img src={teamLogoMap.get(p.team_name)!} alt={p.team_name} className="w-4 h-4 rounded-full object-contain flex-shrink-0 ring-1 ring-white/10" />
+                          ) : (
+                            <span className="w-3 h-3 rounded-full flex-shrink-0 ring-1 ring-white/10 shadow-sm" style={{ backgroundColor: p.team_color }} />
+                          )}
                           <div className="min-w-0">
                             <p className="text-sm font-semibold text-gray-200 truncate">{p.player_name}</p>
                             <p className="text-[10px] text-gray-500 truncate">{p.team_name}</p>
@@ -239,6 +260,7 @@ const TournoiStats = () => {
                       playerName={p.player_name}
                       teamName={p.team_name}
                       teamColor={p.team_color}
+                      teamLogoUrl={teamLogoMap.get(p.team_name)}
                       value={getValue(p)}
                     />
                   );

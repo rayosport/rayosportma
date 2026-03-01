@@ -483,6 +483,20 @@ export function useDeleteTeam() {
   });
 }
 
+export function useUpdateTeam() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: { id: string; color?: string; name?: string; logo_url?: string }) => {
+      const { error } = await supabase.from('teams').update(updates).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tournoi', 'teams'] });
+      qc.invalidateQueries({ queryKey: ['tournoi', 'teams-with-players'] });
+    },
+  });
+}
+
 export function useCreatePlayer() {
   const qc = useQueryClient();
   return useMutation({

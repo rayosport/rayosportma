@@ -5,12 +5,13 @@ interface PlayerStatsRowProps {
   playerName: string;
   teamName: string;
   teamColor: string;
+  teamLogoUrl?: string | null;
   value: number;
   icon?: React.ReactNode;
   index?: number;
 }
 
-const PlayerStatsRow = ({ rank, playerName, teamName, teamColor, value, icon, index = 0 }: PlayerStatsRowProps) => {
+const PlayerStatsRow = ({ rank, playerName, teamName, teamColor, teamLogoUrl, value, icon, index = 0 }: PlayerStatsRowProps) => {
   const isTop3 = rank <= 3;
 
   const rankStyle = () => {
@@ -36,10 +37,11 @@ const PlayerStatsRow = ({ rank, playerName, teamName, teamColor, value, icon, in
         }`}>
           {rank}
         </span>
-        <span
-          className="w-3 h-3 rounded-full flex-shrink-0 ring-1 ring-white/10 shadow-sm"
-          style={{ backgroundColor: teamColor }}
-        />
+        {teamLogoUrl ? (
+          <img src={teamLogoUrl} alt={teamName} className="w-4 h-4 rounded-full object-contain flex-shrink-0 ring-1 ring-white/10" />
+        ) : (
+          <span className="w-3 h-3 rounded-full flex-shrink-0 ring-1 ring-white/10 shadow-sm" style={{ backgroundColor: teamColor }} />
+        )}
         <div className="min-w-0">
           <p className="text-sm font-semibold text-gray-200 truncate">{playerName}</p>
           <p className="text-[10px] text-gray-500 truncate">{teamName}</p>

@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 interface MatchEventTimelineProps {
   events: MatchEventWithDetails[];
   homeTeamId: string;
+  homeColor: string;
+  awayColor: string;
   homeLineup?: MatchLineupWithPlayer[];
   awayLineup?: MatchLineupWithPlayer[];
 }
@@ -53,7 +55,7 @@ const eventBadgeColor = (type: string) => {
   }
 };
 
-const MatchEventTimeline = ({ events, homeTeamId, homeLineup, awayLineup }: MatchEventTimelineProps) => {
+const MatchEventTimeline = ({ events, homeTeamId, homeColor, awayColor, homeLineup, awayLineup }: MatchEventTimelineProps) => {
   const jerseyMap = useMemo(() => {
     const map = new Map<string, number>();
     homeLineup?.forEach(l => { if (l.jersey_number != null) map.set(l.player_id, l.jersey_number); });
@@ -78,6 +80,7 @@ const MatchEventTimeline = ({ events, homeTeamId, homeLineup, awayLineup }: Matc
           const isHome = event.team_id === homeTeamId;
           const isGoal = event.event_type === 'goal';
 
+          const eventColor = isHome ? homeColor : awayColor;
           return (
             <motion.div
               key={event.id}
@@ -97,7 +100,7 @@ const MatchEventTimeline = ({ events, homeTeamId, homeLineup, awayLineup }: Matc
               <div className="flex-shrink-0 w-3 flex items-center justify-center relative z-10">
                 <div
                   className={`rounded-full ${isGoal ? 'w-2.5 h-2.5' : 'w-2 h-2'}`}
-                  style={{ backgroundColor: event.team.color }}
+                  style={{ backgroundColor: eventColor }}
                 />
               </div>
 

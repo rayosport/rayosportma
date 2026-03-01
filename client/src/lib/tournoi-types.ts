@@ -61,6 +61,8 @@ export interface Match {
   away_team_id: string;
   home_score: number;
   away_score: number;
+  home_color: string | null;
+  away_color: string | null;
   status: 'scheduled' | 'live' | 'completed';
   created_at: string;
 }

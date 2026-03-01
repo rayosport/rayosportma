@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   useActiveLeague, useTeamsWithPlayers, useCreateTeam, useDeleteTeam,
   useSearchPlayers, useCreatePlayer, useAddPlayerToTeam, useRemovePlayerFromTeam,
-  useSyncPlayers, usePlayerConflicts, useResolveConflict, useUpdateJerseyNumber,
+  useSyncPlayers, usePlayerConflicts, useResolveConflict, useUpdateJerseyNumber, useUpdateTeam,
 } from '@/hooks/use-tournoi';
 import { useToast } from '@/hooks/use-toast';
 import AdminLayout from '@/components/tournoi/AdminLayout';
@@ -23,8 +23,10 @@ const AdminTeams = () => {
   const { data: conflicts } = usePlayerConflicts();
   const resolveConflict = useResolveConflict();
   const updateJersey = useUpdateJerseyNumber();
+  const updateTeam = useUpdateTeam();
 
   const [editingJersey, setEditingJersey] = useState<{ tpId: string; teamId: string; value: string } | null>(null);
+  const [editingColor, setEditingColor] = useState<{ teamId: string; value: string } | null>(null);
 
   const isJerseyTaken = (teamId: string, num: number, excludeTpId?: string) => {
     const team = teams?.find(t => t.id === teamId);
@@ -43,6 +45,17 @@ const AdminTeams = () => {
       await updateJersey.mutateAsync({ id: editingJersey.tpId, jersey_number: num });
       toast({ title: 'Numéro mis à jour' });
       setEditingJersey(null);
+    } catch (err: any) {
+      toast({ title: 'Erreur', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleSaveColor = async () => {
+    if (!editingColor) return;
+    try {
+      await updateTeam.mutateAsync({ id: editingColor.teamId, color: editingColor.value });
+      toast({ title: 'Couleur mise à jour' });
+      setEditingColor(null);
     } catch (err: any) {
       toast({ title: 'Erreur', description: err.message, variant: 'destructive' });
     }
@@ -250,8 +263,28 @@ const AdminTeams = () => {
                   <div className="flex items-center gap-3">
                     {team.logo_url ? (
                       <img src={team.logo_url} alt={team.name} className="w-7 h-7 object-contain" />
+                    ) : editingColor?.teamId === team.id ? (
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="color"
+                          value={editingColor.value}
+                          onChange={e => setEditingColor({ ...editingColor, value: e.target.value })}
+                          className="w-7 h-7 rounded-full cursor-pointer border-0 p-0 bg-transparent"
+                        />
+                        <button onClick={handleSaveColor} disabled={updateTeam.isPending} className="p-0.5 text-green-400 hover:bg-green-500/10 rounded">
+                          <Check className="w-3 h-3" />
+                        </button>
+                        <button onClick={() => setEditingColor(null)} className="p-0.5 text-gray-500 hover:bg-gray-700 rounded">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
                     ) : (
-                      <span className="w-5 h-5 rounded-full ring-2 ring-gray-800 shadow-sm" style={{ backgroundColor: team.color }} />
+                      <button
+                        onClick={() => setEditingColor({ teamId: team.id, value: team.color })}
+                        className="w-5 h-5 rounded-full ring-2 ring-gray-800 hover:ring-gray-600 shadow-sm transition-all"
+                        style={{ backgroundColor: team.color }}
+                        title="Modifier la couleur"
+                      />
                     )}
                     <span className="text-sm font-bold text-white">{team.name}</span>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-800 text-gray-400 border border-gray-700">
